@@ -107,7 +107,7 @@ export async function profile() {
     .select("*")
     .eq("id", user.id)
     .single();
-  if (error || !data.active) return null;
+  if (error || !data.active || data.revoked) return null;
   return { ...data, email: user.email };
 }
 export async function save(table, value) {
@@ -126,4 +126,20 @@ export async function remove(table, id) {
     .select("id")
     .single();
   if (error) throw error;
+}
+
+export async function loadProfiles() {
+  if (!client) return [];
+  const rows = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await client
+      .from("profiles")
+      .select("*")
+      .order("display_name")
+      .order("id")
+      .range(offset, offset + 999);
+    if (error) throw error;
+    rows.push(...data);
+    if (data.length < 1000) return rows;
+  }
 }

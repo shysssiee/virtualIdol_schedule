@@ -146,3 +146,33 @@ commit;
 
 
 create trigger validate_event before insert or update on public.events for each row execute function public.validate_event();
+
+-- v1.2: retain absolute event times and author records.
+begin;
+alter table public.events add column if not exists input_timezone text not null default 'Asia/Taipei';
+alter table public.events drop constraint if exists events_input_timezone_check;
+alter table public.events add constraint events_input_timezone_check check(input_timezone in ('Asia/Taipei','Asia/Seoul'));
+alter table public.profiles add column if not exists revoked boolean not null default false;
+alter table public.site_settings add column if not exists report_url text not null default '';
+alter table public.site_settings add column if not exists default_timezone text not null default 'auto';
+alter table public.site_settings drop constraint if exists settings_report_check;
+alter table public.site_settings add constraint settings_report_check check(report_url='' or report_url ~ '^https://(forms\.gle|docs\.google\.com)/');
+alter table public.site_settings drop constraint if exists settings_timezone_check;
+alter table public.site_settings add constraint settings_timezone_check check(default_timezone in ('auto','Asia/Taipei','Asia/Seoul','Asia/Tokyo','America/New_York','America/Los_Angeles','Europe/London','UTC'));
+create or replace function public.is_owner() returns boolean language sql stable security definer set search_path=public as $$
+ select exists(select 1 from profiles where id=auth.uid() and role='owner' and active and not revoked);
+$$;
+create or replace function public.is_editor() returns boolean language sql stable security definer set search_path=public as $$
+ select exists(select 1 from profiles where id=auth.uid() and active and not revoked);
+$$;
+create or replace function public.revoke_collaborator(user_id uuid) returns void language plpgsql security definer set search_path=public as $$
+begin
+ if not public.is_owner() then raise exception '僅站主可移除協作者'; end if;
+ if exists(select 1 from profiles where id=user_id and role='owner') then raise exception '不能移除站主'; end if;
+ update profiles set active=false,revoked=true where id=user_id and role='collaborator';
+ if not found then raise exception '找不到協作者'; end if;
+end;
+$$;
+revoke all on function public.revoke_collaborator(uuid) from public,anon;
+grant execute on function public.revoke_collaborator(uuid) to authenticated;
+commit;

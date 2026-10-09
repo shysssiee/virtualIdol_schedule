@@ -534,6 +534,49 @@ form .row {
   border-bottom: 1px solid var(--line);
   padding: 10px 0;
 }
+.admin-row .row-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.admin-row [data-drag] {
+  cursor: grab;
+  touch-action: none;
+}
+.admin-row [data-drag]:active {
+  cursor: grabbing;
+}
+.admin-row label {
+  margin: 0;
+}
+.sort-list {
+  border-radius: 8px;
+}
+.member-section {
+  border-bottom: 1px solid var(--line);
+  margin: 12px 0;
+  padding: 12px 0;
+}
+.member-section > summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 6px;
+}
+.modal-status {
+  padding: 12px;
+  background: #eef0fa;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  font-size: 14px;
+}
+footer > span:last-child {
+  text-align: right;
+}
+#now-time {
+  font-size: 12px;
+  padding: 4px 8px;
+  margin-left: 6px;
+}
 .admin-row button {
   font-size: 12px;
 }
@@ -594,11 +637,18 @@ form .row {
   display: none;
 }
 @media (max-width: 760px) {
+  dialog {
+    padding: 20px;
+  }
+  .admin-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
   #filter-toggle {
     display: block;
     width: 100%;
   }
-  aside:not(.expanded) > :not(#filter-toggle) {
+  .workspace aside:not(.expanded) > :not(#filter-toggle):not(.local-clock) {
     display: none !important;
   }
   header {
@@ -705,4 +755,238 @@ form .row {
 }
 [hidden] {
   display: none !important;
+}
+
+.local-clock {
+  border-bottom: 1px solid var(--line);
+  padding: 0 0 20px;
+  margin-bottom: 20px;
+  font-size: 12px;
+  line-height: 1.8;
+  font-variant-numeric: tabular-nums;
+}
+.local-clock span,
+.local-clock strong,
+.local-clock b {
+  display: block;
+}
+.local-clock b {
+  font-size: 24px;
+  letter-spacing: 2px;
+}
+.day-number {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+.day-number[data-create-date] {
+  cursor: pointer;
+}
+.day-number.is-today {
+  background: var(--ink);
+}
+.day-number:disabled,
+.time-head:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.cell[data-create-date]:hover {
+  outline: 1px solid #c9cde1;
+  outline-offset: -1px;
+}
+.event-info {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.event-status {
+  font-size: 10px;
+  color: #676c80;
+}
+.time-head {
+  width: 100%;
+  border-radius: 0;
+  color: inherit;
+  z-index: 1;
+}
+.admin-workspace {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 32px;
+  max-width: 1700px;
+  padding: 32px;
+  margin: auto;
+}
+.admin-workspace main {
+  min-width: 0;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px;
+}
+.admin-sidebar nav {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  margin: 24px 0;
+  height: auto;
+}
+.admin-sidebar nav button {
+  text-align: left;
+  border-radius: 8px;
+  padding: 14px;
+  height: auto;
+}
+.admin-sidebar nav button.active {
+  border: 0;
+  background: var(--ink);
+  color: white;
+}
+.admin-sidebar h2 {
+  font-size: 22px;
+  margin: 0;
+}
+.admin-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+.table-scroll {
+  overflow: auto;
+  margin-top: 20px;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+th,
+td {
+  padding: 14px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  min-width: 90px;
+}
+th {
+  white-space: nowrap;
+  background: #f7f8fc;
+  color: #757a94;
+}
+td button {
+  font-size: 12px;
+  margin: 0 4px 6px 0;
+  white-space: nowrap;
+}
+.catalog-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 24px 0;
+}
+.settings-card {
+  max-width: 700px;
+  margin: 24px 0;
+}
+.admin-workspace [data-save-order] {
+  margin-top: 14px;
+}
+.admin-workspace .admin-row {
+  gap: 8px;
+}
+.account .platform-link {
+  font-size: 12px;
+  margin: 0;
+  align-self: center;
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .admin-workspace {
+    display: block;
+    padding: 15px;
+  }
+  .admin-workspace main {
+    padding: 20px;
+  }
+  .admin-sidebar nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin: 14px 0;
+    justify-content: flex-start;
+  }
+  .admin-sidebar nav button {
+    padding: 10px;
+    font-size: 13px;
+  }
+  aside:not(.expanded) > .local-clock {
+    display: block !important;
+  }
+  .local-clock {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+  .admin-sidebar {
+    margin-bottom: 16px;
+  }
+  .admin-sidebar h2 {
+    display: block;
+  }
+  .admin-sidebar > #admin-nav,
+  .admin-sidebar > #return-calendar {
+    display: flex !important;
+  }
+  .admin-row .row-name {
+    min-width: 100px;
+  }
+}
+
+.date-controls {
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.date-jump {
+  font-size: 11px;
+  margin: 0;
+}
+.date-jump input {
+  font-size: 12px;
+  padding: 6px;
+  margin-top: 2px;
+  max-width: 150px;
+}
+@media (max-width: 760px) {
+  .date-jump {
+    width: 100%;
+    text-align: right;
+  }
+  .toolbar {
+    gap: 8px;
+  }
+  .date-controls {
+    max-width: 170px;
+  }
+  .toolbar h1 {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 760px) {
+  .account {
+    width: 100%;
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+  .account button {
+    white-space: nowrap;
+  }
+  .admin-sidebar nav {
+    height: auto;
+    width: 100%;
+  }
+  .admin-sidebar h2 {
+    display: block !important;
+  }
 }
