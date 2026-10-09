@@ -1,3 +1,4 @@
+import { createHoverPanel } from "./hover.js";
 import {
   civilKey,
   civilDate,
@@ -44,15 +45,12 @@ setZone(displayZone);
 let anchor = civilDate(dayKey(new Date()));
 let adminOpen = false;
 let zoneInitialized = false;
-let selected;
-try {
-  selected = JSON.parse(localStorage.getItem("calendar-groups") || "null");
-} catch {
-  selected = null;
-}
+// Following filters apply only to this visit; every new page starts with all groups.
+let selected = null;
 const memberSelection = new Map();
 let historyMonth = "";
 const modal = $("#modal");
+const hoverPanel = createHoverPanel($("#tooltip"));
 modal.querySelector(".close").onclick = () => modal.close();
 modal.addEventListener("click", (e) => {
   if (e.target === modal) {
@@ -90,7 +88,7 @@ function toast(message) {
   setTimeout(() => ($("#toast").hidden = true), 4000);
 }
 function show(content) {
-  $("#tooltip").hidden = true;
+  hoverPanel.hide();
   $("#modal-body").innerHTML = content;
   modal.showModal();
 }
@@ -169,7 +167,6 @@ function renderFilters() {
           selected = el.checked
             ? [...new Set([...selected, el.dataset.group])]
             : selected.filter((id) => id !== el.dataset.group);
-          persist();
           render();
         }),
     );
@@ -184,7 +181,6 @@ function renderFilters() {
             .map((n) => n.dataset.member);
           memberSelection.set(id, ids);
           if (!selected.includes(id)) selected.push(id);
-          persist();
           render();
         }),
     );
@@ -196,16 +192,13 @@ function renderFilters() {
           selected = [el.dataset.history];
           history = true;
           historyMonth = "";
-          persist();
           renderFilters();
           render();
         }),
     );
 }
-function persist() {
-  localStorage.setItem("calendar-groups", JSON.stringify(selected));
-}
 function render() {
+  hoverPanel.hide();
   $("#jump-date").value = civilKey(anchor);
   const previousScroll = $(".timeline")?.scrollTop;
   const events = filtered();
@@ -361,21 +354,22 @@ function records(events) {
 function detail(e) {
   return `<h2>${esc(e.title)}</h2><p><span class="dot" style="--color:${group(e).color}"></span> ${esc(group(e).name)} · ${esc(people(e))}</p><p>${dayKey(e.start_at)}　${time(e.start_at)}–${dayKey(end(e)) !== dayKey(e.start_at) ? dayKey(end(e)) + " " : ""}${time(end(e))}（${esc(zoneLabel(displayZone, new Date(e.start_at)))}）</p><p>${esc(data.categories.find((c) => c.id === e.category_id)?.name || "")} ${e.status === "cancelled" ? " · 已取消" : isLive(e) ? " · 直播中" : ""}</p><p>${esc(platforms(e))}</p><p style="white-space:pre-wrap">${esc(e.description)}</p>`;
 }
+function platformLinks(e) {
+  return e.links
+    .filter((l) => /^https?:\/\//i.test(l.url))
+    .map(
+      (l) =>
+        `<a class="platform-link" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(data.platforms.find((p) => p.id === l.platform_id)?.name)} · 開啟直播</a>`,
+    )
+    .join("");
+}
 function bindCards() {
   document.querySelectorAll("[data-event]").forEach((b) => {
     const e = data.events.find((x) => x.id === b.dataset.event);
     b.onclick = () => {
       show(
         detail(e) +
-          `<p class="muted">直播提醒依預定時間顯示，並非平台開播確認。</p><div>${e.links
-            .filter((l) => /^https?:\/\//i.test(l.url))
-            .map(
-              (l) =>
-                `<a class="platform-link" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(data.platforms.find((p) => p.id === l.platform_id)?.name)} · 開啟直播</a>`,
-            )
-            .join(
-              "",
-            )}</div>${me && (me.role === "owner" || e.created_by === me.id) ? '<div class="actions"><button id="edit-event">編輯行程</button>' + (me.role === "owner" ? '<button id="delete-event">刪除行程</button>' : "") + "</div>" : ""}`,
+          `<p class="muted">直播提醒依預定時間顯示，並非平台開播確認。</p><div>${platformLinks(e)}</div>${me && (me.role === "owner" || e.created_by === me.id) ? '<div class="actions"><button id="edit-event">編輯行程</button>' + (me.role === "owner" ? '<button id="delete-event">刪除行程</button>' : "") + "</div>" : ""}`,
       );
       $("#edit-event")?.addEventListener("click", () => eventForm(e));
       $("#delete-event")?.addEventListener("click", async () => {
@@ -392,8 +386,13 @@ function bindCards() {
     };
     b.onmouseenter = () => {
       if (!matchMedia("(hover:hover)").matches || modal.open) return;
+      hoverPanel.cancel();
       const tip = $("#tooltip");
-      tip.innerHTML = detail(e);
+      tip.innerHTML =
+        '<button type="button" class="close" aria-label="關閉浮卡">×</button>' +
+        detail(e) +
+        platformLinks(e);
+      tip.querySelector(".close").onclick = hoverPanel.hide;
       tip.hidden = false;
       const r = b.getBoundingClientRect();
       tip.style.left =
@@ -405,7 +404,7 @@ function bindCards() {
           Math.min(r.bottom + 8, innerHeight - tip.offsetHeight - 10),
         ) + "px";
     };
-    b.onmouseleave = () => ($("#tooltip").hidden = true);
+    b.onmouseleave = hoverPanel.leave;
   });
 }
 function options(table, value) {
@@ -634,11 +633,12 @@ async function refresh() {
   const report = $("#report-link");
   report.hidden = !/^https:\/\//i.test(settings.report_url || "");
   report.href = report.hidden ? "#" : settings.report_url;
-  if (selected === null) selected = data.groups.map((g) => g.id);
+  const freshVisit = selected === null;
+  if (freshVisit) selected = data.groups.map((g) => g.id);
   selected = selected.filter((id) => data.groups.some((g) => g.id === id));
   for (const t of ["category", "platform"]) {
     const el = $("#" + t),
-      value = el.value;
+      value = freshVisit ? "" : el.value;
     el.innerHTML =
       `<option value="">全部${t === "category" ? "分類" : "平台"}</option>` +
       options(t === "category" ? "categories" : "platforms", value);
@@ -664,13 +664,13 @@ $("#platform").onchange = render;
 $("#all").onclick = () => {
   selected = data.groups.map((g) => g.id);
   memberSelection.clear();
-  persist();
+  $("#category").value = "";
+  $("#platform").value = "";
   renderFilters();
   render();
 };
 $("#none").onclick = () => {
   selected = [];
-  persist();
   renderFilters();
   render();
 };
@@ -733,7 +733,7 @@ function enterAdmin() {
   }
   adminOpen = true;
   modal.close();
-  $("#tooltip").hidden = true;
+  hoverPanel.hide();
   $("#public-workspace").hidden = true;
   $("#admin-workspace").hidden = false;
   admin();
@@ -825,13 +825,20 @@ if (client) {
     if (event === "PASSWORD_RECOVERY") passwordForm();
   });
   setInterval(() => {
-    if (!modal.open && !adminOpen) refresh().catch(() => {});
+    if (!modal.open && !adminOpen && $("#tooltip").hidden)
+      refresh().catch(() => {});
   }, 60000);
 }
 setInterval(() => {
-  if (data && !modal.open && !adminOpen) render();
+  if (data && !modal.open && !adminOpen && $("#tooltip").hidden) render();
 }, 30000);
-window.addEventListener("scroll", () => ($("#tooltip").hidden = true), true);
+window.addEventListener(
+  "scroll",
+  (event) => {
+    if (!$("#tooltip").contains(event.target)) hoverPanel.hide();
+  },
+  true,
+);
 if (document.modelContext?.registerTool) {
   Promise.resolve(
     document.modelContext.registerTool({
@@ -855,3 +862,7 @@ if (document.modelContext?.registerTool) {
     }),
   ).catch(console.error);
 }
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !modal.open) hoverPanel.hide();
+});

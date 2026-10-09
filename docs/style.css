@@ -507,7 +507,9 @@ form .row {
   border: 1px solid var(--line);
   border-radius: 12px;
   box-shadow: 0 12px 40px #292c4222;
-  pointer-events: none;
+  pointer-events: auto;
+  max-height: calc(100vh - 20px);
+  overflow: auto;
   font-size: 14px;
   line-height: 1.7;
 }
