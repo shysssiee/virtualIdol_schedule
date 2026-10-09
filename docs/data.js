@@ -1,4 +1,4 @@
-const config = window.CALENDAR_CONFIG;
+const config = window.CALENDAR_CONFIG || {};
 export const authFlow = /type=(invite|recovery)/.test(location.hash);
 export const configured = Boolean(
   config.supabaseUrl && config.supabasePublishableKey,
@@ -21,6 +21,11 @@ const members = [
   { id: "o1", group_id: "orbit", name: "桃音" },
   { id: "l1", group_id: "lumi", name: "光羽" },
 ];
+groups.forEach((g, index) => {
+  g.category_ids = ["chat", "game"];
+  g.platform_ids = index === 2 ? ["youtube"] : ["youtube", "twitch"];
+  g.sort_order = index;
+});
 const today = new Intl.DateTimeFormat("sv-SE", {
   timeZone: "Asia/Taipei",
 }).format(new Date());
@@ -64,18 +69,25 @@ export async function loadData() {
         { id: "twitch", name: "Twitch" },
       ],
       events,
+      site_settings: [{ singleton: true, name: "星曆" }],
     };
-  const tables = ["groups", "members", "categories", "platforms", "events"];
+  const tables = [
+    "groups",
+    "members",
+    "categories",
+    "platforms",
+    "events",
+    "site_settings",
+  ];
   const result = await Promise.all(
     tables.map(async (table) => {
       const rows = [];
       for (let offset = 0; ; offset += 1000) {
-        const { data, error } = await client
-          .from(table)
-          .select("*")
-          .order(table === "events" ? "start_at" : "name")
-          .order("id")
-          .range(offset, offset + 999);
+        let query = client.from(table).select("*");
+        if (table === "events") query = query.order("start_at").order("id");
+        else if (table !== "site_settings")
+          query = query.order("sort_order").order("name").order("id");
+        const { data, error } = await query.range(offset, offset + 999);
         if (error) throw error;
         rows.push(...data);
         if (data.length < 1000) return rows;

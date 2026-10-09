@@ -534,6 +534,32 @@ form .row {
   border-bottom: 1px solid var(--line);
   padding: 10px 0;
 }
+.admin-row .row-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.admin-row [data-drag] {
+  cursor: grab;
+  touch-action: none;
+}
+.admin-row [data-drag]:active {
+  cursor: grabbing;
+}
+.admin-row label {
+  margin: 0;
+}
+.sort-list {
+  border-radius: 8px;
+}
+footer > span:last-child {
+  text-align: right;
+}
+#now-time {
+  font-size: 12px;
+  padding: 4px 8px;
+  margin-left: 6px;
+}
 .admin-row button {
   font-size: 12px;
 }
@@ -594,6 +620,8 @@ form .row {
   display: none;
 }
 @media (max-width: 760px) {
+  dialog { padding: 20px; }
+  .admin-row { flex-wrap: wrap; gap: 6px; }
   #filter-toggle {
     display: block;
     width: 100%;

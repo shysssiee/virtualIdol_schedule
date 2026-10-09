@@ -12,8 +12,15 @@ export const time = (d) =>
 export const end = (e) =>
   Math.min(
     e.end_at ? new Date(e.end_at).getTime() : Infinity,
-    new Date(e.start_at).getTime() + 7200000,
+    new Date(e.start_at).getTime() + MAX_DURATION,
   );
+export const MAX_DURATION = 4 * 60 * 60 * 1000;
+export const VERSION = "v1.1";
+export function groupOptions(group, items, field) {
+  return (group?.[field] || [])
+    .map((id) => items.find((item) => item.id === id))
+    .filter(Boolean);
+}
 export const isLive = (e, now = Date.now()) =>
   e.status === "scheduled" &&
   new Date(e.start_at).getTime() <= now &&

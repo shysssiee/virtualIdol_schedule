@@ -1,3 +1,4 @@
+import { createAdmin } from "./admin.js";
 import {
   configured,
   client,
@@ -8,6 +9,9 @@ import {
   remove,
 } from "./data.js";
 import {
+  MAX_DURATION,
+  VERSION,
+  groupOptions,
   dayKey,
   time,
   end,
@@ -78,7 +82,7 @@ function platforms(e) {
 }
 function card(e, extra = "", style = "") {
   const g = group(e);
-  return `<button class="event ${extra} ${e.status === "cancelled" ? "cancelled" : ""}" style="--color:${g.color};${style}" data-event="${esc(e.id)}"><span class="meta">${time(e.start_at)} · ${esc(platforms(e))}</span>${isLive(e) ? ' <span class="live">直播中</span>' : ""}<strong>${esc(e.title)}</strong>${e.status === "cancelled" ? "<span>已取消</span>" : ""}</button>`;
+  return `<button class="event ${extra} ${e.status === "cancelled" ? "cancelled" : ""}" style="--color:${g.color};${style}" data-event="${esc(e.id)}"><span class="meta">${time(e.start_at)}${platforms(e) ? " · " + esc(platforms(e)) : ""}</span>${isLive(e) ? ' <span class="live">直播中</span>' : ""}<strong>${esc(e.title)}</strong>${e.status === "cancelled" ? "<span>已取消</span>" : ""}</button>`;
 }
 function filtered() {
   const category = $("#category").value,
@@ -339,27 +343,24 @@ function localInput(d) {
   return dayKey(d) + "T" + time(d);
 }
 function eventForm(e) {
+  if (!me) return;
   const value = e || {
     title: "",
     group_id: data.groups[0]?.id,
     member_ids: [],
-    category_id: data.categories[0]?.id,
+    category_id: null,
     start_at: dayKey(anchor) + "T20:00:00+08:00",
     end_at: null,
     description: "",
     links: [],
     status: "scheduled",
   };
-  if (
-    !data.groups.length ||
-    !data.categories.length ||
-    !data.platforms.length
-  ) {
-    toast("請先由站主建立團體、活動分類與直播平台。");
+  if (!data.groups.length) {
+    toast("請先由站主建立團體與可用分類。");
     return;
   }
   show(
-    `<h2>${e ? "編輯" : "新增"}行程</h2><form id="event-form"><label>標題<input name="title" maxlength="160" required value="${esc(value.title)}"></label><div class="row"><label>團體<select name="group_id">${options("groups", value.group_id)}</select></label><label>活動分類<select name="category_id">${options("categories", value.category_id)}</select></label></div><div id="event-members" class="check-list"></div><p class="muted">不勾選成員代表全團。跨團聯動以主辦團體配色，其他參與者填寫於說明。</p><div class="row"><label>開始時間（UTC+8）<input name="start_at" type="datetime-local" required value="${localInput(value.start_at)}"></label><label>結束時間（選填，最多兩小時）<input name="end_at" type="datetime-local" value="${value.end_at ? localInput(value.end_at) : ""}"></label></div><label>狀態<select name="status">${[
+    `<h2>${e ? "編輯" : "新增"}行程</h2><form id="event-form"><label>標題<input name="title" maxlength="160" required value="${esc(value.title)}"></label><div class="row"><label>團體<select name="group_id">${options("groups", value.group_id)}</select></label><label>活動分類<select name="category_id" required></select></label></div><div id="event-members" class="check-list"></div><p class="muted">不勾選成員代表全團。跨團聯動以主辦團體配色，其他參與者填寫於說明。</p><div class="row"><div><label for="event-start">開始時間（UTC+8）</label><button type="button" id="now-time">現在時間</button><input id="event-start" name="start_at" type="datetime-local" required value="${localInput(value.start_at)}"></div><label>結束時間（選填，最多四小時）<input name="end_at" type="datetime-local" value="${value.end_at ? localInput(value.end_at) : ""}"></label></div><label>狀態<select name="status">${[
       ["scheduled", "預定 / 依時間直播中"],
       ["ended", "已結束"],
       ["cancelled", "已取消"],
@@ -370,25 +371,55 @@ function eventForm(e) {
       )
       .join(
         "",
-      )}</select></label><h3>平台與直播連結</h3><div id="event-links">${data.platforms.map((p) => `<label>${esc(p.name)}<input type="url" data-platform-url="${esc(p.id)}" placeholder="https://…" value="${esc(value.links.find((l) => l.platform_id === p.id)?.url || "")}"></label>`).join("")}</div><label>說明<textarea name="description" rows="3" maxlength="5000">${esc(value.description)}</textarea></label><p class="error" id="form-error"></p><button class="primary" type="submit">儲存並公開</button></form>`,
+      )}</select></label><h3>平台與直播連結（選填）</h3><div id="event-links"></div><p class="muted">直播連結可以稍後補上；不填也能公開行程。</p><label>說明<textarea name="description" rows="3" maxlength="5000">${esc(value.description)}</textarea></label><p class="error" id="form-error"></p><button class="primary" type="submit">儲存並公開</button></form>`,
   );
   const form = $("#event-form");
-  function members() {
-    const id = form.elements.group_id.value;
+  function groupFields(initial = false) {
+    const g = data.groups.find((g) => g.id === form.elements.group_id.value);
+    const categories = groupOptions(g, data.categories, "category_ids"),
+      platforms = groupOptions(g, data.platforms, "platform_ids");
+    form.elements.category_id.innerHTML = categories
+      .map(
+        (c) =>
+          `<option value="${c.id}" ${initial && c.id === value.category_id ? "selected" : ""}>${esc(c.name)}</option>`,
+      )
+      .join("");
     $("#event-members").innerHTML =
       "<label>參與成員</label>" +
       data.members
-        .filter((m) => m.group_id === id)
+        .filter((m) => m.group_id === g.id)
         .map(
           (m) =>
-            `<label><input type="checkbox" name="member_ids" value="${esc(m.id)}" ${value.member_ids.includes(m.id) ? "checked" : ""}>${esc(m.name)}</label>`,
+            `<label><input type="checkbox" name="member_ids" value="${m.id}" ${initial && value.member_ids.includes(m.id) ? "checked" : ""}>${esc(m.name)}</label>`,
         )
         .join("");
+    $("#event-links").innerHTML = platforms
+      .map(
+        (p) =>
+          `<label>${esc(p.name)}<input type="url" data-platform-url="${p.id}" placeholder="https://…" value="${esc(initial ? value.links.find((l) => l.platform_id === p.id)?.url || "" : "")}"></label>`,
+      )
+      .join("");
+    const ready = categories.length > 0 && platforms.length > 0;
+    form.querySelector("[type=submit]").disabled = !ready;
+    $("#form-error").textContent = ready
+      ? ""
+      : "請聯絡站主完成此團體的活動分類與平台設定。";
   }
-  members();
-  form.elements.group_id.onchange = members;
-  form.onsubmit = async (ev) => {
-    ev.preventDefault();
+  groupFields(true);
+  form.elements.group_id.onchange = () => groupFields(false);
+  $("#now-time").onclick = () => {
+    form.elements.start_at.value = localInput(new Date());
+    form.elements.start_at.focus();
+    const finish = form.elements.end_at.value;
+    $("#form-error").textContent =
+      finish &&
+      new Date(finish + ":00+08:00") <=
+        new Date(form.elements.start_at.value + ":00+08:00")
+        ? "原本的結束時間已早於或等於開始時間，請重新調整。"
+        : "";
+  };
+  form.onsubmit = async (event) => {
+    event.preventDefault();
     const button = form.querySelector("[type=submit]");
     button.disabled = true;
     try {
@@ -397,8 +428,8 @@ function eventForm(e) {
         finish = f.get("end_at")
           ? new Date(f.get("end_at") + ":00+08:00")
           : null;
-      if (finish && (finish <= start || finish - start > 7200000))
-        throw Error("結束時間須晚於開始，且相隔不超過兩小時。");
+      if (finish && (finish <= start || finish - start > MAX_DURATION))
+        throw Error("結束時間須晚於開始，且相隔不超過四小時。");
       const links = [...form.querySelectorAll("[data-platform-url]")]
         .filter((i) => i.value.trim())
         .map((i) => {
@@ -407,7 +438,6 @@ function eventForm(e) {
             throw Error("連結僅接受 http 或 https。");
           return { platform_id: i.dataset.platformUrl, url: url.href };
         });
-      if (!links.length) throw Error("請至少填寫一個直播平台連結。");
       await save("events", {
         id: e?.id || crypto.randomUUID(),
         title: f.get("title").trim(),
@@ -424,8 +454,10 @@ function eventForm(e) {
       modal.close();
       await refresh();
       toast("行程已公開");
-    } catch (err) {
-      $("#form-error").textContent = err.message;
+    } catch (error) {
+      const target = $("#form-error");
+      if (target) target.textContent = error.message;
+      else toast(error.message);
     } finally {
       button.disabled = false;
     }
@@ -492,113 +524,20 @@ function passwordForm() {
     toast("密碼已更新");
   };
 }
-function admin() {
-  show(
-    `<h2>站主管理</h2><div class="actions">${[
-      ["groups", "團體"],
-      ["members", "成員"],
-      ["categories", "活動分類"],
-      ["platforms", "直播平台"],
-    ]
-      .map(([t, n]) => `<button data-add="${t}">新增${n}</button>`)
-      .join("")}</div>${[
-      ["groups", "團體"],
-      ["members", "成員"],
-      ["categories", "活動分類"],
-      ["platforms", "直播平台"],
-    ]
-      .map(
-        ([t, n]) =>
-          `<h3>${n}</h3>${data[t].map((x) => `<div class="admin-row"><span>${x.color ? `<span class="dot" style="--color:${x.color}"></span> ` : ""}${esc(x.name)}</span><button data-edit-table="${t}" data-id="${esc(x.id)}">修改</button></div>`).join("")}`,
-      )
-      .join(
-        "",
-      )}<h3>協作者</h3><p class="muted">新增帳號請至 Supabase 後台 Authentication → Users 邀請，再於此授權。站主不會接觸協作者密碼。</p><form id="grant-form"><label>帳號 UUID<input name="id" required placeholder="從 Supabase 使用者列表複製"></label><label>顯示名稱<input name="display_name" required maxlength="80"></label><button class="primary">授權為協作者</button><p class="error" id="form-error"></p></form><div id="profiles-list"></div>`,
-  );
-  document
-    .querySelectorAll("[data-add]")
-    .forEach((b) => (b.onclick = () => catalogForm(b.dataset.add)));
-  document.querySelectorAll("[data-edit-table]").forEach(
-    (b) =>
-      (b.onclick = () =>
-        catalogForm(
-          b.dataset.editTable,
-          data[b.dataset.editTable].find((x) => x.id === b.dataset.id),
-        )),
-  );
-  $("#grant-form").onsubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const f = new FormData(e.target);
-      const { data: existing, error } = await client
-        .from("profiles")
-        .select("role")
-        .eq("id", f.get("id").trim())
-        .maybeSingle();
-      if (error) throw error;
-      if (existing?.role === "owner") throw Error("不能將站主帳號改為協作者。");
-      await save("profiles", {
-        id: f.get("id").trim(),
-        display_name: f.get("display_name").trim(),
-        role: "collaborator",
-        active: true,
-      });
-      admin();
-      toast("已授權");
-    } catch (err) {
-      $("#form-error").textContent = err.message;
-    }
-  };
-  client
-    .from("profiles")
-    .select("*")
-    .then(({ data: rows, error }) => {
-      if (error) {
-        toast(error.message);
-        return;
-      }
-      const target = $("#profiles-list");
-      if (!target) return;
-      target.innerHTML = rows
-        .map(
-          (p) =>
-            `<div class="admin-row"><span>${esc(p.display_name)} · ${p.role === "owner" ? "站主" : p.active ? "已啟用" : "已停用"}</span>${p.role !== "owner" ? `<button data-toggle="${p.id}">${p.active ? "停用" : "啟用"}</button>` : ""}</div>`,
-        )
-        .join("");
-      target.querySelectorAll("[data-toggle]").forEach(
-        (b) =>
-          (b.onclick = async () => {
-            try {
-              const p = rows.find((x) => x.id === b.dataset.toggle);
-              await save("profiles", { ...p, active: !p.active });
-              admin();
-            } catch (err) {
-              toast(err.message);
-            }
-          }),
-      );
-    });
-}
-function catalogForm(table, item) {
-  show(
-    `<h2>${item ? "修改" : "新增"}資料</h2><form id="catalog-form"><label>名稱<input name="name" required maxlength="80" value="${esc(item?.name || "")}"></label>${table === "groups" ? `<label>團體固定顏色<input name="color" type="color" value="${item?.color || "#9678ca"}"></label>` : ""}${table === "members" ? `<label>所屬團體<select name="group_id">${options("groups", item?.group_id)}</select></label>` : ""}<p class="error" id="form-error"></p><button class="primary">儲存</button></form>`,
-  );
-  $("#catalog-form").onsubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const value = Object.fromEntries(new FormData(e.target));
-      await save(table, { ...value, id: item?.id || crypto.randomUUID() });
-      await refresh();
-      admin();
-      toast("已儲存");
-    } catch (err) {
-      $("#form-error").textContent = err.message;
-    }
-  };
-}
+const { admin } = createAdmin({
+  getData: () => data,
+  getUser: () => me,
+  show,
+  refresh,
+  toast,
+});
 async function refresh() {
   data = await loadData();
   me = await profile();
+  const siteName = data.site_settings[0]?.name || "星曆";
+  $("#site-name").textContent = siteName;
+  document.title = siteName + " · 直播行程";
+  $("#site-credit").textContent = "架設網站：shysssiee　版本：" + VERSION;
   if (selected === null) selected = data.groups.map((g) => g.id);
   selected = selected.filter((id) => data.groups.some((g) => g.id === id));
   for (const t of ["category", "platform"]) {
