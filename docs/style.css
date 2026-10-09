@@ -885,8 +885,15 @@ td button {
 
 
 
-.month .event {width:100%;min-width:0;max-height:105px;overflow:hidden;}
-.month .event.compact {height:42px;padding:3px 5px;}
-.month .event.compact .event-info,.month .event.compact .event-status,.month .event.compact .live {display:none;}
-.month .event.compact .meta {display:block;white-space:nowrap;}
-.month .event strong {display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* Keep all events inside a fixed date cell. */
+.month .cell {display:flex;flex-direction:column;}
+.month .day-number {flex-shrink:0;}
+.day-events {min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;overscroll-behavior:contain;}
+.month .event {width:100%;min-width:0;overflow:hidden;}
+.month .event.pill {display:flex;align-items:center;gap:5px;height:26px;min-height:26px;padding:3px 7px;border:0;border-radius:999px;margin:3px 0;}
+.month .event.pill .meta {font-size:10px;white-space:nowrap;flex-shrink:0;}
+.month .event.pill strong {font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.month .event.pill .event-info,.month .event.pill .event-status,.month .event.pill .live {display:none;}
+.month .event.color-bar {display:block;height:10px;min-height:10px;padding:0;border:0;border-radius:999px;background:var(--color);margin:4px 0;}
+.month .event.color-bar > * {display:none;}
+.month .event:focus-visible {outline:2px solid #292b49;outline-offset:-2px;}

@@ -244,12 +244,9 @@ function render() {
       const d = shift(start, i),
         items = dayEvents(events, d);
       visible.push(...items);
-      html += `<div ${me ? `data-create-date="${civilKey(d)}"` : ""} class="cell ${d.getUTCMonth() !== anchor.getUTCMonth() ? "outside" : ""} ${i % 7 === 0 ? "sunday" : i % 7 === 6 ? "saturday" : ""}"><button type="button" ${me ? `data-create-date="${civilKey(d)}" aria-label="${civilKey(d)} 新增行程"` : "disabled"} class="day-number ${civilKey(d) === dayKey(new Date()) ? "is-today" : ""}">${d.getUTCDate()}</button>${items
-        .slice(0, 2)
-        .map((e) => card(e, items.length >= 2 ? "compact" : "", "", dayBounds(civilKey(d), displayZone)[0]))
-        .join(
-          "",
-        )}${items.length > 2 ? `<button class="more" data-date="${civilKey(d)}">還有 ${items.length - 2} 場</button>` : ""}</div>`;
+      html += `<div ${me ? `data-create-date="${civilKey(d)}"` : ""} class="cell ${d.getUTCMonth() !== anchor.getUTCMonth() ? "outside" : ""} ${i % 7 === 0 ? "sunday" : i % 7 === 6 ? "saturday" : ""}"><button type="button" ${me ? `data-create-date="${civilKey(d)}" aria-label="${civilKey(d)} 新增行程"` : "disabled"} class="day-number ${civilKey(d) === dayKey(new Date()) ? "is-today" : ""}">${d.getUTCDate()}</button>${'<div class="day-events">'}${items
+        .map((e, index) => card(e, index < 3 ? "pill" : "color-bar", "", dayBounds(civilKey(d), displayZone)[0]))
+        .join("")}</div></div>`;
     }
     html += "</div>";
   } else if (view === "list") {
