@@ -638,123 +638,7 @@ footer > span:last-child {
 #filter-toggle {
   display: none;
 }
-@media (max-width: 760px) {
-  dialog {
-    padding: 20px;
-  }
-  .admin-row {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  #filter-toggle {
-    display: block;
-    width: 100%;
-  }
-  .workspace aside:not(.expanded) > :not(#filter-toggle):not(.local-clock) {
-    display: none !important;
-  }
-  header {
-    height: auto;
-    min-height: 76px;
-    flex-wrap: wrap;
-    padding: 15px;
-    gap: 10px;
-  }
-  .brand span {
-    font-size: 20px;
-  }
-  .brand small {
-    font-size: 9px;
-  }
-  nav {
-    order: 3;
-    width: 100%;
-    height: 42px;
-    justify-content: center;
-  }
-  .account {
-    gap: 4px;
-  }
-  .workspace {
-    display: block;
-    padding: 15px;
-  }
-  aside {
-    position: static;
-    padding: 15px;
-    margin-bottom: 20px;
-  }
-  .aside-heading,
-  .aside-note {
-    display: none;
-  }
-  #groups {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .group {
-    border: 0;
-    padding: 6px 0;
-  }
-  .group details {
-    margin-left: 0;
-  }
-  .search-label {
-    margin-top: 0;
-  }
-  aside > label {
-    display: inline-block;
-    width: 48%;
-    margin: 8px 0;
-  }
-  aside > .search-label {
-    width: 100%;
-  }
-  .toolbar {
-    padding-bottom: 15px;
-  }
-  h1 {
-    font-size: 20px;
-    white-space: nowrap;
-  }
-  .eyebrow {
-    font-size: 10px;
-  }
-  .date-controls {
-    gap: 4px;
-  }
-  .date-controls button {
-    padding: 8px;
-    font-size: 14px;
-  }
-  .views button {
-    padding: 7px 13px;
-  }
-  footer {
-    display: block;
-    line-height: 2;
-  }
-  footer span {
-    display: block;
-  }
-  .record {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  form .row {
-    grid-template-columns: 1fr;
-  }
-  .month {
-    min-width: 700px;
-  }
-  #calendar {
-    overflow: auto;
-  }
-  #tooltip {
-    display: none;
-  }
-}
+
 [hidden] {
   display: none !important;
 }
@@ -904,45 +788,7 @@ td button {
   align-self: center;
   white-space: nowrap;
 }
-@media (max-width: 760px) {
-  .admin-workspace {
-    display: block;
-    padding: 15px;
-  }
-  .admin-workspace main {
-    padding: 20px;
-  }
-  .admin-sidebar nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    margin: 14px 0;
-    justify-content: flex-start;
-  }
-  .admin-sidebar nav button {
-    padding: 10px;
-    font-size: 13px;
-  }
-  aside:not(.expanded) > .local-clock {
-    display: block !important;
-  }
-  .local-clock {
-    margin-bottom: 12px;
-    padding-bottom: 12px;
-  }
-  .admin-sidebar {
-    margin-bottom: 16px;
-  }
-  .admin-sidebar h2 {
-    display: block;
-  }
-  .admin-sidebar > #admin-nav,
-  .admin-sidebar > #return-calendar {
-    display: flex !important;
-  }
-  .admin-row .row-name {
-    min-width: 100px;
-  }
-}
+
 
 .date-controls {
   align-items: center;
@@ -959,36 +805,79 @@ td button {
   margin-top: 2px;
   max-width: 150px;
 }
-@media (max-width: 760px) {
-  .date-jump {
-    width: 100%;
-    text-align: right;
-  }
-  .toolbar {
-    gap: 8px;
-  }
-  .date-controls {
-    max-width: 170px;
-  }
-  .toolbar h1 {
-    white-space: normal;
-  }
-}
+
+
+
 
 @media (max-width: 760px) {
-  .account {
-    width: 100%;
-    margin-left: 0;
-    flex-wrap: wrap;
-  }
-  .account button {
-    white-space: nowrap;
-  }
-  .admin-sidebar nav {
-    height: auto;
-    width: 100%;
-  }
-  .admin-sidebar h2 {
-    display: block !important;
-  }
+  header {height:auto;min-height:0;flex-wrap:wrap;padding:12px;gap:8px;}
+  .brand {gap:7px;font-size:23px;min-width:0;}
+  .brand span {font-size:17px;}
+  .brand small {font-size:8px;letter-spacing:1px;}
+  .account {flex:0 0 auto;max-width:100%;margin-left:auto;gap:4px;flex-wrap:wrap;}
+  .account button,.account .platform-link {font-size:11px;padding:8px;white-space:nowrap;}
+  header nav {order:3;width:100%;height:34px;justify-content:center;gap:22px;}
+  header nav button {font-size:14px;padding:0 10px;}
+  .workspace {display:block;padding:10px;}
+  .workspace main {min-width:0;}
+  aside {position:static;padding:12px;margin-bottom:12px;}
+  .workspace aside:not(.expanded) > :not(#filter-toggle):not(.local-clock) {display:none !important;}
+  #filter-toggle {display:block;width:100%;font-size:12px;padding:7px;}
+  .local-clock {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:0 10px;margin:0 0 9px;padding:0 0 9px;font-size:11px;line-height:1.5;}
+  .local-clock strong {grid-column:1;grid-row:1;font-size:12px;}
+  .local-clock span:first-of-type {grid-column:1;grid-row:2;color:#70758c;}
+  .local-clock span:last-of-type {grid-column:1;grid-row:3;font-size:10px;color:#70758c;}
+  .local-clock b {grid-column:2;grid-row:1 / span 3;font-size:21px;letter-spacing:1px;}
+  .aside-heading {font-size:14px;margin:14px 0;}
+  .aside-note {margin:12px 0 0;}
+  #groups {display:flex;flex-wrap:wrap;gap:12px;}
+  .group {border:0;padding:6px 0;}
+  .group details {margin-left:0;}
+  .search-label {margin-top:0;}
+  aside > label {display:inline-block;width:48%;margin:8px 0;}
+  aside > .search-label {width:100%;}
+  .toolbar {position:static;display:block;padding:0 0 10px;}
+  .toolbar h1 {font-size:23px;letter-spacing:0;white-space:nowrap;margin:0 0 8px;}
+  .eyebrow {display:none;}
+  .date-controls {display:grid;grid-template-columns:repeat(3,auto);align-items:center;gap:4px;max-width:100%;}
+  .date-jump {grid-column:1 / -1;width:100%;text-align:left;font-size:10px;}
+  .date-jump input {width:115px;max-width:115px;font-size:11px;margin:0 0 0 4px;padding:4px;}
+  .date-controls button,.date-controls button:first-child,.date-controls button:last-child {padding:4px 9px;font-size:16px;min-height:32px;}
+  .date-controls #today {font-size:12px;}
+  .subtoolbar {margin-bottom:10px;gap:8px;}
+  .views {padding:3px;}
+  .views button {font-size:13px;padding:5px 11px;}
+  #count {font-size:11px;white-space:nowrap;}
+  #calendar {overflow:visible;}
+  .month {width:100%;min-width:0;grid-template-columns:repeat(7,minmax(0,1fr));border-radius:10px;}
+  .weekday {font-size:12px;padding:9px 0;letter-spacing:0;color:#62677c;}
+  .weekday-en {display:none;}
+  .cell {min-width:0;min-height:106px;padding:5px 2px;border-right:0;}
+  .day-number {width:28px;height:28px;margin:0 auto 5px;font-size:17px;font-weight:700;}
+  .cell.outside {opacity:.4;}
+  .month .event {border-left-width:2px;border-radius:4px;margin:3px 0;padding:3px 2px;font-size:9px;line-height:1.35;}
+  .month .event .meta {display:block;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .month .event strong {font-size:11px;font-weight:700;}
+  .month .event-info {font-size:9px;line-height:1.35;}
+  .month .event-info > span {display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .month .live,.month .event-status {display:block;font-size:9px;white-space:nowrap;}
+  .more {width:100%;font-size:10px;padding:3px 0;color:#62677c;}
+  .record {grid-template-columns:1fr;gap:8px;padding:14px;}
+  .timeline {max-height:60vh;}
+  footer {display:block;font-size:10px;line-height:1.7;padding:14px 2px;}
+  footer > span {display:block;margin-bottom:8px;}
+  footer > span:last-child {text-align:left;}
+  dialog {padding:20px;width:calc(100vw - 24px);max-height:88vh;}
+  form .row {grid-template-columns:1fr;}
+  .admin-row {flex-wrap:wrap;gap:6px;}
+  .admin-row .row-name {min-width:100px;}
+  .admin-workspace {display:block;padding:10px;}
+  .admin-workspace main {padding:18px;}
+  .admin-sidebar {margin-bottom:12px;}
+  .admin-sidebar nav {flex-direction:row;flex-wrap:wrap;margin:12px 0;justify-content:flex-start;height:auto;width:100%;}
+  .admin-sidebar nav button {padding:9px;font-size:12px;}
+  #tooltip {display:none;}
 }
+
+
+

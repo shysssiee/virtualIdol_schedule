@@ -37,7 +37,7 @@ import {
 const $ = (s) => document.querySelector(s);
 let data,
   me,
-  view = matchMedia("(max-width:760px)").matches ? "list" : "month",
+  view = "month",
   history = false;
 let zonePreference = localStorage.getItem("calendar-zone") || "auto";
 let displayZone = deviceZone();
@@ -126,7 +126,7 @@ function card(e, extra = "", style = "", segmentStart = 0) {
         : end(e) <= Date.now() || e.status === "ended"
           ? "已結束"
           : "";
-  return `<button class="event ${extra} ${e.status === "cancelled" ? "cancelled" : ""}" style="--color:${g.color};${style}" data-event="${esc(e.id)}" aria-label="${esc(time(e.start_at) + " " + g.name + " " + e.title)}"><span class="meta">${time(continuation ? segmentStart : e.start_at)}${continuation ? " · 續播" : ""}</span>${status ? ` <span class="${status === "直播中" ? "live" : "event-status"}">${status}</span>` : ""}<strong>${esc(g.name)}</strong><span class="event-info">${esc([category, platforms(e)].filter(Boolean).join(" · "))}</span></button>`;
+  return `<button class="event ${extra} ${e.status === "cancelled" ? "cancelled" : ""}" style="--color:${g.color};${style}" data-event="${esc(e.id)}" aria-label="${esc(time(e.start_at) + " " + g.name + " " + e.title)}"><span class="meta">${time(continuation ? segmentStart : e.start_at)}${continuation ? " · 續播" : ""}</span>${status ? ` <span class="${status === "直播中" ? "live" : "event-status"}">${status}</span>` : ""}<strong>${esc(g.name)}</strong><span class="event-info">${[category,platforms(e)].filter(Boolean).map(text=>`<span>${esc(text)}</span>`).join('<span class="event-separator"> · </span>')}</span></button>`;
 }
 function filtered() {
   const category = $("#category").value,
@@ -236,9 +236,11 @@ function render() {
     html =
       '<div class="month">' +
       ["SUN 日", "MON 一", "TUE 二", "WED 三", "THU 四", "FRI 五", "SAT 六"]
-        .map((x) => `<div class="weekday">${x}</div>`)
+        .map((x) => `<div class="weekday"><span class="weekday-en">${x.split(" ")[0]}</span> ${x.split(" ")[1]}</div>`)
         .join("");
-    for (let i = 0; i < 42; i++) {
+    const daysInMonth=new Date(Date.UTC(anchor.getUTCFullYear(),anchor.getUTCMonth()+1,0)).getUTCDate();
+    const cellCount=Math.ceil((first.getUTCDay()+daysInMonth)/7)*7;
+    for (let i = 0; i < cellCount; i++) {
       const d = shift(start, i),
         items = dayEvents(events, d);
       visible.push(...items);
