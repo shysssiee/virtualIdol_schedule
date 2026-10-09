@@ -50,6 +50,19 @@ modal.addEventListener("click", (e) => {
   }
 });
 function toast(message) {
+  if (modal.open) {
+    let status = $("#modal-status");
+    if (!status) {
+      status = document.createElement("p");
+      status.id = "modal-status";
+      status.className = "modal-status";
+      status.setAttribute("role", "status");
+      $("#modal-body").prepend(status);
+    }
+    status.textContent = message;
+    status.scrollIntoView({ block: "nearest" });
+    return;
+  }
   $("#toast").textContent = message;
   $("#toast").hidden = false;
   setTimeout(() => ($("#toast").hidden = true), 4000);
@@ -356,11 +369,11 @@ function eventForm(e) {
     status: "scheduled",
   };
   if (!data.groups.length) {
-    toast("請先由站主建立團體與可用分類。");
+    toast("請先由站主建立團體。");
     return;
   }
   show(
-    `<h2>${e ? "編輯" : "新增"}行程</h2><form id="event-form"><label>標題<input name="title" maxlength="160" required value="${esc(value.title)}"></label><div class="row"><label>團體<select name="group_id">${options("groups", value.group_id)}</select></label><label>活動分類<select name="category_id" required></select></label></div><div id="event-members" class="check-list"></div><p class="muted">不勾選成員代表全團。跨團聯動以主辦團體配色，其他參與者填寫於說明。</p><div class="row"><div><label for="event-start">開始時間（UTC+8）</label><button type="button" id="now-time">現在時間</button><input id="event-start" name="start_at" type="datetime-local" required value="${localInput(value.start_at)}"></div><label>結束時間（選填，最多四小時）<input name="end_at" type="datetime-local" value="${value.end_at ? localInput(value.end_at) : ""}"></label></div><label>狀態<select name="status">${[
+    `<h2>${e ? "編輯" : "新增"}行程</h2><form id="event-form"><label>標題<input name="title" maxlength="160" required value="${esc(value.title)}"></label><div class="row"><label>團體<select name="group_id">${options("groups", value.group_id)}</select></label><label>活動分類<select name="category_id"></select></label></div><div id="event-members" class="check-list"></div><p class="muted">不勾選成員代表全團。跨團聯動以主辦團體配色，其他參與者填寫於說明。</p><div class="row"><div><label for="event-start">開始時間（UTC+8）</label><button type="button" id="now-time">現在時間</button><input id="event-start" name="start_at" type="datetime-local" required value="${localInput(value.start_at)}"></div><label>結束時間（選填，最多四小時）<input name="end_at" type="datetime-local" value="${value.end_at ? localInput(value.end_at) : ""}"></label></div><label>狀態<select name="status">${[
       ["scheduled", "預定 / 依時間直播中"],
       ["ended", "已結束"],
       ["cancelled", "已取消"],
@@ -378,12 +391,14 @@ function eventForm(e) {
     const g = data.groups.find((g) => g.id === form.elements.group_id.value);
     const categories = groupOptions(g, data.categories, "category_ids"),
       platforms = groupOptions(g, data.platforms, "platform_ids");
-    form.elements.category_id.innerHTML = categories
-      .map(
-        (c) =>
-          `<option value="${c.id}" ${initial && c.id === value.category_id ? "selected" : ""}>${esc(c.name)}</option>`,
-      )
-      .join("");
+    form.elements.category_id.innerHTML =
+      '<option value="">不指定分類</option>' +
+      categories
+        .map(
+          (c) =>
+            `<option value="${c.id}" ${initial && c.id === value.category_id ? "selected" : ""}>${esc(c.name)}</option>`,
+        )
+        .join("");
     $("#event-members").innerHTML =
       "<label>參與成員</label>" +
       data.members
@@ -399,11 +414,6 @@ function eventForm(e) {
           `<label>${esc(p.name)}<input type="url" data-platform-url="${p.id}" placeholder="https://…" value="${esc(initial ? value.links.find((l) => l.platform_id === p.id)?.url || "" : "")}"></label>`,
       )
       .join("");
-    const ready = categories.length > 0 && platforms.length > 0;
-    form.querySelector("[type=submit]").disabled = !ready;
-    $("#form-error").textContent = ready
-      ? ""
-      : "請聯絡站主完成此團體的活動分類與平台設定。";
   }
   groupFields(true);
   form.elements.group_id.onchange = () => groupFields(false);
@@ -442,7 +452,7 @@ function eventForm(e) {
         id: e?.id || crypto.randomUUID(),
         title: f.get("title").trim(),
         group_id: f.get("group_id"),
-        category_id: f.get("category_id"),
+        category_id: f.get("category_id") || null,
         member_ids: f.getAll("member_ids"),
         start_at: start.toISOString(),
         end_at: finish?.toISOString() || null,

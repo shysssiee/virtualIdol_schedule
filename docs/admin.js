@@ -24,15 +24,15 @@ export function createAdmin({ getData, getUser, show, refresh, toast }) {
       `<h2>站主管理</h2><form id="settings-form"><label>網站名稱<input name="name" required maxlength="80" value="${esc(data.site_settings[0]?.name || "星曆")}"></label><button class="primary">儲存網站名稱</button><p class="error" id="settings-error"></p></form><h3>團體與共用分類</h3><p class="muted">分類與平台只需新增一次，再到團體設定勾選可用項目。拖曳左側把手排序，或使用上移／下移按鈕；清單排序自動儲存。</p><div class="actions">${catalogs.map(([table, name]) => `<button data-add="${table}">新增${name}</button>`).join("")}</div>${catalogs
         .map(
           ([table, name]) =>
-            `<h3>${name}</h3>${
+            `<h3>${name}</h3>${table === "members" ? '<div class="actions"><button id="expand-members">全部展開</button><button id="collapse-members">全部收起</button></div>' : ""}${
               table === "members"
                 ? data.groups
                     .map(
                       (g) =>
-                        `<h4>${esc(g.name)}</h4>${list(
+                        `<details class="member-section"><summary>${esc(g.name)}（${data.members.filter((m) => m.group_id === g.id).length} 位成員）</summary>${list(
                           table,
                           data.members.filter((m) => m.group_id === g.id),
-                        )}`,
+                        )}</details>`,
                     )
                     .join("")
                 : list(table, data[table])
@@ -42,6 +42,15 @@ export function createAdmin({ getData, getUser, show, refresh, toast }) {
           "",
         )}<h3>協作者</h3><p class="muted">帳號由你在 Supabase 後台人工建立，再於此授權。站主不會接觸協作者自行設定的密碼。</p><form id="grant-form"><label>帳號 UUID<input name="id" required placeholder="從 Supabase 使用者列表複製"></label><label>顯示名稱<input name="display_name" required maxlength="80"></label><button class="primary">授權為協作者</button><p class="error" id="form-error"></p></form><div id="profiles-list"></div>`,
     );
+    for (const [id, open] of [
+      ["expand-members", true],
+      ["collapse-members", false],
+    ]) {
+      $("#" + id).onclick = () =>
+        document
+          .querySelectorAll(".member-section")
+          .forEach((section) => (section.open = open));
+    }
     $("#settings-form").onsubmit = async (event) => {
       event.preventDefault();
       try {
@@ -78,14 +87,50 @@ export function createAdmin({ getData, getUser, show, refresh, toast }) {
         (button.onclick = async () => {
           const table = button.dataset.deleteTable,
             item = data[table].find((item) => item.id === button.dataset.id);
-          if (!confirm(`確定刪除「${item.name}」？已被使用的資料不能刪除。`))
+          const references = data.events.filter((event) =>
+            table === "categories"
+              ? event.category_id === item.id
+              : table === "platforms"
+                ? event.links.some((link) => link.platform_id === item.id)
+                : table === "members"
+                  ? event.member_ids.includes(item.id)
+                  : event.group_id === item.id,
+          );
+          if (references.length) {
+            toast(
+              "仍被以下行程使用，請先修改：" +
+                references
+                  .slice(0, 10)
+                  .map((event) => event.title)
+                  .join("、"),
+            );
             return;
+          }
+          const field =
+            table === "categories"
+              ? "category_ids"
+              : table === "platforms"
+                ? "platform_ids"
+                : null;
+          const affected = field
+            ? data.groups
+                .filter((group) => group[field].includes(item.id))
+                .map((group) => group.name)
+            : [];
+          if (
+            !confirm(
+              `確定刪除「${item.name}」？${affected.length ? "將同步解除團體設定：" + affected.join("、") : ""}`,
+            )
+          )
+            return;
+          button.disabled = true;
           try {
             await remove(table, item.id);
             await refresh();
             admin();
             toast("已刪除");
           } catch (error) {
+            button.disabled = false;
             toast(
               error.code === "23503"
                 ? "資料仍有成員或行程使用，請先解除使用。"

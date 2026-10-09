@@ -111,10 +111,19 @@ export async function profile() {
   return { ...data, email: user.email };
 }
 export async function save(table, value) {
-  const { error } = await client.from(table).upsert(value);
+  const { error } = await client
+    .from(table)
+    .upsert(value)
+    .select("id")
+    .single();
   if (error) throw error;
 }
 export async function remove(table, id) {
-  const { error } = await client.from(table).delete().eq("id", id);
+  const { error } = await client
+    .from(table)
+    .delete()
+    .eq("id", id)
+    .select("id")
+    .single();
   if (error) throw error;
 }

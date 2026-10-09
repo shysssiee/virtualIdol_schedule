@@ -552,6 +552,23 @@ form .row {
 .sort-list {
   border-radius: 8px;
 }
+.member-section {
+  border-bottom: 1px solid var(--line);
+  margin: 12px 0;
+  padding: 12px 0;
+}
+.member-section > summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 6px;
+}
+.modal-status {
+  padding: 12px;
+  background: #eef0fa;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  font-size: 14px;
+}
 footer > span:last-child {
   text-align: right;
 }
@@ -620,8 +637,13 @@ footer > span:last-child {
   display: none;
 }
 @media (max-width: 760px) {
-  dialog { padding: 20px; }
-  .admin-row { flex-wrap: wrap; gap: 6px; }
+  dialog {
+    padding: 20px;
+  }
+  .admin-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
   #filter-toggle {
     display: block;
     width: 100%;
