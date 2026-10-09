@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>星曆 · 直播行程</title>
+    <meta name="description" content="虛擬偶像直播日曆與過往行程紀錄" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23292c4a'/%3E%3Cpath d='M16 5l3 7 8 4-8 3-3 8-3-8-8-3 8-4z' fill='%23fff'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="config.js"></script>
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="./"
+        >✦ <span>星曆<small>LIVE CALENDAR</small></span></a
+      >
+      <nav>
+        <button id="calendar-nav" class="active">直播行程</button
+        ><button id="history-nav">過往紀錄</button>
+      </nav>
+      <div class="account">
+        <button id="admin-button" hidden>站主管理</button
+        ><button id="new-button" hidden>＋ 新增行程</button
+        ><button id="password-button" hidden>修改密碼</button
+        ><button id="login-button">協作者登入</button>
+      </div>
+    </header>
+    <div id="notice" role="status"></div>
+    <div class="workspace">
+      <aside>
+        <button id="filter-toggle" aria-expanded="false">團體與平台篩選</button>
+        <div class="aside-heading">我的追蹤清單 <span>FILTER</span></div>
+        <label class="search-label"
+          >搜尋團體<input id="search" type="search" placeholder="輸入團體名稱…"
+        /></label>
+        <div class="filter-actions">
+          <button id="all">全選</button><button id="none">清除</button>
+        </div>
+        <div id="groups"></div>
+        <label
+          >活動分類<select id="category">
+            <option value="">全部分類</option>
+          </select></label
+        ><label
+          >直播平台<select id="platform">
+            <option value="">全部平台</option>
+          </select></label
+        >
+        <p class="aside-note">顯示時間皆為台灣時間<br />UTC+8</p>
+      </aside>
+      <main>
+        <div class="toolbar">
+          <div>
+            <p class="eyebrow" id="view-label">STREAM SCHEDULE</p>
+            <h1 id="period"></h1>
+          </div>
+          <div class="date-controls">
+            <button id="previous" aria-label="上一期">‹</button
+            ><button id="today">今天</button
+            ><button id="next" aria-label="下一期">›</button>
+          </div>
+        </div>
+        <div class="subtoolbar">
+          <div class="views" role="group" aria-label="日曆檢視">
+            <button data-view="month" class="active">月</button
+            ><button data-view="week">週</button
+            ><button data-view="day">日</button
+            ><button data-view="list">列表</button>
+          </div>
+          <span id="count"></span>
+        </div>
+        <div id="calendar"></div>
+        <footer>
+          <span>✦ 每一場相遇，都值得期待</span
+          ><span>直播提醒依預定時間顯示 · 最多兩小時</span>
+        </footer>
+      </main>
+    </div>
+    <div id="tooltip" role="tooltip" hidden></div>
+    <dialog id="modal">
+      <button class="close" aria-label="關閉">×</button>
+      <div id="modal-body"></div>
+    </dialog>
+    <div id="toast" role="status" hidden></div>
+  </body>
+</html>
