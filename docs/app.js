@@ -245,11 +245,11 @@ function render() {
         items = dayEvents(events, d);
       visible.push(...items);
       html += `<div ${me ? `data-create-date="${civilKey(d)}"` : ""} class="cell ${d.getUTCMonth() !== anchor.getUTCMonth() ? "outside" : ""} ${i % 7 === 0 ? "sunday" : i % 7 === 6 ? "saturday" : ""}"><button type="button" ${me ? `data-create-date="${civilKey(d)}" aria-label="${civilKey(d)} 新增行程"` : "disabled"} class="day-number ${civilKey(d) === dayKey(new Date()) ? "is-today" : ""}">${d.getUTCDate()}</button>${items
-        .slice(0, 3)
-        .map((e) => card(e, "", "", dayBounds(civilKey(d), displayZone)[0]))
+        .slice(0, 2)
+        .map((e) => card(e, items.length >= 2 ? "compact" : "", "", dayBounds(civilKey(d), displayZone)[0]))
         .join(
           "",
-        )}${items.length > 3 ? `<button class="more" data-date="${civilKey(d)}">還有 ${items.length - 3} 場</button>` : ""}</div>`;
+        )}${items.length > 2 ? `<button class="more" data-date="${civilKey(d)}">還有 ${items.length - 2} 場</button>` : ""}</div>`;
     }
     html += "</div>";
   } else if (view === "list") {
@@ -354,7 +354,7 @@ function records(events) {
     : '<div class="empty">目前沒有符合條件的行程</div>';
 }
 function detail(e) {
-  return `<h2>${esc(e.title)}</h2><p><span class="dot" style="--color:${group(e).color}"></span> ${esc(group(e).name)} · ${esc(people(e))}</p><p>${dayKey(e.start_at)}　${time(e.start_at)}–${dayKey(end(e)) !== dayKey(e.start_at) ? dayKey(end(e)) + " " : ""}${time(end(e))}（${esc(zoneLabel(displayZone, new Date(e.start_at)))}）</p><p>${esc(data.categories.find((c) => c.id === e.category_id)?.name || "")} ${e.status === "cancelled" ? " · 已取消" : isLive(e) ? " · 直播中" : ""}</p><p>${esc(platforms(e))}</p><p style="white-space:pre-wrap">${esc(e.description)}</p>`;
+  return `<h2>${esc(e.title)}</h2><p><span class="dot" style="--color:${group(e).color}"></span> ${esc(group(e).name)} · ${esc(people(e))}</p><p>${dayKey(e.start_at)}　${time(e.start_at)}（${esc(zoneLabel(displayZone, new Date(e.start_at)))}）</p><p>${esc(data.categories.find((c) => c.id === e.category_id)?.name || "")} ${e.status === "cancelled" ? " · 已取消" : isLive(e) ? " · 直播中" : ""}</p><p>${esc(platforms(e))}</p><p style="white-space:pre-wrap">${esc(e.description)}</p>`;
 }
 function platformLinks(e) {
   return e.links
@@ -438,7 +438,7 @@ function eventForm(e, initialStart) {
     return;
   }
   show(
-    `<h2>${e ? "編輯" : "新增"}行程</h2><form id="event-form"><label>輸入時區<select name="input_timezone"><option value="Asia/Taipei" ${inputZone === "Asia/Taipei" ? "selected" : ""}>台灣時間（UTC+8）</option><option value="Asia/Seoul" ${inputZone === "Asia/Seoul" ? "selected" : ""}>韓國時間（UTC+9）</option></select></label><p class="muted">開始與結束時間均依所選輸入時區；儲存後讀者會看到自己的當地時間。</p><label>標題<input name="title" maxlength="160" required value="${esc(value.title)}"></label><div class="row"><label>團體<select name="group_id">${options("groups", value.group_id)}</select></label><label>活動分類<select name="category_id"></select></label></div><div id="event-members" class="check-list"></div><p class="muted">不勾選成員代表全團。跨團聯動以主辦團體配色，其他參與者填寫於說明。</p><div class="row"><div><label for="event-start">開始時間（依輸入時區）</label><button type="button" id="now-time">現在時間</button><input id="event-start" name="start_at" type="datetime-local" required value="${localInput(value.start_at, inputZone)}"></div><label>結束時間（選填，最多四小時）<input name="end_at" type="datetime-local" value="${value.end_at ? localInput(value.end_at, inputZone) : ""}"></label></div><label>狀態<select name="status">${[
+    `<h2>${e ? "編輯" : "新增"}行程</h2><form id="event-form"><label>輸入時區<select name="input_timezone"><option value="Asia/Taipei" ${inputZone === "Asia/Taipei" ? "selected" : ""}>台灣時間（UTC+8）</option><option value="Asia/Seoul" ${inputZone === "Asia/Seoul" ? "selected" : ""}>韓國時間（UTC+9）</option></select></label><p class="muted">開始時間依所選輸入時區；儲存後讀者會看到自己的當地時間。</p><label>標題<input name="title" maxlength="160" required value="${esc(value.title)}"></label><div class="row"><label>團體<select name="group_id">${options("groups", value.group_id)}</select></label><label>活動分類<select name="category_id"></select></label></div><div id="event-members" class="check-list"></div><p class="muted">不勾選成員代表全團。跨團聯動以主辦團體配色，其他參與者填寫於說明。</p><div class="row"><div><label for="event-start">開始時間（依輸入時區）</label><button type="button" id="now-time">現在時間</button><input id="event-start" name="start_at" type="datetime-local" required value="${localInput(value.start_at, inputZone)}"></div></div><label>狀態<select name="status">${[
       ["scheduled", "預定 / 依時間直播中"],
       ["ended", "已結束"],
       ["cancelled", "已取消"],
@@ -485,7 +485,7 @@ function eventForm(e, initialStart) {
   let formZone = inputZone;
   form.elements.input_timezone.onchange = () => {
     const next = form.elements.input_timezone.value;
-    for (const name of ["start_at", "end_at"]) {
+    for (const name of ["start_at"]) {
       const field = form.elements[name];
       if (field.value)
         field.value = localInput(fromLocal(field.value, formZone), next);
@@ -495,13 +495,7 @@ function eventForm(e, initialStart) {
   $("#now-time").onclick = () => {
     form.elements.start_at.value = localInput(new Date(), formZone);
     form.elements.start_at.focus();
-    const finish = form.elements.end_at.value;
-    $("#form-error").textContent =
-      finish &&
-      fromLocal(finish, formZone) <=
-        fromLocal(form.elements.start_at.value, formZone)
-        ? "原本的結束時間已早於或等於開始時間，請重新調整。"
-        : "";
+    $("#form-error").textContent = "";
   };
   form.onsubmit = async (event) => {
     event.preventDefault();
@@ -509,10 +503,7 @@ function eventForm(e, initialStart) {
     button.disabled = true;
     try {
       const f = new FormData(form),
-        start = fromLocal(f.get("start_at"), formZone),
-        finish = f.get("end_at") ? fromLocal(f.get("end_at"), formZone) : null;
-      if (finish && (finish <= start || finish - start > MAX_DURATION))
-        throw Error("結束時間須晚於開始，且相隔不超過四小時。");
+        start = fromLocal(f.get("start_at"), formZone);
       const links = [...form.querySelectorAll("[data-platform-url]")]
         .filter((i) => i.value.trim())
         .map((i) => {
@@ -529,7 +520,7 @@ function eventForm(e, initialStart) {
         member_ids: f.getAll("member_ids"),
         input_timezone: formZone,
         start_at: start.toISOString(),
-        end_at: finish?.toISOString() || null,
+        end_at: null,
         status: f.get("status"),
         description: f.get("description"),
         links,

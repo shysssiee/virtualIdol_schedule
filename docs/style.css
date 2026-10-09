@@ -251,7 +251,10 @@ h1 {
   border-bottom: 1px solid var(--line);
 }
 .cell {
-  min-height: 140px;
+  min-height: 0;
+  height: 180px;
+  min-width: 0;
+  overflow: hidden;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   padding: 10px 7px;
@@ -852,7 +855,7 @@ td button {
   .month {width:100%;min-width:0;grid-template-columns:repeat(7,minmax(0,1fr));border-radius:10px;}
   .weekday {font-size:12px;padding:9px 0;letter-spacing:0;color:#62677c;}
   .weekday-en {display:none;}
-  .cell {min-width:0;min-height:106px;padding:5px 2px;border-right:0;}
+  .cell {min-width:0;min-height:0;height:156px;padding:5px 2px;border-right:0;}
   .day-number {width:28px;height:28px;margin:0 auto 5px;font-size:17px;font-weight:700;}
   .cell.outside {opacity:.4;}
   .month .event {border-left-width:2px;border-radius:4px;margin:3px 0;padding:3px 2px;font-size:9px;line-height:1.35;}
@@ -881,3 +884,9 @@ td button {
 
 
 
+
+.month .event {width:100%;min-width:0;max-height:105px;overflow:hidden;}
+.month .event.compact {height:42px;padding:3px 5px;}
+.month .event.compact .event-info,.month .event.compact .event-status,.month .event.compact .live {display:none;}
+.month .event.compact .meta {display:block;white-space:nowrap;}
+.month .event strong {display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}

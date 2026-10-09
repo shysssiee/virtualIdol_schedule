@@ -5,12 +5,8 @@ export const setZone = (value) => {
 };
 export const dayKey = (date, tz = zone) => dateKey(date, tz);
 export const time = (date, tz = zone) => clockTime(date, tz);
-export const end = (e) =>
-  Math.min(
-    e.end_at ? new Date(e.end_at).getTime() : Infinity,
-    new Date(e.start_at).getTime() + MAX_DURATION,
-  );
-export const MAX_DURATION = 4 * 60 * 60 * 1000;
+export const MAX_DURATION = 2 * 60 * 60 * 1000;
+export const end = (e) => new Date(e.start_at).getTime() + MAX_DURATION;
 export const VERSION = "v1.2";
 export function groupOptions(group, items, field) {
   return (group?.[field] || [])
