@@ -1,6 +1,7 @@
+import { memberName } from "./v14.js";
 import { client } from "./data.js";
 export async function addMember(data, groupId, name) {
-  const clean = name.trim();
+  const clean = memberName(name.trim());
   if (!clean || clean.length > 80) throw Error("請輸入1至80字的成員名字。");
   let member;
   if (client) {
@@ -12,6 +13,7 @@ export async function addMember(data, groupId, name) {
     member = Array.isArray(row) ? row[0] : row;
   } else throw Error("請先設定 Supabase 並登入。");
   if (!member?.id) throw Error("新增成員失敗，請確認 r5 升級 SQL 已執行。");
+  member = { ...member, name: memberName(member.name) };
   if (!data.members.some((m) => m.id === member.id)) data.members.push(member);
   return member;
 }

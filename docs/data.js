@@ -1,3 +1,4 @@
+import { memberName } from "./v14.js";
 const config = window.CALENDAR_CONFIG || {};
 export const authFlow = /type=(invite|recovery)/.test(location.hash);
 export const configured = Boolean(
@@ -99,7 +100,9 @@ export async function loadData() {
       }
     }),
   );
-  return Object.fromEntries(tables.map((t, i) => [t, result[i]]));
+  const data = Object.fromEntries(tables.map((t, i) => [t, result[i]]));
+  data.members = data.members.map((m) => ({ ...m, name: memberName(m.name) }));
+  return data;
 }
 export async function profile() {
   if (!client) return null;
@@ -116,6 +119,7 @@ export async function profile() {
   return { ...data, email: user.email };
 }
 export async function save(table, value, { existing = false } = {}) {
+  if (table === "members") value = { ...value, name: memberName(value.name) };
   const relation = client.from(table);
   const query = existing
     ? relation.update(value).eq("id", value.id)

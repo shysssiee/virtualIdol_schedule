@@ -1,3 +1,10 @@
+import { groupDay, newEventStatus, duplicates, eventChanges } from "./v14.js";
+import { bindGroupPhotos } from "./group-photo.js";
+import {
+  templateHtml,
+  bindTemplates,
+  showEventHistory,
+} from "./event-tools.js";
 import { defaultEventTitle, templateValues } from "./event-template.js";
 import { startIdleSession } from "./idle-session.js";
 import { startVisitorPresence } from "./visitor-presence.js";
@@ -156,6 +163,36 @@ function platforms(e) {
     .map((l) => data.platforms.find((p) => p.id === l.platform_id)?.name || "")
     .join(" / ");
 }
+function groupSummary(bundle, key) {
+  const g = data.groups.find((g) => g.id === bundle.id),
+    live = bundle.items.some((e) => isLive(e)),
+    upcoming = bundle.items.some((e) => isUpcoming(e));
+  return `<button class="event pill group-summary" style="--color:${esc(g.color)}" data-group-day="${key}" data-group-id="${esc(g.id)}" aria-label="${esc(g.name)} ${bundle.items.length} 場直播">${live ? '<span class="live">LIVE</span>' : upcoming ? '<span class="upcoming">即將直播</span>' : ""}<strong>${esc(g.name)}${bundle.items.length > 1 ? " ＋" : ""}</strong></button>`;
+}
+function showGroupDay(key, id) {
+  const items = dayEvents(filtered(), civilDate(key))
+    .filter((e) => e.group_id === id)
+    .sort((a, b) => Date.parse(a.start_at) - Date.parse(b.start_at));
+  if (items.length === 1) {
+    openEvent(items[0]);
+    return;
+  }
+  const g = data.groups.find((g) => g.id === id);
+  show(
+    `<h2>${esc(g.name)} · ${esc(key)}</h2><p>當日 ${items.length} 場直播</p><div class="day-schedule-list">${items
+      .map(
+        (e) =>
+          `<button class="day-schedule-item" data-event="${esc(e.id)}" style="--color:${esc(g.color)}"><strong>${isLive(e) ? '<span class="live">LIVE</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : ""}${time(e.start_at)} · ${esc(
+            e.member_ids
+              .map((id) => data.members.find((m) => m.id === id)?.name)
+              .filter(Boolean)
+              .join("、") || "全團",
+          )}</strong><span>${esc(e.title)}</span></button>`,
+      )
+      .join("")}</div>`,
+  );
+  bindCards();
+}
 function card(e, extra = "", style = "", segmentStart = 0) {
   const continuation = segmentStart > Date.parse(e.start_at);
   const g = group(e);
@@ -303,13 +340,14 @@ function render() {
           (a, b) => Date.parse(a.start_at) - Date.parse(b.start_at),
         );
       visible.push(...items);
+      const bundles = groupDay(items);
       const limit = matchMedia("(max-width:600px)").matches ? 2 : 3;
-      html += `<div data-day-list="${civilKey(d)}" class="cell ${d.getUTCMonth() !== anchor.getUTCMonth() ? "outside" : ""} ${i % 7 === 0 ? "sunday" : i % 7 === 6 ? "saturday" : ""}"><button type="button" data-day-list="${civilKey(d)}" aria-label="${civilKey(d)} 查看當日行程" class="day-number ${civilKey(d) === dayKey(new Date()) ? "is-today" : ""}">${d.getUTCDate()}</button>${extras.dateExtras(civilKey(d))}<div class="day-events">${items
+      html += `<div data-day-list="${civilKey(d)}" class="cell ${d.getUTCMonth() !== anchor.getUTCMonth() ? "outside" : ""} ${i % 7 === 0 ? "sunday" : i % 7 === 6 ? "saturday" : ""}"><button type="button" data-day-list="${civilKey(d)}" aria-label="${civilKey(d)} 查看當日行程" class="day-number ${civilKey(d) === dayKey(new Date()) ? "is-today" : ""}">${d.getUTCDate()}</button>${extras.dateExtras(civilKey(d))}<div class="day-events">${bundles
         .slice(0, limit)
-        .map((e) => card(e, "pill", "", dayBounds(civilKey(d), displayZone)[0]))
+        .map((bundle) => groupSummary(bundle, civilKey(d)))
         .join(
           "",
-        )}${items.length > limit ? `<button class="more-events" data-day-list="${civilKey(d)}">＋其他 ${items.length - limit} 場</button>` : ""}</div></div>`;
+        )}${bundles.length > limit ? `<button class="more-events" data-day-list="${civilKey(d)}">＋其他 ${bundles.length - limit} 團</button>` : ""}</div></div>`;
     }
     html += "</div>";
   } else if (view === "list") {
@@ -360,10 +398,17 @@ function render() {
     .filter((g) => selected.includes(g.id))
     .map(
       (g) =>
-        `<span class="legend-item"><span class="dot" style="--color:${esc(g.color)}"></span>${esc(g.name)}</span>`,
+        `<span class="legend-item" ${g.photo_data ? `tabindex="0" role="button" aria-label="查看 ${esc(g.name)} 團體照片" data-photo-group="${esc(g.id)}"` : ""}><span class="dot" style="--color:${esc(g.color)}"></span>${esc(g.name)}</span>`,
     )
     .join("");
   $("#calendar").innerHTML = html;
+  bindGroupPhotos($("#group-legend"), data.groups);
+  document
+    .querySelectorAll("[data-group-day]")
+    .forEach(
+      (b) =>
+        (b.onclick = () => showGroupDay(b.dataset.groupDay, b.dataset.groupId)),
+    );
 
   $("#history-month")?.addEventListener("change", (e) => {
     historyMonth = e.target.value;
@@ -411,7 +456,11 @@ function render() {
   document.querySelectorAll("[data-day-list]").forEach(
     (node) =>
       (node.onclick = (event) => {
-        if (event.target.closest("[data-event],[data-anniversary-date]"))
+        if (
+          event.target.closest(
+            "[data-event],[data-anniversary-date],[data-group-day]",
+          )
+        )
           return;
         event.stopPropagation();
         showDayList(node.dataset.dayList);
@@ -471,7 +520,7 @@ function detail(e) {
     : /聲音/.test(category)
       ? "🔊 "
       : "";
-  return `<div class="event-detail" style="--color:${group(e).color}"><h3>${esc(group(e).name)} · ${esc(people(e))}</h3><h2>${esc(e.title)}${isLive(e) ? '<span class="detail-live-badge">直播中</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : ""}${e.members_only ? '<span class="members-only-badge">屬於付費會員限定</span>' : ""}</h2><p>${dayKey(e.start_at)}　${time(e.start_at)}（${esc(zoneLabel(displayZone, new Date(e.start_at)))}）</p><p>${icon}${esc(category)} ${e.status === "cancelled" ? " · 已取消" : ""}</p><p style="white-space:pre-wrap">${esc(e.description)}</p></div>`;
+  return `<div class="event-detail" style="--color:${group(e).color}"><h3>${esc(group(e).name)} · ${esc(people(e))}</h3><h2>${esc(e.title)}${e.previous_start_at ? ' <span class="time-change">時間異動</span>' : ""}${isLive(e) ? '<span class="detail-live-badge">直播中</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : ""}${e.members_only ? '<span class="members-only-badge">屬於付費會員限定</span>' : ""}</h2>${e.previous_start_at ? `<p class="muted">原時間：${dayKey(e.previous_start_at)} ${time(e.previous_start_at)} → 新時間：${dayKey(e.start_at)} ${time(e.start_at)}</p>` : ""}<p>${dayKey(e.start_at)}　${time(e.start_at)}（${esc(zoneLabel(displayZone, new Date(e.start_at)))}）</p><p>${icon}${esc(category)} ${e.status === "cancelled" ? " · 已取消" : ""}</p><p style="white-space:pre-wrap">${esc(e.description)}</p></div>`;
 }
 function platformLinks(e) {
   return e.links
@@ -488,30 +537,34 @@ function styleEventDialog(e) {
   modal.style.background =
     "color-mix(in srgb, " + group(e).color + " 12%, white)";
 }
+function openEvent(e) {
+  show(
+    detail(e) +
+      `<div>${platformLinks(e)}</div><p class="muted">直播提醒依預定時間顯示，開始後兩小時停止；並非平台開播確認。</p>${extras.shareHtml(e)}${me ? '<button id="event-history">修改紀錄</button>' : ""}${me && (me.role === "owner" || e.created_by === me.id) ? '<div class="actions"><button id="edit-event">編輯行程</button>' + (isLive(e) ? '<button id="end-live">結束直播</button>' : "") + (me.role === "owner" ? '<button id="delete-event">刪除行程</button>' : "") + "</div>" : ""}`,
+  );
+  styleEventDialog(e);
+  $("#event-history")?.addEventListener("click", () =>
+    showEventHistory(e, show, data),
+  );
+  extras.bindShare($("#modal-body"));
+  $("#end-live")?.addEventListener("click", () => finishLive(e));
+  $("#edit-event")?.addEventListener("click", () => eventForm(e));
+  $("#delete-event")?.addEventListener("click", async () => {
+    if (!confirm("確定刪除這筆行程？")) return;
+    try {
+      await remove("events", e.id);
+      modal.close();
+      await refresh();
+      toast("行程已刪除");
+    } catch (err) {
+      toast(err.message);
+    }
+  });
+}
 function bindCards() {
   document.querySelectorAll("[data-event]").forEach((b) => {
     const e = data.events.find((x) => x.id === b.dataset.event);
-    b.onclick = () => {
-      show(
-        detail(e) +
-          `<div>${platformLinks(e)}</div><p class="muted">直播提醒依預定時間顯示，開始後兩小時停止；並非平台開播確認。</p>${extras.shareHtml(e)}${me && (me.role === "owner" || e.created_by === me.id) ? '<div class="actions"><button id="edit-event">編輯行程</button>' + (isLive(e) ? '<button id="end-live">結束直播</button>' : "") + (me.role === "owner" ? '<button id="delete-event">刪除行程</button>' : "") + "</div>" : ""}`,
-      );
-      styleEventDialog(e);
-      extras.bindShare($("#modal-body"));
-      $("#end-live")?.addEventListener("click", () => finishLive(e));
-      $("#edit-event")?.addEventListener("click", () => eventForm(e));
-      $("#delete-event")?.addEventListener("click", async () => {
-        if (!confirm("確定刪除這筆行程？")) return;
-        try {
-          await remove("events", e.id);
-          modal.close();
-          await refresh();
-          toast("行程已刪除");
-        } catch (err) {
-          toast(err.message);
-        }
-      });
-    };
+    b.onclick = () => openEvent(e);
     b.onmouseenter = () => {
       if (!matchMedia("(hover:hover)").matches || modal.open) return;
       hoverPanel.cancel();
@@ -580,18 +633,20 @@ function eventForm(e, initialStart, liveOnly = false) {
     return;
   }
   show(
-    `<h2>${e ? "編輯" : "新增"}行程</h2><form id="event-form"><label>輸入時區<select name="input_timezone"><option value="Asia/Taipei" ${inputZone === "Asia/Taipei" ? "selected" : ""}>台灣時間（UTC+8）</option><option value="Asia/Seoul" ${inputZone === "Asia/Seoul" ? "selected" : ""}>韓國時間（UTC+9）</option></select></label><p class="muted">開始時間依所選輸入時區；儲存後讀者會看到自己的當地時間。</p><label>標題<input name="title" maxlength="160" placeholder="留空自動顯示團體／分類 LIVE" value="${esc(value.title)}"></label><div class="row"><label>團體<select name="group_id">${options("groups", value.group_id)}</select></label><label>活動分類<select name="category_id"></select></label></div>${!e ? '<div class="settings-card"><label>套用過往行程<select id="past-event"></select></label><div class="actions"><button type="button" id="apply-latest">套用最近一次</button><button type="button" id="apply-past">套用選取行程</button></div><p class="muted">保留本次日期，帶入過往時間與設定；標題留空。請確認連結是否適用本次直播。</p></div>' : ""}<label class="members-only-option"><input type="checkbox" name="members_only" ${value.members_only ? "checked" : ""}>會員限定</label><div id="event-members" class="check-list"></div><p class="muted">不勾選成員代表全團。跨團聯動以主辦團體配色，其他參與者填寫於說明。</p><div class="row"><div><label for="event-start">開始時間（依輸入時區）</label><button type="button" id="now-time">現在時間</button><input id="event-start" name="start_at" type="datetime-local" required value="${localInput(value.start_at, inputZone)}"></div></div><label>狀態<select name="status">${[
-      ["scheduled", "預定 / 依時間直播中"],
-      ["ended", "已結束"],
-      ["cancelled", "已取消"],
-    ]
-      .map(
-        ([v, n]) =>
-          `<option value="${v}" ${v === value.status ? "selected" : ""}>${n}</option>`,
-      )
-      .join(
-        "",
-      )}</select></label><h3>平台與直播連結（選填）</h3><div id="event-links"></div><p class="muted">直播連結可以稍後補上；不填也能公開行程。</p><label>說明<textarea name="description" rows="3" maxlength="5000">${esc(value.description)}</textarea></label><p class="error" id="form-error"></p><button class="primary" type="submit">儲存並公開</button></form>`,
+    `<h2>${e ? "編輯" : "新增"}行程</h2><form id="event-form"><label>輸入時區<select name="input_timezone"><option value="Asia/Taipei" ${inputZone === "Asia/Taipei" ? "selected" : ""}>台灣時間（UTC+8）</option><option value="Asia/Seoul" ${inputZone === "Asia/Seoul" ? "selected" : ""}>韓國時間（UTC+9）</option></select></label><p class="muted">開始時間依所選輸入時區；儲存後讀者會看到自己的當地時間。</p><label>標題<input name="title" maxlength="160" placeholder="留空自動顯示團體／分類 LIVE" value="${esc(value.title)}"></label><div class="row"><label>團體<select name="group_id">${options("groups", value.group_id)}</select></label><label>活動分類<select name="category_id"></select></label></div>${!e ? '<div class="settings-card"><label>套用過往行程<select id="past-event"></select></label><div class="actions"><button type="button" id="apply-latest">套用最近一次</button><button type="button" id="apply-past">套用選取行程</button></div><p class="muted">保留本次日期，帶入過往時間與設定；標題留空。請確認連結是否適用本次直播。</p></div>' : ""}<label class="members-only-option"><input type="checkbox" name="members_only" ${value.members_only ? "checked" : ""}>會員限定</label><div id="event-members" class="check-list"></div><p class="muted">不勾選成員代表全團。跨團聯動以主辦團體配色，其他參與者填寫於說明。</p><div class="row"><div><label for="event-start">開始時間（依輸入時區）</label><button type="button" id="now-time">現在時間</button><input id="event-start" name="start_at" type="datetime-local" required value="${localInput(value.start_at, inputZone)}"></div></div>${
+      e
+        ? `<label>狀態<select name="status">${[
+            ["scheduled", "預定 / 依時間直播中"],
+            ["ended", "已結束"],
+            ["cancelled", "已取消"],
+          ]
+            .map(
+              ([v, n]) =>
+                `<option value="${v}" ${v === value.status ? "selected" : ""}>${n}</option>`,
+            )
+            .join("")}</select></label>`
+        : '<p id="automatic-status" class="muted"></p>'
+    }${!e ? templateHtml() : ""}<h3>平台與直播連結（選填）</h3><div id="event-links"></div><p class="muted">直播連結可以稍後補上；不填也能公開行程。</p><label>說明<textarea name="description" rows="3" maxlength="5000">${esc(value.description)}</textarea></label><p class="error" id="form-error"></p><button class="primary" type="submit">儲存並公開</button></form>`,
   );
   const form = $("#event-form");
   function groupFields(initial = false) {
@@ -649,6 +704,7 @@ function eventForm(e, initialStart, liveOnly = false) {
   form.elements.group_id.onchange = () => {
     groupFields(false);
     pastOptions();
+    reloadTemplates?.();
   };
   function pastEvents() {
     return data.events
@@ -694,7 +750,8 @@ function eventForm(e, initialStart, liveOnly = false) {
               ?.url || ""),
       );
     form.elements.title.value = "";
-    form.elements.status.value = "scheduled";
+    if (form.elements.status) form.elements.status.value = "scheduled";
+    updateAutomaticStatus();
     toast("已帶入過往設定，請確認日期、時間與連結後儲存");
   }
   pastOptions();
@@ -714,10 +771,85 @@ function eventForm(e, initialStart, liveOnly = false) {
         field.value = localInput(fromLocal(field.value, formZone), next);
     }
     formZone = next;
+    updateAutomaticStatus();
   };
+  function updateAutomaticStatus() {
+    const note = $("#automatic-status");
+    if (note && !form.elements.start_at.value) {
+      note.textContent = "請選擇開始時間";
+      return;
+    }
+    if (note)
+      note.textContent =
+        "狀態自動判定：" +
+        (newEventStatus(
+          fromLocal(form.elements.start_at.value, formZone).toISOString(),
+        ) === "ended"
+          ? "已結束（補登過往直播）"
+          : "預定直播");
+  }
+  let reloadTemplates = null;
+  if (!e) {
+    reloadTemplates = bindTemplates(form, {
+      getGroup: () => form.elements.group_id.value,
+      getUser: () => me,
+      toast,
+      readSettings: () => ({
+        zone: formZone,
+        time: form.elements.start_at.value.slice(11, 16),
+        category: form.elements.category_id.value,
+        members: [...form.querySelectorAll('[name="member_ids"]')]
+          .filter((i) => i.checked)
+          .map((i) => i.value),
+        membersOnly: form.elements.members_only.checked,
+        links: [...form.querySelectorAll("[data-platform-url]")]
+          .filter((i) => i.value.trim())
+          .map((i) => ({
+            platform_id: i.dataset.platformUrl,
+            url: i.value.trim(),
+          })),
+      }),
+      applySettings: (settings) => {
+        const zone = ["Asia/Taipei", "Asia/Seoul"].includes(settings.zone)
+          ? settings.zone
+          : "Asia/Taipei";
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(settings.time))
+          throw Error("範本時間格式錯誤");
+        form.elements.input_timezone.value = zone;
+        formZone = zone;
+        form.elements.start_at.value =
+          form.elements.start_at.value.slice(0, 10) + "T" + settings.time;
+        groupFields(false);
+        form.elements.category_id.value = settings.category || "";
+        if (form.elements.category_id.selectedIndex < 0)
+          form.elements.category_id.value = "";
+        form
+          .querySelectorAll('[name="member_ids"]')
+          .forEach(
+            (i) => (i.checked = (settings.members || []).includes(i.value)),
+          );
+        form.elements.members_only.checked = !!settings.membersOnly;
+        form
+          .querySelectorAll("[data-platform-url]")
+          .forEach(
+            (i) =>
+              (i.value =
+                (settings.links || []).find(
+                  (l) => l.platform_id === i.dataset.platformUrl,
+                )?.url || ""),
+          );
+        form.elements.title.value = "";
+        updateAutomaticStatus();
+      },
+    });
+    reloadTemplates();
+    form.elements.start_at.addEventListener("input", updateAutomaticStatus);
+    updateAutomaticStatus();
+  }
   $("#now-time").onclick = () => {
     form.elements.start_at.value = localInput(new Date(), formZone);
     form.elements.start_at.focus();
+    updateAutomaticStatus();
     $("#form-error").textContent = "";
   };
   form.onsubmit = async (event) => {
@@ -735,6 +867,19 @@ function eventForm(e, initialStart, liveOnly = false) {
             throw Error("連結僅接受 http 或 https。");
           return { platform_id: i.dataset.platformUrl, url: url.href };
         });
+      const duplicateRows = duplicates(data.events, {
+        id: e?.id,
+        group_id: f.get("group_id"),
+        member_ids: f.getAll("member_ids"),
+        start_at: start.toISOString(),
+      });
+      if (
+        duplicateRows.length &&
+        !confirm(
+          `已有 ${duplicateRows.length} 筆同團、同時間且成員重疊的行程。確定仍要發布？`,
+        )
+      )
+        return;
       await save(
         "events",
         {
@@ -751,7 +896,7 @@ function eventForm(e, initialStart, liveOnly = false) {
           input_timezone: formZone,
           start_at: start.toISOString(),
           end_at: null,
-          status: f.get("status"),
+          status: e ? f.get("status") : newEventStatus(start.toISOString()),
           description: f.get("description"),
           links,
           created_by: e?.created_by || me.id,
@@ -863,8 +1008,32 @@ const {
   isLive,
   end,
 });
+let lastEvents = null,
+  latestChanges = [];
 async function refresh() {
   data = await loadData();
+  const changes = eventChanges(lastEvents, data.events);
+  lastEvents = structuredClone(data.events);
+  if (changes.length) {
+    latestChanges = changes;
+    const notice = $("#update-notice");
+    notice.hidden = false;
+    notice.innerHTML = `<span>本次更新：新增 ${changes.filter((c) => c.kind === "新增").length} 場、修改 ${changes.filter((c) => c.kind === "修改").length} 場</span><button id="view-updates">查看更新</button><button id="dismiss-updates" aria-label="關閉更新提示">×</button>`;
+    $("#dismiss-updates").onclick = () => (notice.hidden = true);
+    $("#view-updates").onclick = () => {
+      show(
+        "<h2>本次行程更新</h2>" +
+          latestChanges
+            .map(
+              (c) =>
+                `<button class="day-schedule-item" data-event="${esc(c.event.id)}"><strong>${c.kind} · ${esc(data.groups.find((g) => g.id === c.event.group_id)?.name)} · ${dayKey(c.event.start_at)} ${time(c.event.start_at)}</strong><span>${esc(c.event.title)}</span>${c.prior && c.prior.start_at !== c.event.start_at ? `<span>原時間：${dayKey(c.prior.start_at)} ${time(c.prior.start_at)}</span>` : ""}</button>`,
+            )
+            .join(""),
+      );
+      bindCards();
+    };
+  }
+
   me = await profile();
   presence.start();
   const siteName = data.site_settings[0]?.name || "星曆";

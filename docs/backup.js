@@ -16,7 +16,7 @@ export function backupPage(root, toast) {
       const a = document.createElement("a");
       a.href = url;
       a.download =
-        "calendar-v1.3-backup-" +
+        "calendar-v1.4-backup-" +
         new Date().toISOString().replace(/[:.]/g, "-") +
         ".json";
       a.click();

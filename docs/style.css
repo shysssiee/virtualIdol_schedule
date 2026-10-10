@@ -1881,3 +1881,113 @@ nav button {
   gap: 8px;
   margin: 8px 0;
 }
+
+#group-photo-crop {
+  display: block;
+  width: min(100%, 280px);
+  height: auto;
+  aspect-ratio: 4/3;
+  background: #f4f4f8;
+  margin: 12px 0;
+  border-radius: 8px;
+}
+#group-photo-tip {
+  position: fixed;
+  z-index: 1500;
+  width: 176px;
+  padding: 8px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 6px 22px #25263a22;
+}
+#group-photo-tip[hidden] {
+  display: none;
+}
+#group-photo-tip img {
+  display: block;
+  width: 160px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+#group-photo-tip span {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  margin-top: 5px;
+}
+.legend-item[data-photo-group] {
+  cursor: help;
+}
+.legend-item[data-photo-group]:focus-visible {
+  outline: 2px solid #7277ad;
+  outline-offset: 4px;
+}
+.update-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+  padding: 12px;
+  background: #edf2ff;
+  border: 1px solid #d5dffa;
+  border-radius: 8px;
+}
+.update-notice[hidden] {
+  display: none;
+}
+.time-change {
+  display: inline-flex;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 2px 6px;
+  border: 1px solid #a58438;
+  border-radius: 4px;
+  color: #765b1d;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+.month .group-summary {
+  height: 28px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.group-summary strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.group-summary .upcoming {
+  font-size: 9px;
+  flex-shrink: 0;
+}
+@media (max-width: 600px) {
+  .month .group-summary {
+    height: 36px;
+    min-height: 36px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px;
+    align-content: center;
+  }
+  .month .group-summary strong {
+    width: 100%;
+    font-size: 10px;
+    line-height: 13px;
+  }
+  .month .group-summary .live {
+    font-size: 8px;
+    line-height: 10px;
+  }
+  .month .group-summary .upcoming {
+    font-size: 8px;
+    line-height: 10px;
+  }
+}
+
+.day-schedule-item strong > .live, .day-schedule-item strong > .upcoming { margin-right: 6px; display: inline-flex; vertical-align: middle; }

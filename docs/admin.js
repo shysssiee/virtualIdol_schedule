@@ -1,3 +1,5 @@
+import { memberName } from "./v14.js";
+import { photoEditorHtml, bindPhotoEditor } from "./group-photo.js";
 import { accountPage } from "./account.js";
 import { backendHome } from "./backend-home.js";
 import { backupPage } from "./backup.js";
@@ -558,11 +560,15 @@ export function createAdmin({
     if (!allowed()) return;
     const data = getData();
     show(
-      `<h2>${item ? "修改" : "新增"}${catalogs.find((x) => x[0] === table)[1]}</h2><form id="catalog-form"><label>名稱<input name="name" required maxlength="80" value="${esc(item?.name || "")}"></label>${table === "groups" ? `<label>團體固定顏色<input name="color" type="color" value="${item?.color || "#9678ca"}"></label><h3>可使用的活動分類</h3>${groupChoices(item, "categories", "category_ids")}<h3>可使用的直播平台</h3>${groupChoices(item, "platforms", "platform_ids")}<p class="muted">勾選可用項目，拖曳或上下移動調整此團體的顯示順序；按儲存後生效。已有行程使用的項目需先修改相關行程才能取消勾選。</p>` : ""}${table === "members" ? `<label>所屬團體<select name="group_id">${data.groups.map((g) => `<option value="${g.id}" ${g.id === item?.group_id ? "selected" : ""}>${esc(g.name)}</option>`).join("")}</select></label>` : ""}<p class="error" id="form-error"></p><button class="primary">儲存</button></form>`,
+      `<h2>${item ? "修改" : "新增"}${catalogs.find((x) => x[0] === table)[1]}</h2><form id="catalog-form"><label>名稱<input name="name" required maxlength="80" value="${esc(item?.name || "")}"></label>${table === "groups" ? `<label>團體固定顏色<input name="color" type="color" value="${item?.color || "#9678ca"}"></label>${photoEditorHtml(item?.photo_data)}<h3>可使用的活動分類</h3>${groupChoices(item, "categories", "category_ids")}<h3>可使用的直播平台</h3>${groupChoices(item, "platforms", "platform_ids")}<p class="muted">勾選可用項目，拖曳或上下移動調整此團體的顯示順序；按儲存後生效。已有行程使用的項目需先修改相關行程才能取消勾選。</p>` : ""}${table === "members" ? `<label>所屬團體<select name="group_id">${data.groups.map((g) => `<option value="${g.id}" ${g.id === item?.group_id ? "selected" : ""}>${esc(g.name)}</option>`).join("")}</select></label>` : ""}<p class="error" id="form-error"></p><button class="primary">儲存</button></form>`,
     );
     document
       .querySelectorAll("[data-options]")
       .forEach((container) => bindSorting(container, async () => {}));
+    const readPhoto =
+      table === "groups"
+        ? bindPhotoEditor($("#catalog-form"), item?.photo_data)
+        : null;
     $("#catalog-form").onsubmit = async (event) => {
       event.preventDefault();
       try {
@@ -576,10 +582,14 @@ export function createAdmin({
           };
         if (table === "groups") {
           value.color = form.get("color");
+          value.photo_data = readPhoto();
           value.category_ids = form.getAll("category_ids");
           value.platform_ids = form.getAll("platform_ids");
         }
-        if (table === "members") value.group_id = form.get("group_id");
+        if (table === "members") {
+          value.group_id = form.get("group_id");
+          value.name = memberName(value.name);
+        }
         await save(table, value);
         await refresh();
         document.querySelector("#modal").close();
