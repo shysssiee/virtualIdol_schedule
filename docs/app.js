@@ -163,7 +163,7 @@ function card(e, extra = "", style = "", segmentStart = 0) {
         : end(e) <= Date.now() || e.status === "ended"
           ? "已結束"
           : "";
-  return `<button class="event ${extra} ${isLive(e) ? "is-live" : ""} ${e.status === "cancelled" ? "cancelled" : ""}" style="--color:${g.color};${style}" data-event="${esc(e.id)}" aria-label="${esc(time(e.start_at) + " " + g.name + " " + e.title + (isLive(e) ? " LIVE 直播中" : ""))}"><span class="meta">${time(continuation ? segmentStart : e.start_at)}${continuation ? " · 續播" : ""}</span>${status ? ` <span class="${status === "直播中" ? "live" : "event-status"}">${status === "直播中" ? "LIVE" : status}</span>` : ""}<strong>${esc(g.name)}</strong><span class="event-info">${[
+  return `<button class="event ${extra} ${isLive(e) ? "is-live" : ""} ${e.status === "cancelled" ? "cancelled" : ""}" style="--color:${g.color};${style}" data-event="${esc(e.id)}" aria-label="${esc(time(e.start_at) + " " + g.name + " " + e.title + (isLive(e) ? " LIVE 直播中" : ""))}">${status ? ` <span class="${status === "直播中" ? "live" : "event-status"}">${status === "直播中" ? "LIVE" : status}</span>` : ""}<span class="meta">${time(continuation ? segmentStart : e.start_at)}${continuation ? " · 續播" : ""}</span><strong>${esc(g.name)}</strong><span class="event-info">${[
     category,
     platforms(e),
   ]
@@ -448,7 +448,7 @@ function detail(e) {
     : /聲音/.test(category)
       ? "🔊 "
       : "";
-  return `<div class="event-detail" style="--color:${group(e).color}"><h3>${esc(group(e).name)} · ${esc(people(e))}</h3><h2>${esc(e.title)}${e.members_only ? '<span class="members-only-badge">屬於付費會員限定</span>' : ""}</h2><p>${dayKey(e.start_at)}　${time(e.start_at)}（${esc(zoneLabel(displayZone, new Date(e.start_at)))}）</p><p>${icon}${esc(category)} ${e.status === "cancelled" ? " · 已取消" : isLive(e) ? " · 直播中" : ""}</p><p style="white-space:pre-wrap">${esc(e.description)}</p></div>`;
+  return `<div class="event-detail" style="--color:${group(e).color}"><h3>${esc(group(e).name)} · ${esc(people(e))}</h3><h2>${esc(e.title)}${isLive(e) ? '<span class="detail-live-badge">直播中</span>' : ""}${e.members_only ? '<span class="members-only-badge">屬於付費會員限定</span>' : ""}</h2><p>${dayKey(e.start_at)}　${time(e.start_at)}（${esc(zoneLabel(displayZone, new Date(e.start_at)))}）</p><p>${icon}${esc(category)} ${e.status === "cancelled" ? " · 已取消" : ""}</p><p style="white-space:pre-wrap">${esc(e.description)}</p></div>`;
 }
 function platformLinks(e) {
   return e.links
@@ -866,6 +866,8 @@ $("#login-button").onclick = async () => {
 $("#new-button").onclick = () => eventForm();
 $("#password-button").onclick = passwordForm;
 const collaborator = createCollaborator({
+  isLive,
+  end,
   getData: () => data,
   getUser: () => me,
   eventForm,

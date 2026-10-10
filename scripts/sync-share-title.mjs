@@ -1,6 +1,17 @@
 import fs from "node:fs/promises";
-const url = process.env.SUPABASE_URL,
-  key = process.env.SUPABASE_PUBLISHABLE_KEY;
+import vm from "node:vm";
+// config.js only contains public browser settings. Never log its contents.
+const context = { window: {} };
+try {
+  vm.runInNewContext(await fs.readFile("docs/config.js", "utf8"), context, {
+    timeout: 1000,
+  });
+} catch {
+  /* Actions secrets remain the preferred source. */
+}
+const config = context.window.CALENDAR_CONFIG || {};
+const url = process.env.SUPABASE_URL || config.supabaseUrl,
+  key = process.env.SUPABASE_PUBLISHABLE_KEY || config.supabasePublishableKey;
 if (!url || !key)
   throw Error(
     "Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in Actions secrets",

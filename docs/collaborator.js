@@ -2,6 +2,8 @@ import { client } from "./data.js";
 import { escape as esc, time, dayKey } from "./calendar.js";
 import { memberEntryHtml, bindMemberEntry } from "./member-entry.js";
 export function createCollaborator({
+  isLive,
+  end,
   getData,
   getUser,
   eventForm,
@@ -13,7 +15,21 @@ export function createCollaborator({
   toast,
 }) {
   let section = "events",
-    timer;
+    timer,
+    page = 0,
+    creators = new Map();
+  const $ = (s) => root().querySelector(s);
+  const creator = (e) =>
+    creators.get(e.id) ||
+    (e.created_by === getUser()?.id ? getUser().display_name : "未知建立者");
+  const status = (e) =>
+    e.status === "cancelled"
+      ? "已取消"
+      : isLive(e)
+        ? "直播中"
+        : e.status === "ended" || end(e) <= Date.now()
+          ? "已結束"
+          : "預定";
   const root = () => document.querySelector("#admin-content");
   async function render() {
     if (!getUser() || getUser().role === "owner") return;
@@ -42,25 +58,29 @@ export function createCollaborator({
     );
     const r = root();
     if (section === "events") {
-      r.innerHTML =
-        '<h1>行程管理</h1><button id="collab-new">新增行程</button><div class="collab-event-list">' +
-        [...data.events]
-          .sort((a, b) => Date.parse(b.start_at) - Date.parse(a.start_at))
-          .map(
-            (e) =>
-              `<article class="settings-card"><strong>${esc(data.groups.find((g) => g.id === e.group_id)?.name || "")} · ${dayKey(e.start_at)} ${time(e.start_at)}</strong><p>${esc(e.title)}</p><div class="actions">${e.created_by === me.id ? `<button data-own-event="${e.id}">修改行程</button>` : `<button data-feedback-event="${e.id}">回報站主</button>`}</div></article>`,
-          )
-          .join("") +
-        "</div>";
-      r.querySelector("#collab-new").onclick = () => eventForm();
-      r.querySelectorAll("[data-own-event]").forEach(
-        (b) =>
-          (b.onclick = () =>
-            eventForm(data.events.find((e) => e.id === b.dataset.ownEvent))),
+      const result = await client.rpc("event_creator_names", {});
+      if (result.error) toast("新增者名稱無法讀取，請執行本次補充 SQL。");
+      creators = new Map(
+        (result.data || []).map((row) => [row.event_id, row.nickname]),
       );
-      r.querySelectorAll("[data-feedback-event]").forEach(
-        (b) => (b.onclick = () => board.form(null, b.dataset.feedbackEvent)),
-      );
+      const authors = [...new Set(data.events.map(creator))].sort();
+      r.innerHTML = `<h1>行程管理</h1><p class="muted">所有過去與未來行程永久保留，只有站主主動刪除才移除。時間依日曆選擇的顯示時區。</p><div class="admin-filters"><label>搜尋標題／團體／新增者<input id="admin-search" type="search"></label><label>團體<select id="admin-group"><option value="">全部團體</option>${data.groups.map((g) => `<option value="${g.id}">${esc(g.name)}</option>`).join("")}</select></label><label>新增者<select id="admin-creator"><option value="">所有新增者</option>${authors.map((name) => `<option value="${esc(name)}">${esc(name)}</option>`).join("")}</select></label><label>從日期<input id="admin-from" type="date"></label><label>至日期<input id="admin-to" type="date"></label></div><button id="admin-new">新增行程</button><button id="admin-refresh">重新整理</button><div id="event-table"></div>`;
+      $("#admin-new").onclick = () => eventForm();
+      $("#admin-refresh").onclick = () =>
+        render().catch((e) => toast(e.message));
+      for (const id of [
+        "admin-search",
+        "admin-group",
+        "admin-creator",
+        "admin-from",
+        "admin-to",
+      ])
+        $("#" + id).oninput = () => {
+          page = 0;
+          renderOverview();
+        };
+      page = 0;
+      renderOverview();
     } else if (section === "members") {
       r.innerHTML =
         '<h1>成員與紀念日</h1><label>團體<select id="collab-group">' +
@@ -96,6 +116,68 @@ export function createCollaborator({
         '</p><button id="collab-password">修改密碼</button>';
       r.querySelector("#collab-password").onclick = passwordForm;
     }
+  }
+  function renderOverview() {
+    const data = getData(),
+      query = $("#admin-search").value.trim().toLowerCase(),
+      g = $("#admin-group").value,
+      author = $("#admin-creator").value,
+      from = $("#admin-from").value,
+      to = $("#admin-to").value;
+    const rows = data.events
+      .filter((e) => {
+        const date = dayKey(e.start_at),
+          name = data.groups.find((g) => g.id === e.group_id)?.name || "";
+        return (
+          (!g || e.group_id === g) &&
+          (!author || creator(e) === author) &&
+          (!from || date >= from) &&
+          (!to || date <= to) &&
+          (!query ||
+            [e.title, name, creator(e)].join(" ").toLowerCase().includes(query))
+        );
+      })
+      .sort((a, b) => Date.parse(b.start_at) - Date.parse(a.start_at));
+    const pages = Math.max(1, Math.ceil(rows.length / 50));
+    page = Math.min(page, pages - 1);
+    $("#event-table").innerHTML =
+      `<p class="muted">共 ${rows.length} 場 · 第 ${page + 1} / ${pages} 頁</p><div class="table-scroll"><table><thead><tr>${["開始時間", "團體", "標題", "分類", "平台", "狀態", "新增者", "最後更新", "操作"].map((n) => `<th>${n}</th>`).join("")}</tr></thead><tbody>${
+        rows
+          .slice(page * 50, page * 50 + 50)
+          .map(
+            (e) =>
+              `<tr><td>${dayKey(e.start_at)}<br>${time(e.start_at)}</td><td>${esc(data.groups.find((g) => g.id === e.group_id)?.name)}</td><td>${esc(e.title)}</td><td>${esc(data.categories.find((c) => c.id === e.category_id)?.name)}</td><td>${esc(
+                e.links
+                  .map(
+                    (l) =>
+                      data.platforms.find((p) => p.id === l.platform_id)?.name,
+                  )
+                  .filter(Boolean)
+                  .join(" / "),
+              )}</td><td>${status(e)}</td><td>${esc(creator(e))}</td><td>${e.updated_at ? dayKey(e.updated_at) + " " + time(e.updated_at) : "—"}</td><td>${e.created_by === getUser().id ? `<button data-admin-edit="${e.id}">修改</button>` : `<button data-feedback-event="${e.id}">回報站主</button>`}</td></tr>`,
+          )
+          .join("") || '<tr><td colspan="9">沒有符合條件的行程</td></tr>'
+      }</tbody></table></div><div class="actions"><button id="admin-prev" ${page === 0 ? "disabled" : ""}>上一頁</button><button id="admin-next" ${page === pages - 1 ? "disabled" : ""}>下一頁</button></div>`;
+    $("#admin-prev").onclick = () => {
+      page--;
+      renderOverview();
+    };
+    $("#admin-next").onclick = () => {
+      page++;
+      renderOverview();
+    };
+    document
+      .querySelectorAll("[data-admin-edit]")
+      .forEach(
+        (b) =>
+          (b.onclick = () =>
+            eventForm(data.events.find((e) => e.id === b.dataset.adminEdit))),
+      );
+    root()
+      .querySelectorAll("[data-feedback-event]")
+      .forEach(
+        (b) => (b.onclick = () => board.form(null, b.dataset.feedbackEvent)),
+      );
   }
   async function directory() {
     const target = document.querySelector("#directory-rows");
