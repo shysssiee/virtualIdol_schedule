@@ -66,7 +66,14 @@ export function createExtras({
         )
       ) {
         const l = lunar.getLunarCalendar();
-        html += '<span class="almanac">' + esc(lunarLabel(l)) + "</span>";
+        html +=
+          '<span class="almanac">' +
+          esc(
+            matchMedia("(max-width:600px)").matches
+              ? lunarLabel(l).replace(/^韓曆/, "")
+              : lunarLabel(l),
+          ) +
+          "</span>";
       }
       if (holidays[key])
         html +=

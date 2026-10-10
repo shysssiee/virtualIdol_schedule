@@ -1752,3 +1752,116 @@ nav button {
     margin-right: 1px;
   }
 }
+
+/* Calendar summaries: fixed cells, complete details opened by date. */
+.month .day-events {
+  overflow: hidden;
+  scrollbar-width: none;
+}
+.month .event.pill {
+  border-radius: 5px;
+  border-left: 3px solid var(--color);
+  background: color-mix(in srgb, var(--color) 7%, white);
+  color: #343746;
+  margin: 4px 0;
+}
+.month .event.pill strong {
+  font-weight: 500;
+}
+.more-events {
+  display: block;
+  border: 0;
+  background: transparent;
+  color: #555b74;
+  font-size: 11px;
+  padding: 3px 4px;
+  margin-top: 4px;
+  height: 24px;
+  text-align: left;
+  width: 100%;
+}
+.more-events:hover,
+.more-events:focus-visible {
+  background: #eef0f8;
+}
+.mobile-day-panel {
+  display: none;
+}
+.idle-warning {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  width: 600px;
+  z-index: 1000;
+  background: #fff5df;
+  color: #604515;
+  padding: 16px;
+  border: 1px solid #e2c484;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px #0002;
+}
+.idle-warning[hidden] {
+  display: none;
+}
+.idle-warning button {
+  margin-top: 10px;
+}
+@media (max-width: 600px) {
+  .month .event.pill {
+    height: 40px;
+    min-height: 40px;
+    padding: 3px 2px;
+    margin: 4px 0;
+    border-left-width: 2px;
+  }
+  .month .event.pill .meta {
+    font-size: 9px;
+    font-weight: 400;
+    color: #626779;
+  }
+  .month .event.pill strong {
+    display: block;
+    font-size: 10px;
+    line-height: 14px;
+  }
+  .month .almanac {
+    font-size: 8px;
+    line-height: 12px;
+  }
+  .month .cell {
+    background: #fff;
+  }
+  .month .cell.saturday,
+  .month .cell.sunday {
+    background: #fafbfe;
+  }
+  .more-events {
+    font-size: 9px;
+    padding: 2px 0;
+  }
+  .mobile-day-panel:not([hidden]) {
+    display: block;
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    background: white;
+    border-radius: 12px;
+  }
+  .mobile-day-panel h2 {
+    font-size: 18px;
+    margin-top: 0;
+  }
+  .mobile-day-panel .day-schedule-item {
+    border-left: 3px solid var(--color);
+    border-radius: 6px;
+    text-align: left;
+  }
+  .mobile-day-panel .day-schedule-item strong {
+    font-size: 14px;
+  }
+  .mobile-day-panel .day-schedule-item > span {
+    font-size: 13px;
+  }
+}

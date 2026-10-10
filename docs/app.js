@@ -1,3 +1,4 @@
+import { startIdleSession } from "./idle-session.js";
 import { startVisitorPresence } from "./visitor-presence.js";
 import { visitorForm } from "./visitor-forms.js";
 import { startAutoRefresh } from "./auto-refresh.js";
@@ -297,18 +298,17 @@ function render() {
     const cellCount = Math.ceil((first.getUTCDay() + daysInMonth) / 7) * 7;
     for (let i = 0; i < cellCount; i++) {
       const d = shift(start, i),
-        items = dayEvents(events, d);
+        items = dayEvents(events, d).sort(
+          (a, b) => Date.parse(a.start_at) - Date.parse(b.start_at),
+        );
       visible.push(...items);
-      html += `<div data-day-list="${civilKey(d)}" class="cell ${d.getUTCMonth() !== anchor.getUTCMonth() ? "outside" : ""} ${i % 7 === 0 ? "sunday" : i % 7 === 6 ? "saturday" : ""}"><button type="button" data-day-list="${civilKey(d)}" aria-label="${civilKey(d)} 查看當日行程" class="day-number ${civilKey(d) === dayKey(new Date()) ? "is-today" : ""}">${d.getUTCDate()}</button>${extras.dateExtras(civilKey(d))}${'<div class="day-events">'}${items
-        .map((e, index) =>
-          card(
-            e,
-            index < 3 ? "pill" : "color-bar",
-            "",
-            dayBounds(civilKey(d), displayZone)[0],
-          ),
-        )
-        .join("")}</div></div>`;
+      const limit = matchMedia("(max-width:600px)").matches ? 2 : 3;
+      html += `<div data-day-list="${civilKey(d)}" class="cell ${d.getUTCMonth() !== anchor.getUTCMonth() ? "outside" : ""} ${i % 7 === 0 ? "sunday" : i % 7 === 6 ? "saturday" : ""}"><button type="button" data-day-list="${civilKey(d)}" aria-label="${civilKey(d)} 查看當日行程" class="day-number ${civilKey(d) === dayKey(new Date()) ? "is-today" : ""}">${d.getUTCDate()}</button>${extras.dateExtras(civilKey(d))}<div class="day-events">${items
+        .slice(0, limit)
+        .map((e) => card(e, "pill", "", dayBounds(civilKey(d), displayZone)[0]))
+        .join(
+          "",
+        )}${items.length > limit ? `<button class="more-events" data-day-list="${civilKey(d)}">＋其他 ${items.length - limit} 場</button>` : ""}</div></div>`;
     }
     html += "</div>";
   } else if (view === "list") {
@@ -331,7 +331,9 @@ function render() {
       const d = shift(start, i);
       const [midnight, finish] = dayBounds(civilKey(d), displayZone);
       const duration = (finish - midnight) / 60000;
-      const items = dayEvents(events, d);
+      const items = dayEvents(events, d).sort(
+        (a, b) => Date.parse(a.start_at) - Date.parse(b.start_at),
+      );
       visible.push(...items);
       html += `<section class="time-day"><button class="time-head" type="button" ${me ? `data-create-date="${civilKey(d)}"` : "disabled"}>${d.getUTCMonth() + 1}/${d.getUTCDate()} ${["日", "一", "二", "三", "四", "五", "六"][d.getUTCDay()]}</button><div class="time-body" style="height:${duration}px" ${me ? `data-create-date="${civilKey(d)}" data-midnight="${midnight}"` : ""}>${Array.from({ length: Math.ceil(duration / 60) }, (_, h) => `<span class="hour" style="top:${h * 60}px">${time(midnight + h * 3600000)}</span>`).join("")}${layout(
         items,
@@ -414,6 +416,13 @@ function render() {
         showDayList(node.dataset.dayList);
       }),
   );
+  if (
+    selectedDay &&
+    view === "month" &&
+    matchMedia("(max-width:600px)").matches
+  )
+    showDayList(selectedDay, false);
+  else $("#mobile-day-panel").hidden = true;
   bindCards();
   extras.bindDates();
   const timeline = $(".timeline");
@@ -434,15 +443,22 @@ function records(events) {
         .join("")
     : '<div class="empty">目前沒有符合條件的行程</div>';
 }
-function showDayList(key) {
+let selectedDay = null;
+function showDayList(key, shouldScroll = true) {
+  selectedDay = key;
   const items = dayEvents(filtered(), civilDate(key)).sort(
     (a, b) => Date.parse(a.start_at) - Date.parse(b.start_at),
   );
-  show(
-    `<h2>${esc(key)} 當日行程</h2><div class="day-schedule-list">${items.map((e) => `<button data-event="${esc(e.id)}" class="day-schedule-item" style="--color:${esc(group(e).color)}"><span class="dot" style="--color:${esc(group(e).color)}"></span><strong>${time(e.start_at)} · ${esc(group(e).name)}</strong><span>${esc(e.title)}${e.members_only ? " · 屬於付費會員限定" : ""}</span></button>`).join("") || "<p>當日暫無行程</p>"}</div>${me ? '<button id="day-add-event" class="primary">＋ 新增行程</button>' : ""}`,
-  );
+  const content = `<h2>${esc(key)} 當日行程</h2><div class="day-schedule-list">${items.map((e) => `<button data-event="${esc(e.id)}" class="day-schedule-item" style="--color:${esc(group(e).color)}"><strong>${isLive(e) ? '<span class="live">LIVE</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : e.status === "ended" ? "已結束 · " : ""}${time(e.start_at)} · ${esc(group(e).name)}</strong><span>${esc(e.title)}${e.members_only ? " · 屬於付費會員限定" : ""}</span></button>`).join("") || "<p>當日暫無行程</p>"}</div>${me ? '<button id="day-add-event" class="primary">＋ 新增行程</button>' : ""}`;
+  if (matchMedia("(max-width:600px)").matches) {
+    const panel = document.querySelector("#mobile-day-panel");
+    panel.hidden = false;
+    panel.innerHTML = content;
+    if (shouldScroll)
+      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+  } else show(content);
   $("#day-add-event")?.addEventListener("click", () =>
-    extras.choose(fromLocal(key + "T20:00", displayZone)),
+    eventForm(null, fromLocal(key + "T12:00", displayZone)),
   );
   bindCards();
 }
@@ -708,7 +724,7 @@ function login() {
   $("#login-form").onsubmit = async (e) => {
     e.preventDefault();
     const f = new FormData(e.target);
-    const { error } = await client.auth.signInWithPassword({
+    const { data: loginResult, error } = await client.auth.signInWithPassword({
       email: f.get("email"),
       password: f.get("password"),
     });
@@ -716,6 +732,12 @@ function login() {
       $("#form-error").textContent = "登入失敗，請確認帳號與密碼。";
       return;
     }
+    try {
+      localStorage.setItem(
+        "calendar-idle-" + loginResult.user.id,
+        String(Date.now()),
+      );
+    } catch {}
     await refresh();
     if (!me) {
       $("#form-error").textContent = "帳號尚未授權或已停用，請聯絡站主。";
@@ -1029,6 +1051,20 @@ if (client) {
   if (authFlow) passwordForm();
   client.auth.onAuthStateChange((event) => {
     if (event === "PASSWORD_RECOVERY") passwordForm();
+    if (event === "SIGNED_OUT")
+      setTimeout(async () => {
+        if (!me) return;
+        me = null;
+        modal.close();
+        hoverPanel.hide();
+        leaveAdmin(true);
+        try {
+          await presence.stop();
+          await refresh();
+        } catch (error) {
+          toast(error.message);
+        }
+      }, 0);
   });
   const autoRefresh = startAutoRefresh({
     refresh,
@@ -1081,3 +1117,25 @@ $("#apply-button").onclick = () => visitorForm("application", { show, toast });
 $("#report-link").onclick = () => visitorForm("report", { show, toast });
 
 startVisitorPresence(client, $("#count"));
+
+if (client)
+  startIdleSession({
+    getUser: () => me,
+    signOut: async () => {
+      const { error } = await client.auth.signOut({ scope: "local" });
+      if (error) {
+        toast("自動登出失敗，請檢查網路。");
+        throw error;
+      }
+      await presence.stop();
+      me = null;
+      modal.close();
+      hoverPanel.hide();
+      leaveAdmin(true);
+      await refresh();
+      toast("閒置超過1小時，已自動登出。");
+    },
+  });
+window.addEventListener("resize", () => {
+  if (data && !modal.open && !adminOpen) render();
+});
