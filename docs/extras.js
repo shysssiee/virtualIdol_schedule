@@ -207,21 +207,29 @@ export function createExtras({
       b.disabled = true;
       try {
         const v = new FormData(f);
+        const originalDate = anniversaryDate(
+          v.get("original_date"),
+          v.get("kind") === "birthday" && unknown.checked,
+        );
         let memberId = v.get("member_id") || null;
         if (v.get("kind") === "birthday" && !memberId) {
           const m = await addMember(d, v.get("group_id"), v.get("name"));
           memberId = m.id;
         }
-        await save("anniversaries", {
-          id: item?.id || crypto.randomUUID(),
-          kind: v.get("kind"),
-          group_id: v.get("group_id"),
-          member_id: memberId,
-          name: v.get("name").trim(),
-          original_date: originalDate,
-          year_unknown: v.get("kind") === "birthday" && unknown.checked,
-          created_by: item?.created_by || me.id,
-        });
+        await save(
+          "anniversaries",
+          {
+            id: item?.id || crypto.randomUUID(),
+            kind: v.get("kind"),
+            group_id: v.get("group_id"),
+            member_id: memberId,
+            name: v.get("name").trim(),
+            original_date: originalDate,
+            year_unknown: v.get("kind") === "birthday" && unknown.checked,
+            created_by: item?.created_by || me.id,
+          },
+          { existing: !!item },
+        );
         $("#modal").close();
         await refresh();
         toast("紀念日已儲存，每年自動顯示");
