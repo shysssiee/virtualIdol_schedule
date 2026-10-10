@@ -1,3 +1,4 @@
+import { lunarLabel, holidayLabel } from "./almanac.js";
 import { save, remove, client } from "./data.js";
 import { escape as esc, dayKey, time } from "./calendar.js";
 import { anniversariesOn, calendarFile } from "./anniversaries.js";
@@ -60,20 +61,14 @@ export function createExtras({
         )
       ) {
         const l = lunar.getLunarCalendar();
-        html +=
-          '<span class="almanac">음 ' +
-          (l.intercalation ? "윤 " : "") +
-          l.month +
-          "/" +
-          l.day +
-          "</span>";
+        html += '<span class="almanac">' + esc(lunarLabel(l)) + "</span>";
       }
       if (holidays[key])
         html +=
           '<span class="almanac holiday" title="' +
-          esc(holidays[key].join("、")) +
+          esc(holidays[key].map(holidayLabel).join("、")) +
           '">' +
-          esc(holidays[key].join("、")) +
+          esc(holidays[key].map(holidayLabel).join("、")) +
           "</span>";
     }
     return '<div class="date-extras">' + html + "</div>";
@@ -114,6 +109,7 @@ export function createExtras({
         tip.innerHTML =
           '<button class="close" aria-label="關閉浮卡">×</button>' +
           anniversaryContent(b.dataset.anniversaryDate);
+        tip.style.removeProperty("--event-color");
         tip.style.background = "white";
         tip.querySelector(".close").onclick = hoverPanel.hide;
         tip.hidden = false;
@@ -306,9 +302,20 @@ export function createExtras({
           const e = getData().events.find((x) => x.id === b.dataset.ics),
             a = document.createElement("a");
           a.href = URL.createObjectURL(
-            new Blob([calendarFile(e, (getData().groups.find(g=>g.id===e.group_id)?.name||"")+" · "+e.title)], {
-              type: "text/calendar;charset=utf-8",
-            }),
+            new Blob(
+              [
+                calendarFile(
+                  e,
+                  (getData().groups.find((g) => g.id === e.group_id)?.name ||
+                    "") +
+                    " · " +
+                    e.title,
+                ),
+              ],
+              {
+                type: "text/calendar;charset=utf-8",
+              },
+            ),
           );
           a.download = "idol-schedule.ics";
           a.click();

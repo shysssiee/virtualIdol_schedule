@@ -1,3 +1,4 @@
+import { createPresence } from "./presence.js";
 import { createExtras } from "./extras.js";
 import { createHoverPanel } from "./hover.js";
 import {
@@ -89,11 +90,14 @@ function toast(message) {
   setTimeout(() => ($("#toast").hidden = true), 4000);
 }
 function show(content) {
+  modal.classList.remove("event-dialog");
+  modal.style.removeProperty("--event-color");
   $("#modal").style.background = "white";
   hoverPanel.hide();
   $("#modal-body").innerHTML = content;
   modal.showModal();
 }
+const presence = createPresence(client, () => me);
 const extras = createExtras({
   getData: () => data,
   getUser: () => me,
@@ -421,6 +425,12 @@ function platformLinks(e) {
     )
     .join("");
 }
+function styleEventDialog(e) {
+  modal.classList.add("event-dialog");
+  modal.style.setProperty("--event-color", group(e).color);
+  modal.style.background =
+    "color-mix(in srgb, " + group(e).color + " 12%, white)";
+}
 function bindCards() {
   document.querySelectorAll("[data-event]").forEach((b) => {
     const e = data.events.find((x) => x.id === b.dataset.event);
@@ -429,8 +439,7 @@ function bindCards() {
         detail(e) +
           `<div>${platformLinks(e)}</div><p class="muted">直播提醒依預定時間顯示，開始後兩小時停止；並非平台開播確認。</p>${extras.shareHtml(e)}${me && (me.role === "owner" || e.created_by === me.id) ? '<div class="actions"><button id="edit-event">編輯行程</button>' + (me.role === "owner" ? '<button id="delete-event">刪除行程</button>' : "") + "</div>" : ""}`,
       );
-      $("#modal").style.background =
-        "color-mix(in srgb, " + group(e).color + " 12%, white)";
+      styleEventDialog(e);
       extras.bindShare($("#modal-body"));
       $("#edit-event")?.addEventListener("click", () => eventForm(e));
       $("#delete-event")?.addEventListener("click", async () => {
@@ -455,6 +464,7 @@ function bindCards() {
         platformLinks(e) +
         '<p class="muted">直播提醒開始後兩小時停止，並非平台開播確認。</p>' +
         extras.shareHtml(e);
+      tip.style.setProperty("--event-color", group(e).color);
       tip.style.background =
         "color-mix(in srgb, " + group(e).color + " 12%, white)";
       extras.bindShare(tip);
@@ -623,6 +633,7 @@ function login() {
     await refresh();
     if (!me) {
       $("#form-error").textContent = "帳號尚未授權或已停用，請聯絡站主。";
+      await presence.stop();
       await client.auth.signOut();
       return;
     }
@@ -673,12 +684,14 @@ const {
   eventForm,
   manageAnniversaries: extras.manager,
   manageReports: extras.reports,
+  updatePresence: presence.badges,
   isLive,
   end,
 });
 async function refresh() {
   data = await loadData();
   me = await profile();
+  presence.start();
   const siteName = data.site_settings[0]?.name || "星曆";
   $("#site-name").textContent = siteName;
   document.title = siteName + " · 直播行程";
@@ -777,6 +790,7 @@ $("#today").onclick = () => {
 };
 $("#login-button").onclick = async () => {
   if (me) {
+    await presence.stop();
     await client.auth.signOut();
     await refresh();
   } else login();
@@ -813,13 +827,17 @@ function historyReplace() {
 $("#admin-button").onclick = enterAdmin;
 $("#return-calendar").onclick = () => leaveAdmin();
 window.addEventListener("hashchange", () => {
-  if (location.hash === "#admin") enterAdmin();
+  if (location.hash === "#admin") {
+    enterAdmin();
+    return;
+  }
   if (location.hash.startsWith("#event=")) {
     const id = decodeURIComponent(location.hash.slice(7));
     document.querySelector('[data-event="' + CSS.escape(id) + '"]')?.click();
     const e = data.events.find((x) => x.id === id);
     if (e && !modal.open) {
       show(detail(e) + platformLinks(e) + extras.shareHtml(e));
+      styleEventDialog(e);
       extras.bindShare($("#modal-body"));
     }
   } else if (adminOpen) leaveAdmin();
@@ -882,6 +900,7 @@ try {
     const e = data.events.find((x) => x.id === id);
     if (e && !modal.open) {
       show(detail(e) + platformLinks(e) + extras.shareHtml(e));
+      styleEventDialog(e);
       extras.bindShare($("#modal-body"));
     }
   }

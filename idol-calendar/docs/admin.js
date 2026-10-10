@@ -12,6 +12,7 @@ export function createAdmin({
   eventForm,
   manageAnniversaries,
   manageReports,
+  updatePresence,
   isLive,
   end,
 }) {
@@ -172,9 +173,10 @@ export function createAdmin({
           .filter((p) => !p.revoked)
           .map(
             (p) =>
-              `<div class="admin-row"><span class="row-name">${esc(p.display_name)} · ${p.role === "owner" ? "站主" : p.active ? "已啟用" : "已停用"}</span>${p.role !== "owner" ? `<button data-toggle="${p.id}">${p.active ? "停用" : "啟用"}</button><button data-revoke="${p.id}">移除授權</button>` : ""}</div>`,
+              `<div class="admin-row"><span class="row-name"><span class="account-avatar" data-presence-user="${esc(p.id)}" title="正在取得在線狀態" aria-label="正在取得在線狀態">${esc(Array.from(p.display_name)[0] || "人")}</span>${esc(p.display_name)} · ${p.role === "owner" ? "站主" : p.active ? "已啟用" : "已停用"}</span>${p.role !== "owner" ? `<button data-toggle="${p.id}">${p.active ? "停用" : "啟用"}</button><button data-revoke="${p.id}">移除授權</button>` : ""}</div>`,
           )
           .join("")}</div>`;
+      updatePresence($("#profiles-list"));
       $("#grant-form").onsubmit = async (event) => {
         event.preventDefault();
         const button = event.target.querySelector("button");
@@ -529,5 +531,10 @@ export function createAdmin({
     dirty.clear();
     request++;
   }
+  const presenceTimer = setInterval(() => {
+    if (!$("#admin-workspace").hidden && section === "collaborators")
+      updatePresence($("#profiles-list"));
+  }, 30000);
+  window.addEventListener("pagehide", () => clearInterval(presenceTimer));
   return { admin, canLeave, reset };
 }
