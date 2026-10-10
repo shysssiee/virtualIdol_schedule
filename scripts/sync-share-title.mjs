@@ -50,8 +50,11 @@ for (const [attr, id, value] of [
   );
 }
 html = html.replace(
-  /(<span id="site-name">)[\s\S]*?(<\/span>)/,
+  /(<span id="site-name">)[\s\S]*?(<\/span\s*>)/,
   () => '<span id="site-name">' + esc(name) + "</span>",
 );
+for (const id of ["site-name", "calendar-nav", "history-nav", "login-greeting", "login-button"]) {
+  if (!html.includes('id="' + id + '"')) throw Error("Homepage structure missing: " + id + "; upload the complete index.html before deploying");
+}
 await fs.writeFile("docs/index.html", html);
 console.log("Share title synchronized");
