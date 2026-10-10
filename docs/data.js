@@ -115,12 +115,12 @@ export async function profile() {
   if (error || !data.active || data.revoked) return null;
   return { ...data, email: user.email };
 }
-export async function save(table, value) {
-  const { error } = await client
-    .from(table)
-    .upsert(value)
-    .select("id")
-    .single();
+export async function save(table, value, { existing = false } = {}) {
+  const relation = client.from(table);
+  const query = existing
+    ? relation.update(value).eq("id", value.id)
+    : relation.upsert(value);
+  const { error } = await query.select("id").single();
   if (error) throw error;
 }
 export async function remove(table, id) {

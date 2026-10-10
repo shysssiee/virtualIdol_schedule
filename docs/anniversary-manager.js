@@ -141,7 +141,7 @@ export function anniversaryManager(
             original_date: anniversaryDate(date.value, !!unknown?.checked),
             created_by: x.created_by,
           };
-          await save("anniversaries", value);
+          await save("anniversaries", value, { existing: true });
           await refresh();
           editing = null;
           render();
