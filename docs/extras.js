@@ -16,6 +16,7 @@ export function createExtras({
   render,
   getZone,
   openLive,
+  openImport,
   hoverPanel,
   positionHover,
 }) {
@@ -250,9 +251,10 @@ export function createExtras({
   }
   function choose(start) {
     show(
-      '<h2>新增內容</h2><div class="content-choices"><button id="choose-live">直播行程</button><button id="choose-anniversary">生日／紀念日</button><button id="my-anniversaries">管理我的紀念日</button></div>',
+      '<h2>新增內容</h2><div class="content-choices"><button id="choose-live">直播行程</button><button id="choose-anniversary">生日／紀念日</button><button id="my-anniversaries">管理我的紀念日</button><button id="choose-import">導入網址擷取</button></div>',
     );
     $("#choose-live").onclick = () => openLive(start);
+    $("#choose-import").onclick = openImport;
     $("#choose-anniversary").onclick = () => form();
     $("#my-anniversaries").onclick = () => {
       show('<div id="my-ann-root"></div>');

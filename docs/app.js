@@ -1,3 +1,5 @@
+import { showUrlImport } from "./url-import.js";
+import { matchImportGroup } from "./url-import-core.js";
 import { groupDay, newEventStatus, duplicates, eventChanges } from "./v14.js";
 import { bindGroupPhotos } from "./group-photo.js";
 import {
@@ -128,6 +130,13 @@ const extras = createExtras({
   hoverPanel,
   positionHover,
   openLive: (start) => eventForm(null, start, true),
+  openImport: () =>
+    showUrlImport({
+      show,
+      openManual: () => eventForm(null, null, true),
+      openEvent: (result) =>
+        eventForm(null, new Date(result.start_at), true, result),
+    }),
 });
 function positionHover(tip, button) {
   const r = button.getBoundingClientRect(),
@@ -359,7 +368,8 @@ function render() {
       to = dayBounds(civilKey(next), displayZone)[0];
     visible = events.filter(
       (e) =>
-        extras.rangeActive() || (Date.parse(e.start_at) >= from && Date.parse(e.start_at) < to),
+        extras.rangeActive() ||
+        (Date.parse(e.start_at) >= from && Date.parse(e.start_at) < to),
     );
     html = records(visible);
   } else {
@@ -607,7 +617,7 @@ function options(table, value) {
     )
     .join("");
 }
-function eventForm(e, initialStart, liveOnly = false) {
+function eventForm(e, initialStart, liveOnly = false, imported = null) {
   if (!e && !liveOnly && me) {
     extras.choose(initialStart);
     return;
@@ -615,8 +625,10 @@ function eventForm(e, initialStart, liveOnly = false) {
   const inputZone = e?.input_timezone || "Asia/Taipei";
   if (!me) return;
   const value = e || {
-    title: "",
-    group_id: data.groups[0]?.id,
+    title: imported?.title || "",
+    group_id:
+      (imported && matchImportGroup(imported, data.groups)) ||
+      data.groups[0]?.id,
     member_ids: [],
     members_only: false,
     category_id: null,
@@ -633,7 +645,7 @@ function eventForm(e, initialStart, liveOnly = false) {
     return;
   }
   show(
-    `<h2>${e ? "編輯" : "新增"}行程</h2><form id="event-form"><label>輸入時區<select name="input_timezone"><option value="Asia/Taipei" ${inputZone === "Asia/Taipei" ? "selected" : ""}>台灣時間（UTC+8）</option><option value="Asia/Seoul" ${inputZone === "Asia/Seoul" ? "selected" : ""}>韓國時間（UTC+9）</option></select></label><p class="muted">開始時間依所選輸入時區；儲存後讀者會看到自己的當地時間。</p><label>標題<input name="title" maxlength="160" placeholder="留空自動顯示團體／分類 LIVE" value="${esc(value.title)}"></label><div class="row"><label>團體<select name="group_id">${options("groups", value.group_id)}</select></label><label>活動分類<select name="category_id"></select></label></div>${!e ? '<div class="settings-card"><label>套用過往行程<select id="past-event"></select></label><div class="actions"><button type="button" id="apply-latest">套用最近一次</button><button type="button" id="apply-past">套用選取行程</button></div><p class="muted">保留本次日期，帶入過往時間與設定；標題留空。請確認連結是否適用本次直播。</p></div>' : ""}<label class="members-only-option"><input type="checkbox" name="members_only" ${value.members_only ? "checked" : ""}>會員限定</label><div id="event-members" class="check-list"></div><p class="muted">不勾選成員代表全團。跨團聯動以主辦團體配色，其他參與者填寫於說明。</p><div class="row"><div><label for="event-start">開始時間（依輸入時區）</label><button type="button" id="now-time">現在時間</button><input id="event-start" name="start_at" type="datetime-local" required value="${localInput(value.start_at, inputZone)}"></div></div>${
+    `<h2>${e ? "編輯" : "新增"}行程</h2><form id="event-form">${imported ? `<div class="settings-card"><p>已導入 ${esc(imported.platform)} ${esc(imported.channel || imported.host || "")} 的直播資訊。請確認團體、成員、日期與時間；資料尚未發布。</p><label><input type="checkbox" required>我已確認導入資訊與團體選擇</label></div>` : ""}<label>輸入時區<select name="input_timezone"><option value="Asia/Taipei" ${inputZone === "Asia/Taipei" ? "selected" : ""}>台灣時間（UTC+8）</option><option value="Asia/Seoul" ${inputZone === "Asia/Seoul" ? "selected" : ""}>韓國時間（UTC+9）</option></select></label><p class="muted">開始時間依所選輸入時區；儲存後讀者會看到自己的當地時間。</p><label>標題<input name="title" maxlength="160" placeholder="留空自動顯示團體／分類 LIVE" value="${esc(value.title)}"></label><div class="row"><label>團體<select name="group_id">${options("groups", value.group_id)}</select></label><label>活動分類<select name="category_id"></select></label></div>${!e ? '<div class="settings-card"><label>套用過往行程<select id="past-event"></select></label><div class="actions"><button type="button" id="apply-latest">套用最近一次</button><button type="button" id="apply-past">套用選取行程</button></div><p class="muted">保留本次日期，帶入過往時間與設定；標題留空。請確認連結是否適用本次直播。</p></div>' : ""}<label class="members-only-option"><input type="checkbox" name="members_only" ${value.members_only ? "checked" : ""}>會員限定</label><div id="event-members" class="check-list"></div><p class="muted">不勾選成員代表全團。跨團聯動以主辦團體配色，其他參與者填寫於說明。</p><div class="row"><div><label for="event-start">開始時間（依輸入時區）</label><button type="button" id="now-time">現在時間</button><input id="event-start" name="start_at" type="datetime-local" required value="${localInput(value.start_at, inputZone)}"></div></div>${
       e
         ? `<label>狀態<select name="status">${[
             ["scheduled", "預定 / 依時間直播中"],
@@ -852,8 +864,42 @@ function eventForm(e, initialStart, liveOnly = false) {
     updateAutomaticStatus();
     $("#form-error").textContent = "";
   };
+  if (imported) {
+    const fillImportedLink = () => {
+      const g = data.groups.find((g) => g.id === form.elements.group_id.value);
+      const p = groupOptions(g, data.platforms, "platform_ids").find((p) =>
+        imported.platform === "YouTube"
+          ? /youtube/i.test(p.name)
+          : /^(x|twitter|x\s*[／/]\s*twitter)$/i.test(p.name),
+      );
+      if (p) {
+        const input = [...form.querySelectorAll("[data-platform-url]")].find(
+          (i) => i.dataset.platformUrl === p.id,
+        );
+        if (input) input.value = imported.url;
+      }
+      const missing = form.querySelector("#import-platform-missing");
+      if (missing) missing.remove();
+      if (!p)
+        form
+          .querySelector("#event-links")
+          .insertAdjacentHTML(
+            "afterend",
+            `<p id="import-platform-missing" class="error">此團體未啟用 ${esc(imported.platform)} 平台，請先由站主設定平台再儲存。來源：${esc(imported.url)}</p>`,
+          );
+      return !!p;
+    };
+    fillImportedLink();
+    form.elements.group_id.addEventListener("change", fillImportedLink);
+    form.dataset.importPlatform = imported.platform;
+  }
   form.onsubmit = async (event) => {
     event.preventDefault();
+    if (imported && form.querySelector("#import-platform-missing")) {
+      $("#form-error").textContent =
+        "請先啟用此團體的直播平台，避免遺漏匯入網址";
+      return;
+    }
     const button = form.querySelector("[type=submit]");
     button.disabled = true;
     try {

@@ -1918,7 +1918,7 @@ nav button {
   margin-top: 5px;
 }
 .legend-item[data-photo-group] {
-  cursor: help;
+  cursor: default;
 }
 .legend-item[data-photo-group]:focus-visible {
   outline: 2px solid #7277ad;
