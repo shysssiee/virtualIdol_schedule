@@ -793,6 +793,7 @@ const {
   refresh,
   toast,
   eventForm,
+  passwordForm,
   manageAnniversaries: extras.manager,
   manageReports: board.list,
   updatePresence: presence.badges,

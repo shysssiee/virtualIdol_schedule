@@ -1,6 +1,6 @@
 import { backendHome } from "./backend-home.js";
 import { paginate, pageSizeOptions } from "./pagination.js";
-import { renderLoginHistory } from "./login-history.js";
+import { accountPage } from "./account.js";
 import { client } from "./data.js";
 import { escape as esc, time, dayKey } from "./calendar.js";
 import { memberEntryHtml, bindMemberEntry } from "./member-entry.js";
@@ -126,12 +126,7 @@ export function createCollaborator({
       await directory();
     } else if (section === "board") await board.list(r);
     else {
-      r.innerHTML =
-        "<h1>我的帳號</h1><p>" +
-        esc(me.display_name) +
-        '</p><button id="collab-password">修改密碼</button><section id="login-history" class="login-history"></section>';
-      r.querySelector("#collab-password").onclick = passwordForm;
-      await renderLoginHistory(r.querySelector("#login-history"));
+      accountPage(r, { getUser, refresh, toast, passwordForm });
     }
   }
   function renderOverview() {

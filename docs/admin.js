@@ -1,3 +1,4 @@
+import { accountPage } from "./account.js";
 import { backendHome } from "./backend-home.js";
 import { backupPage } from "./backup.js";
 import { paginate, pageSizeOptions } from "./pagination.js";
@@ -15,6 +16,7 @@ export function createAdmin({
   refresh,
   toast,
   eventForm,
+  passwordForm,
   manageAnniversaries,
   manageReports,
   updatePresence,
@@ -55,6 +57,7 @@ export function createAdmin({
       ["collaborators", "協作者管理"],
       ["settings", "網站設定"],
       ["reports", "建議／問題留言板"],
+      ["account", "我的帳號"],
       ["backup", "網站備份下載"],
     ]
       .map(
@@ -110,6 +113,15 @@ export function createAdmin({
     $("#admin-status").hidden = true;
     if (section === "home") {
       backendHome($("#admin-content"));
+      return;
+    }
+    if (section === "account") {
+      accountPage($("#admin-content"), {
+        getUser,
+        refresh,
+        toast,
+        passwordForm,
+      });
       return;
     }
     if (section === "backup") {
