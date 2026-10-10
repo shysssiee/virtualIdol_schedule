@@ -1,48 +1,80 @@
 <!doctype html>
-<html lang="zh-Hant"><head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Virtual Idol 直播行程表 · 直播行程</title>
-    <meta property="og:title" content="Virtual Idol 直播行程表 · 直播行程">
-    <meta property="og:site_name" content="Virtual Idol 直播行程表">
-    <meta name="twitter:title" content="Virtual Idol 直播行程表 · 直播行程">
-    <meta name="description" content="虛擬偶像直播日曆與過往行程紀錄">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23292c4a'/%3E%3Cpath d='M16 5l3 7 8 4-8 3-3 8-3-8-8-3 8-4z' fill='%23fff'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="style.css">
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>星曆 · 直播行程</title>
+    <meta property="og:title" content="星曆 · 直播行程" />
+    <meta property="og:site_name" content="星曆" />
+    <meta name="twitter:title" content="星曆 · 直播行程" />
+    <meta name="description" content="虛擬偶像直播日曆與過往行程紀錄" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23292c4a'/%3E%3Cpath d='M16 5l3 7 8 4-8 3-3 8-3-8-8-3 8-4z' fill='%23fff'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="style.css" />
     <script src="config.js"></script>
     <script src="./vendor/korean-lunar-calendar.min.js"></script>
     <script type="module" src="app.js"></script>
   </head>
   <body>
     <header>
-      <a class="brand" href="./">✦
-        <span><span id="site-name">Virtual Idol 直播行程表</span><small>LIVE CALENDAR</small></span></a>
+      <a class="brand" href="./"
+        >✦
+        <span
+          ><span id="site-name">星曆</span><small>LIVE CALENDAR</small></span
+        ></a
+      >
       <nav>
-        <button id="calendar-nav" class="active">直播行程</button><button id="history-nav">過往紀錄</button>
+        <button id="calendar-nav" class="active">直播行程</button
+        ><button id="history-nav">過往紀錄</button>
       </nav>
       <div class="account">
-        <a id="report-link" class="platform-link" hidden="" target="_blank" rel="noopener noreferrer">問題回報</a><button id="admin-button" hidden="">站主管理</button><span id="login-greeting" hidden=""></span><button id="new-button" hidden="">＋ 新增行程</button><button id="password-button" hidden="">修改密碼</button><button id="login-button">協作者登入</button>
+        <span id="login-greeting" hidden></span>
+        <a
+          id="report-link"
+          class="platform-link"
+          hidden
+          target="_blank"
+          rel="noopener noreferrer"
+          >問題回報</a
+        ><button id="admin-button" hidden>站主管理</button
+        ><button id="new-button" hidden>＋ 新增行程</button
+        ><button id="password-button" hidden>修改密碼</button
+        ><button id="login-button">協作者登入</button>
       </div>
     </header>
     <div id="notice" role="status"></div>
     <div class="workspace" id="public-workspace">
       <aside>
-        <div id="taipei-clock" class="local-clock" aria-label="中原標準時間"></div>
+        <div
+          id="taipei-clock"
+          class="local-clock"
+          aria-label="中原標準時間"
+        ></div>
         <button id="filter-toggle" aria-expanded="false">團體與平台篩選</button>
         <div class="aside-heading">我的追蹤清單 <span>FILTER</span></div>
-        <label class="search-label">搜尋團體<input id="search" type="search" placeholder="輸入團體名稱…"></label>
+        <label class="search-label"
+          >搜尋團體<input id="search" type="search" placeholder="輸入團體名稱…"
+        /></label>
         <div class="filter-actions">
           <button id="all">全選</button><button id="none">清除</button>
         </div>
         <div id="groups"></div>
-        <label>活動分類<select id="category">
+        <label
+          >活動分類<select id="category">
             <option value="">全部分類</option>
-          </select></label><label>直播平台<select id="platform">
+          </select></label
+        ><label
+          >直播平台<select id="platform">
             <option value="">全部平台</option>
-          </select></label>
+          </select></label
+        >
         <label>行程顯示時區<select id="display-zone"></select></label>
-        <label><input id="korean-almanac" type="checkbox" checked="">
-          韓國農曆與假日</label><label><input id="chinese-almanac" type="checkbox"> 農曆日期</label>
+        <label
+          ><input id="korean-almanac" type="checkbox" checked />
+          韓國農曆與假日</label
+        ><label><input id="chinese-almanac" type="checkbox" /> 農曆日期</label>
         <p id="zone-note" class="aside-note"></p>
       </aside>
       <main>
@@ -52,39 +84,58 @@
             <h1 id="period"></h1>
           </div>
           <div class="date-controls">
-            <label class="date-jump">📅<input aria-label="選擇日期" id="jump-date" min="2023-01-01" type="date"></label>
-            <button id="date-range" aria-label="日期篩選">📅</button><button id="previous" aria-label="上一期">‹</button><button id="today">今天</button><button id="next" aria-label="下一期">›</button>
+            <label class="date-jump"
+              >📅<input
+                aria-label="選擇日期"
+                id="jump-date"
+                min="2023-01-01"
+                type="date"
+            /></label>
+            <button id="date-range" aria-label="日期篩選">📅</button
+            ><button id="previous" aria-label="上一期">‹</button
+            ><button id="today">今天</button
+            ><button id="next" aria-label="下一期">›</button>
           </div>
         </div>
         <div class="subtoolbar">
           <div class="views" role="group" aria-label="日曆檢視">
-            <button data-view="month" class="active">月</button><button data-view="week">週</button><button data-view="day">日</button><button data-view="list">列表</button>
+            <button data-view="month" class="active">月</button
+            ><button data-view="week">週</button
+            ><button data-view="day">日</button
+            ><button data-view="list">列表</button>
           </div>
+          <div id="group-legend" aria-label="團體顏色圖例"></div>
           <span id="count"></span>
         </div>
         <div id="calendar"></div>
         <footer>
-          <span>本站直播行程依官方公告整理，僅供參考。如有異動，請以官方最新公告為準。</span><span>直播提醒依預定時間顯示 · 開始後兩小時自動停止<br><span id="site-credit">架設網站：shysssiee　版本：v1.2 r5</span></span>
+          <span
+            >本站直播行程依官方公告整理，僅供參考。如有異動，請以官方最新公告為準。</span
+          ><span
+            >直播提醒依預定時間顯示 · 開始後兩小時自動停止<br /><span
+              id="site-credit"
+              >架設網站：shysssiee　版本：v1.2 r6</span
+            ></span
+          >
         </footer>
       </main>
     </div>
-    <section id="admin-workspace" class="admin-workspace" hidden="">
+    <section id="admin-workspace" class="admin-workspace" hidden>
       <aside class="admin-sidebar">
         <h2>站主後台</h2>
         <nav id="admin-nav"></nav>
         <button id="return-calendar">返回日曆</button>
       </aside>
       <main>
-        <p id="admin-status" class="modal-status" role="status" hidden=""></p>
+        <p id="admin-status" class="modal-status" role="status" hidden></p>
         <div id="admin-content"></div>
       </main>
     </section>
-    <div id="tooltip" role="dialog" aria-label="行程快速資訊" hidden=""></div>
+    <div id="tooltip" role="dialog" aria-label="行程快速資訊" hidden></div>
     <dialog id="modal">
       <button class="close" aria-label="關閉">×</button>
       <div id="modal-body"></div>
     </dialog>
-    <div id="toast" role="status" hidden=""></div>
-  
-
-</body></html>
+    <div id="toast" role="status" hidden></div>
+  </body>
+</html>

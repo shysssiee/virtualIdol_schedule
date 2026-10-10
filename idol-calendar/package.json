@@ -1,7 +1,7 @@
 {
   "name": "idol-calendar",
   "private": true,
-  "version": "1.2.0-r5",
+  "version": "1.2.0-r6",
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.js"

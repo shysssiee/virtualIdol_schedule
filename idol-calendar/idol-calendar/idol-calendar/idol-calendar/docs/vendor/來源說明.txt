@@ -1,0 +1,3 @@
+韓國農曆：korean-lunar-calendar 0.3.6 https://github.com/usingsky/korean_lunar_calendar_js (MIT)
+韓國假日資料：date-holidays 3.37.0 https://github.com/commenthol/date-holidays (ISC AND CC-BY-3.0)，從 KR 規則產生2023～2050年 public 假日。完整來源歸屬保留於 date-holidays-LICENSE。
+資料產生日期：2026-10-10。臨時假日與未來制度改動需更新。
