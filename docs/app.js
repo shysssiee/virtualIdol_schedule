@@ -359,7 +359,7 @@ function render() {
       to = dayBounds(civilKey(next), displayZone)[0];
     visible = events.filter(
       (e) =>
-        extras.rangeActive() || (Date.parse(e.start_at) < to && end(e) > from),
+        extras.rangeActive() || (Date.parse(e.start_at) >= from && Date.parse(e.start_at) < to),
     );
     html = records(visible);
   } else {
