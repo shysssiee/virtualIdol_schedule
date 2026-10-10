@@ -722,6 +722,7 @@ footer > span:last-child {
   height: auto;
 }
 .admin-sidebar nav button {
+  justify-content: flex-start;
   text-align: left;
   border-radius: 8px;
   padding: 14px;
