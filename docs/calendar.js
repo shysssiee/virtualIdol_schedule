@@ -7,7 +7,7 @@ export const dayKey = (date, tz = zone) => dateKey(date, tz);
 export const time = (date, tz = zone) => clockTime(date, tz);
 export const MAX_DURATION = 2 * 60 * 60 * 1000;
 export const end = (e) => new Date(e.start_at).getTime() + MAX_DURATION;
-export const VERSION = "v1.2";
+export const VERSION = "v1.2 r3";
 export function groupOptions(group, items, field) {
   return (group?.[field] || [])
     .map((id) => items.find((item) => item.id === id))

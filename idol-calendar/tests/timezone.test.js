@@ -63,10 +63,10 @@ test("DST day bounds support 23 and 25 hour days", () => {
     assert.equal(b - a, hours * 3600000);
   }
 });
-test("The four hour cap measures elapsed time across a timezone change", () => {
+test("The two hour cap measures elapsed time across a timezone change", () => {
   const e = {
     start_at: fromLocal("2026-10-10T22:00", "Asia/Seoul").toISOString(),
     end_at: null,
   };
-  assert.equal(end(e) - Date.parse(e.start_at), 4 * 3600000);
+  assert.equal(end(e) - Date.parse(e.start_at), 2 * 3600000);
 });

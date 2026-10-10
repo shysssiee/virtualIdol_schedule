@@ -17,7 +17,7 @@ const event = (id, start, finish = null) => ({
 });
 test("Taiwan date handles UTC date boundary", () =>
   assert.equal(dayKey("2026-10-08T17:00:00Z"), "2026-10-09"));
-test("Live window begins at start and ends after four hours", () => {
+test("Live window begins at start and ends after two hours", () => {
   const e = event("a", "20:00");
   const start = Date.parse(e.start_at);
   assert.equal(isLive(e, start - 1), false);
@@ -27,14 +27,14 @@ test("Live window begins at start and ends after four hours", () => {
   assert.equal(isLive({ ...e, status: "cancelled" }, start), false);
   assert.equal(isLive({ ...e, status: "ended" }, start), false);
 });
-test("Explicit finish can shorten but cannot lengthen reminder", () => {
+test("Legacy finish is ignored; reminders use two hours", () => {
   assert.equal(
     end(event("a", "20:00", "21:00")),
-    Date.parse("2026-10-09T21:00:00+08:00"),
+    Date.parse("2026-10-09T22:00:00+08:00"),
   );
   assert.equal(
     end({ ...event("a", "20:00"), end_at: "2026-10-10T01:00:00+08:00" }),
-    Date.parse("2026-10-10T00:00:00+08:00"),
+    Date.parse("2026-10-09T22:00:00+08:00"),
   );
 });
 test("Overlapping streams never share a column; next cluster resets", () => {
@@ -55,7 +55,7 @@ test("Overlapping streams never share a column; next cluster resets", () => {
 });
 test("Adjacent streams reuse a column", () =>
   assert.deepEqual(
-    layout([event("a", "20:00", "21:00"), event("b", "21:00", "22:00")]).map(
+    layout([event("a", "20:00", "21:00"), event("b", "22:00")]).map(
       (r) => r.columns,
     ),
     [1, 1],
@@ -73,3 +73,4 @@ test("Group options use only assigned items in their group order", () => {
     [],
   );
 });
+

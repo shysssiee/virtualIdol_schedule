@@ -10,6 +10,8 @@ export function createAdmin({
   refresh,
   toast,
   eventForm,
+  manageAnniversaries,
+  manageReports,
   isLive,
   end,
 }) {
@@ -43,6 +45,7 @@ export function createAdmin({
       ["catalog", "團體與共用分類"],
       ["collaborators", "協作者管理"],
       ["settings", "網站設定"],
+      ["reports", "修正回報"],
     ]
       .map(
         ([id, name]) =>
@@ -121,6 +124,8 @@ export function createAdmin({
           renderOverview();
         };
       renderOverview();
+    } else if (section === "reports") {
+      manageReports($("#admin-content"));
     } else if (section === "catalog") {
       $("#admin-content").innerHTML =
         `<h1>團體與共用分類</h1><p class="muted">共用分類與平台新增一次，再到團體設定勾選。拖曳或上下移動後，請按「儲存順序」。</p><div class="catalog-tabs">${catalogs.map(([id, name]) => `<button data-catalog-tab="${id}" class="${id === catalog ? "primary" : ""}">${name}</button>`).join("")}</div><div class="actions"><button class="primary" data-add="${catalog}">新增${catalogs.find((c) => c[0] === catalog)[1]}</button>${catalog === "members" ? '<button id="expand-members">全部展開</button><button id="collapse-members">全部收起</button>' : ""}</div>${
@@ -155,6 +160,11 @@ export function createAdmin({
             document
               .querySelectorAll(".member-section")
               .forEach((d) => (d.open = open));
+      $("#admin-content").insertAdjacentHTML(
+        "beforeend",
+        '<div id="anniversaries-manager" class="settings-card"></div>',
+      );
+      manageAnniversaries($("#anniversaries-manager"));
       bindCatalog();
     } else if (section === "collaborators") {
       $("#admin-content").innerHTML =

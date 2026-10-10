@@ -1,3 +1,4 @@
+import { createExtras } from "./extras.js";
 import { createHoverPanel } from "./hover.js";
 import {
   civilKey,
@@ -88,9 +89,35 @@ function toast(message) {
   setTimeout(() => ($("#toast").hidden = true), 4000);
 }
 function show(content) {
+  $("#modal").style.background = "white";
   hoverPanel.hide();
   $("#modal-body").innerHTML = content;
   modal.showModal();
+}
+const extras = createExtras({
+  getData: () => data,
+  getUser: () => me,
+  show,
+  refresh,
+  toast,
+  render,
+  getZone: () => displayZone,
+  hoverPanel,
+  positionHover,
+  openLive: (start) => eventForm(null, start, true),
+});
+function positionHover(tip, button) {
+  const r = button.getBoundingClientRect(),
+    w = tip.offsetWidth,
+    h = tip.offsetHeight;
+  const left =
+    r.right + 8 + w <= innerWidth
+      ? r.right + 8
+      : r.left - w - 8 >= 10
+        ? r.left - w - 8
+        : Math.max(10, Math.min(r.left, innerWidth - w - 10));
+  tip.style.left = left + "px";
+  tip.style.top = Math.max(10, Math.min(r.top, innerHeight - h - 10)) + "px";
 }
 function group(e) {
   return (
@@ -126,7 +153,13 @@ function card(e, extra = "", style = "", segmentStart = 0) {
         : end(e) <= Date.now() || e.status === "ended"
           ? "已結束"
           : "";
-  return `<button class="event ${extra} ${e.status === "cancelled" ? "cancelled" : ""}" style="--color:${g.color};${style}" data-event="${esc(e.id)}" aria-label="${esc(time(e.start_at) + " " + g.name + " " + e.title)}"><span class="meta">${time(continuation ? segmentStart : e.start_at)}${continuation ? " · 續播" : ""}</span>${status ? ` <span class="${status === "直播中" ? "live" : "event-status"}">${status}</span>` : ""}<strong>${esc(g.name)}</strong><span class="event-info">${[category,platforms(e)].filter(Boolean).map(text=>`<span>${esc(text)}</span>`).join('<span class="event-separator"> · </span>')}</span></button>`;
+  return `<button class="event ${extra} ${e.status === "cancelled" ? "cancelled" : ""}" style="--color:${g.color};${style}" data-event="${esc(e.id)}" aria-label="${esc(time(e.start_at) + " " + g.name + " " + e.title)}"><span class="meta">${time(continuation ? segmentStart : e.start_at)}${continuation ? " · 續播" : ""}</span>${status ? ` <span class="${status === "直播中" ? "live" : "event-status"}">${status}</span>` : ""}<strong>${esc(g.name)}</strong><span class="event-info">${[
+    category,
+    platforms(e),
+  ]
+    .filter(Boolean)
+    .map((text) => `<span>${esc(text)}</span>`)
+    .join('<span class="event-separator"> · </span>')}</span></button>`;
 }
 function filtered() {
   const category = $("#category").value,
@@ -201,7 +234,7 @@ function render() {
   hoverPanel.hide();
   $("#jump-date").value = civilKey(anchor);
   const previousScroll = $(".timeline")?.scrollTop;
-  const events = filtered();
+  const events = filtered().filter(extras.inRange);
   $("#calendar-nav").classList.toggle("active", !history);
   $("#history-nav").classList.toggle("active", history);
   $(".views").hidden = history;
@@ -213,6 +246,7 @@ function render() {
   $("#period").textContent = history
     ? "過往直播紀錄"
     : `${anchor.getUTCFullYear()} 年 ${anchor.getUTCMonth() + 1} 月${view === "day" ? " " + anchor.getUTCDate() + " 日" : ""}`;
+  if (extras.rangeActive()) $("#period").textContent = extras.rangeLabel();
   let html = "",
     visible = [];
   if (history) {
@@ -236,16 +270,28 @@ function render() {
     html =
       '<div class="month">' +
       ["SUN 日", "MON 一", "TUE 二", "WED 三", "THU 四", "FRI 五", "SAT 六"]
-        .map((x) => `<div class="weekday"><span class="weekday-en">${x.split(" ")[0]}</span> ${x.split(" ")[1]}</div>`)
+        .map(
+          (x) =>
+            `<div class="weekday"><span class="weekday-en">${x.split(" ")[0]}</span> ${x.split(" ")[1]}</div>`,
+        )
         .join("");
-    const daysInMonth=new Date(Date.UTC(anchor.getUTCFullYear(),anchor.getUTCMonth()+1,0)).getUTCDate();
-    const cellCount=Math.ceil((first.getUTCDay()+daysInMonth)/7)*7;
+    const daysInMonth = new Date(
+      Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth() + 1, 0),
+    ).getUTCDate();
+    const cellCount = Math.ceil((first.getUTCDay() + daysInMonth) / 7) * 7;
     for (let i = 0; i < cellCount; i++) {
       const d = shift(start, i),
         items = dayEvents(events, d);
       visible.push(...items);
-      html += `<div ${me ? `data-create-date="${civilKey(d)}"` : ""} class="cell ${d.getUTCMonth() !== anchor.getUTCMonth() ? "outside" : ""} ${i % 7 === 0 ? "sunday" : i % 7 === 6 ? "saturday" : ""}"><button type="button" ${me ? `data-create-date="${civilKey(d)}" aria-label="${civilKey(d)} 新增行程"` : "disabled"} class="day-number ${civilKey(d) === dayKey(new Date()) ? "is-today" : ""}">${d.getUTCDate()}</button>${'<div class="day-events">'}${items
-        .map((e, index) => card(e, index < 3 ? "pill" : "color-bar", "", dayBounds(civilKey(d), displayZone)[0]))
+      html += `<div ${me ? `data-create-date="${civilKey(d)}"` : ""} class="cell ${d.getUTCMonth() !== anchor.getUTCMonth() ? "outside" : ""} ${i % 7 === 0 ? "sunday" : i % 7 === 6 ? "saturday" : ""}"><button type="button" ${me ? `data-create-date="${civilKey(d)}" aria-label="${civilKey(d)} 新增行程"` : "disabled"} class="day-number ${civilKey(d) === dayKey(new Date()) ? "is-today" : ""}">${d.getUTCDate()}</button>${extras.dateExtras(civilKey(d))}${'<div class="day-events">'}${items
+        .map((e, index) =>
+          card(
+            e,
+            index < 3 ? "pill" : "color-bar",
+            "",
+            dayBounds(civilKey(d), displayZone)[0],
+          ),
+        )
         .join("")}</div></div>`;
     }
     html += "</div>";
@@ -257,7 +303,8 @@ function render() {
     const from = dayBounds(first, displayZone)[0],
       to = dayBounds(civilKey(next), displayZone)[0];
     visible = events.filter(
-      (e) => Date.parse(e.start_at) < to && end(e) > from,
+      (e) =>
+        extras.rangeActive() || (Date.parse(e.start_at) < to && end(e) > from),
     );
     html = records(visible);
   } else {
@@ -307,7 +354,11 @@ function render() {
   document.querySelectorAll("[data-create-date]").forEach(
     (node) =>
       (node.onclick = (event) => {
-        if (!me || event.target.closest("[data-event],.more")) return;
+        if (
+          !me ||
+          event.target.closest("[data-event],.more,[data-anniversary-date]")
+        )
+          return;
         event.stopPropagation();
         let instant = fromLocal(
           node.dataset.createDate + "T20:00",
@@ -332,6 +383,7 @@ function render() {
       }),
   );
   bindCards();
+  extras.bindDates();
   const timeline = $(".timeline");
   if (timeline) {
     const firstCard = timeline.querySelector(".time-event");
@@ -351,7 +403,14 @@ function records(events) {
     : '<div class="empty">目前沒有符合條件的行程</div>';
 }
 function detail(e) {
-  return `<h2>${esc(e.title)}</h2><p><span class="dot" style="--color:${group(e).color}"></span> ${esc(group(e).name)} · ${esc(people(e))}</p><p>${dayKey(e.start_at)}　${time(e.start_at)}（${esc(zoneLabel(displayZone, new Date(e.start_at)))}）</p><p>${esc(data.categories.find((c) => c.id === e.category_id)?.name || "")} ${e.status === "cancelled" ? " · 已取消" : isLive(e) ? " · 直播中" : ""}</p><p>${esc(platforms(e))}</p><p style="white-space:pre-wrap">${esc(e.description)}</p>`;
+  const category =
+    data.categories.find((c) => c.id === e.category_id)?.name || "";
+  const icon = /可視/.test(category)
+    ? "📺 "
+    : /聲音/.test(category)
+      ? "🔊 "
+      : "";
+  return `<div class="event-detail" style="--color:${group(e).color}"><h3>${esc(group(e).name)} · ${esc(people(e))}</h3><h2>${esc(e.title)}</h2><p>${dayKey(e.start_at)}　${time(e.start_at)}（${esc(zoneLabel(displayZone, new Date(e.start_at)))}）</p><p>${icon}${esc(category)} ${e.status === "cancelled" ? " · 已取消" : isLive(e) ? " · 直播中" : ""}</p><p style="white-space:pre-wrap">${esc(e.description)}</p></div>`;
 }
 function platformLinks(e) {
   return e.links
@@ -368,8 +427,11 @@ function bindCards() {
     b.onclick = () => {
       show(
         detail(e) +
-          `<p class="muted">直播提醒依預定時間顯示，並非平台開播確認。</p><div>${platformLinks(e)}</div>${me && (me.role === "owner" || e.created_by === me.id) ? '<div class="actions"><button id="edit-event">編輯行程</button>' + (me.role === "owner" ? '<button id="delete-event">刪除行程</button>' : "") + "</div>" : ""}`,
+          `<div>${platformLinks(e)}</div><p class="muted">直播提醒依預定時間顯示，開始後兩小時停止；並非平台開播確認。</p>${extras.shareHtml(e)}${me && (me.role === "owner" || e.created_by === me.id) ? '<div class="actions"><button id="edit-event">編輯行程</button>' + (me.role === "owner" ? '<button id="delete-event">刪除行程</button>' : "") + "</div>" : ""}`,
       );
+      $("#modal").style.background =
+        "color-mix(in srgb, " + group(e).color + " 12%, white)";
+      extras.bindShare($("#modal-body"));
       $("#edit-event")?.addEventListener("click", () => eventForm(e));
       $("#delete-event")?.addEventListener("click", async () => {
         if (!confirm("確定刪除這筆行程？")) return;
@@ -390,18 +452,15 @@ function bindCards() {
       tip.innerHTML =
         '<button type="button" class="close" aria-label="關閉浮卡">×</button>' +
         detail(e) +
-        platformLinks(e);
+        platformLinks(e) +
+        '<p class="muted">直播提醒開始後兩小時停止，並非平台開播確認。</p>' +
+        extras.shareHtml(e);
+      tip.style.background =
+        "color-mix(in srgb, " + group(e).color + " 12%, white)";
+      extras.bindShare(tip);
       tip.querySelector(".close").onclick = hoverPanel.hide;
       tip.hidden = false;
-      const r = b.getBoundingClientRect();
-      tip.style.left =
-        Math.max(10, Math.min(r.left, innerWidth - tip.offsetWidth - 10)) +
-        "px";
-      tip.style.top =
-        Math.max(
-          10,
-          Math.min(r.bottom + 8, innerHeight - tip.offsetHeight - 10),
-        ) + "px";
+      positionHover(tip, b);
     };
     b.onmouseleave = hoverPanel.leave;
   });
@@ -414,7 +473,11 @@ function options(table, value) {
     )
     .join("");
 }
-function eventForm(e, initialStart) {
+function eventForm(e, initialStart, liveOnly = false) {
+  if (!e && !liveOnly && me) {
+    extras.choose(initialStart);
+    return;
+  }
   const inputZone = e?.input_timezone || "Asia/Taipei";
   if (!me) return;
   const value = e || {
@@ -608,6 +671,8 @@ const {
   refresh,
   toast,
   eventForm,
+  manageAnniversaries: extras.manager,
+  manageReports: extras.reports,
   isLive,
   end,
 });
@@ -682,6 +747,7 @@ document.querySelectorAll("[data-view]").forEach(
     }),
 );
 function navigate(direction) {
+  extras.clearRange();
   if (view === "month" || view === "list" || history) {
     anchor = new Date(
       Date.UTC(
@@ -697,12 +763,14 @@ function navigate(direction) {
 }
 $("#jump-date").onchange = (event) => {
   if (!event.target.value) return;
+  extras.clearRange();
   anchor = civilDate(event.target.value);
   render();
 };
 $("#previous").onclick = () => navigate(-1);
 $("#next").onclick = () => navigate(1);
 $("#today").onclick = () => {
+  extras.clearRange();
   anchor = civilDate(dayKey(new Date()));
   historyMonth = "";
   render();
@@ -746,7 +814,15 @@ $("#admin-button").onclick = enterAdmin;
 $("#return-calendar").onclick = () => leaveAdmin();
 window.addEventListener("hashchange", () => {
   if (location.hash === "#admin") enterAdmin();
-  else if (adminOpen) leaveAdmin();
+  if (location.hash.startsWith("#event=")) {
+    const id = decodeURIComponent(location.hash.slice(7));
+    document.querySelector('[data-event="' + CSS.escape(id) + '"]')?.click();
+    const e = data.events.find((x) => x.id === id);
+    if (e && !modal.open) {
+      show(detail(e) + platformLinks(e) + extras.shareHtml(e));
+      extras.bindShare($("#modal-body"));
+    }
+  } else if (adminOpen) leaveAdmin();
 });
 function applyZone(defaultZone) {
   const requested = zonePreference === "default" ? defaultZone : zonePreference;
@@ -793,13 +869,22 @@ function updateClock() {
     weekday: "long",
   }).format(now);
   $("#taipei-clock").innerHTML =
-    `<strong>${p.year}年${p.month}月${p.day}日</strong><span>${weekday}</span><span>中原標準時間（UTC+8）</span><b>${p.hour}:${p.minute}:${p.second}</b>`;
+    `<strong>${p.year}年${p.month}月${p.day}日（${weekday}）</strong><span>中原標準時間（UTC+8）</span><b>${p.hour}:${p.minute}:${p.second}</b>`;
 }
 updateClock();
 setInterval(updateClock, 1000);
 try {
   await refresh();
   if (location.hash === "#admin") enterAdmin();
+  if (location.hash.startsWith("#event=")) {
+    const id = decodeURIComponent(location.hash.slice(7));
+    document.querySelector('[data-event="' + CSS.escape(id) + '"]')?.click();
+    const e = data.events.find((x) => x.id === id);
+    if (e && !modal.open) {
+      show(detail(e) + platformLinks(e) + extras.shareHtml(e));
+      extras.bindShare($("#modal-body"));
+    }
+  }
   $("#notice").textContent = configured
     ? ""
     : "唯讀示範 · 團體與行程為虛構資料，設定資料服務後即可正式使用。";

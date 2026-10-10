@@ -69,6 +69,7 @@ export async function loadData() {
         { id: "twitch", name: "Twitch" },
       ],
       events,
+      anniversaries: [],
       site_settings: [{ singleton: true, name: "星曆" }],
     };
   const tables = [
@@ -77,6 +78,7 @@ export async function loadData() {
     "categories",
     "platforms",
     "events",
+    "anniversaries",
     "site_settings",
   ];
   const result = await Promise.all(
@@ -84,7 +86,10 @@ export async function loadData() {
       const rows = [];
       for (let offset = 0; ; offset += 1000) {
         let query = client.from(table).select("*");
-        if (table === "events") query = query.order("start_at").order("id");
+        if (table === "anniversaries")
+          query = query.order("original_date").order("id");
+        else if (table === "events")
+          query = query.order("start_at").order("id");
         else if (table !== "site_settings")
           query = query.order("sort_order").order("name").order("id");
         const { data, error } = await query.range(offset, offset + 999);

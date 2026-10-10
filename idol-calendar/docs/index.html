@@ -11,6 +11,7 @@
     />
     <link rel="stylesheet" href="style.css" />
     <script src="config.js"></script>
+    <script src="./vendor/korean-lunar-calendar.min.js"></script>
     <script type="module" src="app.js"></script>
   </head>
   <body>
@@ -66,6 +67,10 @@
           </select></label
         >
         <label>行程顯示時區<select id="display-zone"></select></label>
+        <label
+          ><input id="korean-almanac" type="checkbox" checked />
+          韓國農曆與假日</label
+        ><label><input id="chinese-almanac" type="checkbox" /> 農曆日期</label>
         <p id="zone-note" class="aside-note"></p>
       </aside>
       <main>
@@ -76,9 +81,14 @@
           </div>
           <div class="date-controls">
             <label class="date-jump"
-              >跳至日期<input id="jump-date" type="date"
+              >📅<input
+                aria-label="選擇日期"
+                id="jump-date"
+                min="2023-01-01"
+                type="date"
             /></label>
-            <button id="previous" aria-label="上一期">‹</button
+            <button id="date-range" aria-label="日期篩選">📅</button
+            ><button id="previous" aria-label="上一期">‹</button
             ><button id="today">今天</button
             ><button id="next" aria-label="下一期">›</button>
           </div>
@@ -97,8 +107,9 @@
           <span
             >本站直播行程依官方公告整理，僅供參考。如有異動，請以官方最新公告為準。</span
           ><span
-            >直播提醒依預定時間顯示 · 最多四小時<br /><span id="site-credit"
-              >架設網站：shysssiee　版本：v1.2</span
+            >直播提醒依預定時間顯示 · 開始後兩小時自動停止<br /><span
+              id="site-credit"
+              >架設網站：shysssiee　版本：v1.2 r3</span
             ></span
           >
         </footer>
@@ -115,7 +126,7 @@
         <div id="admin-content"></div>
       </main>
     </section>
-    <div id="tooltip" role="tooltip" hidden></div>
+    <div id="tooltip" role="dialog" aria-label="行程快速資訊" hidden></div>
     <dialog id="modal">
       <button class="close" aria-label="關閉">×</button>
       <div id="modal-body"></div>
