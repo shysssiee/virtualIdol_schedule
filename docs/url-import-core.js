@@ -103,3 +103,9 @@ export function matchImportGroup(result, groups) {
   });
   return matches.length === 1 ? matches[0].id : null;
 }
+
+export function matchImportPlatform(platform, name) {
+ const key=String(name||'').toUpperCase().replace(/[\s/／()（）_：:－-]/g,'');
+ if(platform==='YouTube')return ['YOUTUBE','YT'].includes(key);
+ return platform==='X' && ['X','TWITTER','XTWITTER','XSPACE','XSPACES','TWITTERSPACE','TWITTERSPACES','SPACE','SPACES','X推特'].includes(key);
+}

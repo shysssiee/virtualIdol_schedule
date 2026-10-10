@@ -1,5 +1,5 @@
 import { showUrlImport } from "./url-import.js";
-import { matchImportGroup } from "./url-import-core.js";
+import { matchImportGroup, matchImportPlatform } from "./url-import-core.js";
 import { groupDay, newEventStatus, duplicates, eventChanges } from "./v14.js";
 import { bindGroupPhotos } from "./group-photo.js";
 import {
@@ -867,11 +867,7 @@ function eventForm(e, initialStart, liveOnly = false, imported = null) {
   if (imported) {
     const fillImportedLink = () => {
       const g = data.groups.find((g) => g.id === form.elements.group_id.value);
-      const p = groupOptions(g, data.platforms, "platform_ids").find((p) =>
-        imported.platform === "YouTube"
-          ? /youtube/i.test(p.name)
-          : /^(x|twitter|x\s*[／/]\s*twitter)$/i.test(p.name),
-      );
+      const p = groupOptions(g, data.platforms, "platform_ids").find(p => matchImportPlatform(imported.platform, p.name));
       if (p) {
         const input = [...form.querySelectorAll("[data-platform-url]")].find(
           (i) => i.dataset.platformUrl === p.id,
