@@ -66,10 +66,21 @@
           </select></label
         >
         <label>行程顯示時區<select id="display-zone"></select></label>
-        <label
-          ><input id="korean-almanac" type="checkbox" checked="" />
-          韓國農曆與假日</label
-        ><label><input id="chinese-almanac" type="checkbox" /> 農曆日期</label>
+        <fieldset class="regional-options">
+          <legend>年曆顯示</legend>
+          <label
+            ><input id="taiwan-almanac" type="checkbox" checked />
+            台灣年曆（含農曆）</label
+          ><label
+            ><input id="korean-almanac" type="checkbox" />
+            韓國年曆（含農曆）</label
+          >
+          <p class="aside-note">
+            台灣含行政機關假日、補假與補班。<span id="taiwan-calendar-status"
+              >行政年曆讀取中…</span
+            >
+          </p>
+        </fieldset>
         <p id="zone-note" class="aside-note"></p>
       </aside>
       <main>

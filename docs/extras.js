@@ -3,7 +3,7 @@ import { anniversaryDate, bindBirthdayYear } from "./anniversaries.js";
 import { createBoard } from "./board.js";
 import { addMember, memberEntryHtml, bindMemberEntry } from "./member-entry.js";
 import { siteTitle } from "./site-title.js";
-import { lunarLabel, holidayLabel } from "./almanac.js";
+import { calendarLines } from "./regional-calendar.js";
 import { save, remove, client } from "./data.js";
 import { escape as esc, dayKey, time } from "./calendar.js";
 import { anniversariesOn, calendarFile } from "./anniversaries.js";
@@ -20,6 +20,34 @@ export function createExtras({
   positionHover,
 }) {
   const $ = (s) => document.querySelector(s);
+  let office = null;
+  fetch("./taiwan-calendar.json")
+    .then((r) => {
+      if (!r.ok) throw Error();
+      return r.json();
+    })
+    .then((x) => {
+      office = x;
+      $("#taiwan-calendar-status").textContent =
+        "行政年曆：" + x.years[0] + "–" + x.years.at(-1) + " 年。";
+      if (getData()) render();
+    })
+    .catch(() => {
+      $("#taiwan-calendar-status").textContent =
+        "行政年曆載入失敗，請重新整理。";
+    });
+  function dayAlmanac(key) {
+    return calendarLines(
+      key,
+      {
+        taiwan: $("#taiwan-almanac").checked,
+        korea: $("#korean-almanac").checked,
+      },
+      office,
+      holidays,
+      window.KoreanLunarCalendar,
+    );
+  }
   let holidays = {};
   fetch("./korean-holidays.json")
     .then((r) => r.json())
@@ -44,45 +72,18 @@ export function createExtras({
         [...new Set(items.map((x) => x.icon))].join("") +
         "</button>"
       : "";
-    const date = new Date(key + "T12:00:00Z");
-    if ($("#chinese-almanac").checked)
-      html +=
-        '<span class="almanac">農 ' +
-        esc(
-          new Intl.DateTimeFormat("zh-TW-u-ca-chinese", {
-            month: "numeric",
-            day: "numeric",
-            timeZone: "Asia/Taipei",
-          }).format(date),
-        ) +
-        "</span>";
-    if ($("#korean-almanac").checked) {
-      const lunar = new window.KoreanLunarCalendar();
-      if (
-        lunar.setSolarDate(
-          Number(key.slice(0, 4)),
-          Number(key.slice(5, 7)),
-          Number(key.slice(8)),
-        )
-      ) {
-        const l = lunar.getLunarCalendar();
-        html +=
-          '<span class="almanac">' +
-          esc(
-            matchMedia("(max-width:600px)").matches
-              ? lunarLabel(l).replace(/^韓曆/, "")
-              : lunarLabel(l),
-          ) +
-          "</span>";
-      }
-      if (holidays[key])
-        html +=
-          '<span class="almanac holiday" title="' +
-          esc(holidays[key].map(holidayLabel).join("、")) +
+    html += dayAlmanac(key)
+      .map(
+        (line) =>
+          '<span class="almanac' +
+          (line.includes("：") ? " holiday" : "") +
+          '" title="' +
+          esc(line) +
           '">' +
-          esc(holidays[key].map(holidayLabel).join("、")) +
-          "</span>";
-    }
+          esc(line) +
+          "</span>",
+      )
+      .join("");
     return '<div class="date-extras">' + html + "</div>";
   }
   function anniversaryContent(key) {
@@ -396,10 +397,34 @@ export function createExtras({
     };
   }
   $("#date-range").onclick = range;
-  for (const id of ["korean-almanac", "chinese-almanac"])
-    $("#" + id).onchange = render;
+  let preferences = { taiwan: true, korea: false };
+  try {
+    const stored = JSON.parse(localStorage.getItem("regional-calendars-v1"));
+    if (
+      stored &&
+      typeof stored.taiwan === "boolean" &&
+      typeof stored.korea === "boolean"
+    )
+      preferences = stored;
+  } catch {}
+  $("#taiwan-almanac").checked = preferences.taiwan;
+  $("#korean-almanac").checked = preferences.korea;
+  for (const id of ["taiwan-almanac", "korean-almanac"])
+    $("#" + id).onchange = () => {
+      try {
+        localStorage.setItem(
+          "regional-calendars-v1",
+          JSON.stringify({
+            taiwan: $("#taiwan-almanac").checked,
+            korea: $("#korean-almanac").checked,
+          }),
+        );
+      } catch {}
+      render();
+    };
   return {
     dateExtras,
+    dayAlmanac,
     bindDates,
     manager,
     form,
