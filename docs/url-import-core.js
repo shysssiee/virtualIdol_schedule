@@ -25,24 +25,8 @@ export function normalizeImportUrl(value) {
   if (u.protocol !== "https:" || u.username || u.password || u.port)
     throw Error("僅支援 HTTPS 平台網址");
   const host = u.hostname.toLowerCase();
-  if (
-    ["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"].includes(
-      host,
-    )
-  ) {
-    const id =
-      host === "youtu.be"
-        ? u.pathname.slice(1)
-        : u.pathname === "/watch"
-          ? u.searchParams.get("v")
-          : u.pathname.match(/^\/live\/([^/]+)$/)?.[1];
-    if (!/^[A-Za-z0-9_-]{11}$/.test(id || ""))
-      throw Error("請使用 YouTube 影片或直播網址");
-    return {
-      platform: "YouTube",
-      url: `https://www.youtube.com/watch?v=${id}`,
-    };
-  }
+  if (["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"].includes(host))
+    throw Error("YouTube 已取消自動擷取，請使用直播行程手動新增");
   if (["x.com", "www.x.com", "twitter.com", "www.twitter.com"].includes(host)) {
     const m = u.pathname.match(
       /^\/([A-Za-z0-9_]{1,15})\/status\/(\d{1,25})\/?$/,
@@ -52,35 +36,23 @@ export function normalizeImportUrl(value) {
   }
   if (host === "weverse.io" || host === "www.weverse.io")
     throw Error("Weverse 目前尚未支援自動擷取，請使用直播行程手動新增");
-  throw Error("目前僅支援 YouTube 與 X 的直播網址");
+  throw Error("目前僅支援 X／Space 貼文網址");
 }
 export function parseImportHtml(html, target, now = Date.now()) {
   let title,
     timestamp,
     channel = null,
     host = null;
-  if (target.platform === "YouTube") {
-    const text = html.match(
-      /"videoDetails":\{[^]*?"title":("(?:[^"\\]|\\.)*")/,
-    )?.[1];
-    title = text ? JSON.parse(text) : null;
-    timestamp =
-      html.match(
-        /"liveBroadcastDetails":\{[^}]*"startTimestamp":"([^"]+)"/,
-      )?.[1] || meta(html, "startDate");
-    const c = html.match(/"ownerChannelName":("(?:[^"\\]|\\.)*")/)?.[1];
-    channel = c ? JSON.parse(c) : null;
-  } else {
-    const label = html.match(/aria-label="Space recording: ([^"]+)"/)?.[1];
+  if (target.platform !== "X") throw Error("目前僅支援 X／Space 貼文網址");
+    const label = html.match(/aria-label="(?:Space recording|Ended Space): ([^"]+)"/)?.[1];
     const split = label?.lastIndexOf(", hosted by ") ?? -1;
     if (split >= 0) {
       title = decode(label.slice(0, split));
       host = decode(label.slice(split + 12));
     }
     timestamp = meta(html, "article:published_time");
-  }
-  if (!title || !timestamp || !Number.isFinite(Date.parse(timestamp)))
-    throw Error("無法取得直播標題或完整時間，請改用手動新增");
+  if (!title) throw Error(`${target.platform} 沒有回傳直播標題，可能是平台限制或頁面格式不同，請手動新增`);
+  if (!timestamp || !Number.isFinite(Date.parse(timestamp))) throw Error(`${target.platform} 沒有回傳完整開播時間，可能是平台限制；不會使用上架日期代替，請手動新增`);
   return {
     platform: target.platform,
     title,
@@ -106,6 +78,5 @@ export function matchImportGroup(result, groups) {
 
 export function matchImportPlatform(platform, name) {
  const key=String(name||'').toUpperCase().replace(/[\s/／()（）_：:－-]/g,'');
- if(platform==='YouTube')return ['YOUTUBE','YT'].includes(key);
  return platform==='X' && ['X','TWITTER','XTWITTER','XSPACE','XSPACES','TWITTERSPACE','TWITTERSPACES','SPACE','SPACES','X推特'].includes(key);
 }

@@ -2,7 +2,7 @@ import { client } from "./data.js";
 import { normalizeImportUrl } from "./url-import-core.js";
 export function showUrlImport({ show, openEvent, openManual }) {
   show(
-    '<h2>導入網址擷取</h2><form id="url-import-form"><label>直播網址<input name="url" type="url" required maxlength="2048" placeholder="貼上 YouTube 或 X Space 貼文網址"></label><p class="muted">支援 YouTube 直播與 X Space 貼文。擷取後請確認團體、成員與時間，再儲存行程。Weverse 暫時請手動新增。</p><p id="url-import-error" class="error" role="alert"></p><div class="actions"><button type="submit" class="primary">擷取資料</button><button type="button" id="import-manual">手動新增</button></div></form>',
+    '<h2>導入網址擷取</h2><form id="url-import-form"><label>直播網址<input name="url" type="url" required maxlength="2048" placeholder="貼上 X／Space 貼文網址"></label><p class="muted">僅支援 X／Space 貼文。擷取後請確認團體、成員與時間，再儲存行程。YouTube 與 Weverse 請手動新增。</p><p id="url-import-error" class="error" role="alert"></p><div class="actions"><button type="submit" class="primary">擷取資料</button><button type="button" id="import-manual">手動新增</button></div></form>',
   );
   const form = document.querySelector("#url-import-form");
   document.querySelector("#import-manual").onclick = openManual;
