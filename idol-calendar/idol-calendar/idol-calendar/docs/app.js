@@ -1,3 +1,6 @@
+import { greeting } from "./greeting.js";
+import { memberEntryHtml, bindMemberEntry } from "./member-entry.js";
+import { updateSiteMetadata } from "./site-title.js";
 import { createPresence } from "./presence.js";
 import { createExtras } from "./extras.js";
 import { createHoverPanel } from "./hover.js";
@@ -543,6 +546,29 @@ function eventForm(e, initialStart, liveOnly = false) {
             `<label><input type="checkbox" name="member_ids" value="${m.id}" ${initial && value.member_ids.includes(m.id) ? "checked" : ""}>${esc(m.name)}</label>`,
         )
         .join("");
+    let entry = form.querySelector(".member-entry");
+    if (!entry) {
+      $("#event-members").insertAdjacentHTML("afterend", memberEntryHtml());
+      entry = form.querySelector(".member-entry");
+    }
+    bindMemberEntry(
+      entry,
+      data,
+      () => form.elements.group_id.value,
+      (m) => {
+        const existing = form.querySelector(
+          `input[name="member_ids"][value="${CSS.escape(m.id)}"]`,
+        );
+        if (existing) {
+          existing.checked = true;
+          return;
+        }
+        $("#event-members").insertAdjacentHTML(
+          "beforeend",
+          `<label><input type="checkbox" name="member_ids" value="${esc(m.id)}" checked>${esc(m.name)}</label>`,
+        );
+      },
+    );
     $("#event-links").innerHTML = platforms
       .map(
         (p) =>
@@ -637,7 +663,10 @@ function login() {
       await client.auth.signOut();
       return;
     }
-    modal.close();
+    show(
+      `<div class="login-welcome"><h2>登入成功！</h2><p>${esc(greeting(me.display_name, displayZone))}</p><button id="welcome-start" class="primary">開始使用</button></div>`,
+    );
+    $("#welcome-start").onclick = () => modal.close();
   };
   $("#reset").onclick = async () => {
     const email = $("#login-form").elements.email.value;
@@ -694,7 +723,7 @@ async function refresh() {
   presence.start();
   const siteName = data.site_settings[0]?.name || "星曆";
   $("#site-name").textContent = siteName;
-  document.title = siteName + " · 直播行程";
+  updateSiteMetadata(document, siteName);
   $("#site-credit").textContent = "架設網站：shysssiee　版本：" + VERSION;
   const settings = data.site_settings[0] || {};
   applyZone(settings.default_timezone || "auto");
@@ -714,6 +743,7 @@ async function refresh() {
   renderFilters();
   render();
   if (adminOpen && me?.role !== "owner") leaveAdmin(true);
+  updateGreeting();
   $("#new-button").hidden = !me;
   $("#password-button").hidden = !me;
   $("#admin-button").hidden = me?.role !== "owner";
@@ -879,7 +909,13 @@ $("#display-zone").onchange = (event) => {
   applyZone(data.site_settings[0]?.default_timezone || "auto");
   render();
 };
+function updateGreeting() {
+  const el = $("#login-greeting");
+  el.hidden = !me;
+  el.textContent = me ? greeting(me.display_name, displayZone) : "";
+}
 function updateClock() {
+  updateGreeting();
   const now = new Date(),
     p = parts(now, "Asia/Taipei");
   const weekday = new Intl.DateTimeFormat("zh-TW", {

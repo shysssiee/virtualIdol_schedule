@@ -1377,3 +1377,43 @@ td button {
   min-width: 42px;
   font-size: 25px;
 }
+
+.content-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.content-choices button:hover,
+.content-choices button:active,
+.content-choices button:focus-visible {
+  background: #eee9f8;
+  border-color: #9678ca;
+}
+.member-entry {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0;
+}
+.member-entry label {
+  flex: 1;
+  min-width: 180px;
+}
+.member-entry .error {
+  width: 100%;
+}
+.login-welcome {
+  text-align: center;
+  padding: 20px;
+}
+#login-greeting {
+  font-size: 14px;
+  line-height: 1.6;
+}
+@media (max-width: 700px) {
+  #login-greeting {
+    flex-basis: 100%;
+    text-align: right;
+  }
+}

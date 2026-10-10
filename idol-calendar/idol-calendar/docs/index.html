@@ -30,6 +30,7 @@
         ><button id="history-nav">過往紀錄</button>
       </nav>
       <div class="account">
+        <span id="login-greeting" hidden></span>
         <a
           id="report-link"
           class="platform-link"
@@ -38,7 +39,6 @@
           rel="noopener noreferrer"
           >問題回報</a
         ><button id="admin-button" hidden>站主管理</button
-        ><span id="login-greeting" hidden></span
         ><button id="new-button" hidden>＋ 新增行程</button
         ><button id="password-button" hidden>修改密碼</button
         ><button id="login-button">協作者登入</button>
@@ -104,6 +104,7 @@
             ><button data-view="day">日</button
             ><button data-view="list">列表</button>
           </div>
+          <div id="group-legend" aria-label="團體顏色圖例"></div>
           <span id="count"></span>
         </div>
         <div id="calendar"></div>
@@ -113,7 +114,7 @@
           ><span
             >直播提醒依預定時間顯示 · 開始後兩小時自動停止<br /><span
               id="site-credit"
-              >架設網站：shysssiee　版本：v1.2 r5</span
+              >架設網站：shysssiee　版本：v1.2 r6</span
             ></span
           >
         </footer>

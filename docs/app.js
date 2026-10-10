@@ -1,3 +1,5 @@
+import { createBoard } from "./board.js";
+import { createCollaborator } from "./collaborator.js";
 import { greeting } from "./greeting.js";
 import { memberEntryHtml, bindMemberEntry } from "./member-entry.js";
 import { updateSiteMetadata } from "./site-title.js";
@@ -101,6 +103,7 @@ function show(content) {
   modal.showModal();
 }
 const presence = createPresence(client, () => me);
+const board = createBoard({ getUser: () => me, show, toast });
 const extras = createExtras({
   getData: () => data,
   getUser: () => me,
@@ -160,7 +163,7 @@ function card(e, extra = "", style = "", segmentStart = 0) {
         : end(e) <= Date.now() || e.status === "ended"
           ? "已結束"
           : "";
-  return `<button class="event ${extra} ${e.status === "cancelled" ? "cancelled" : ""}" style="--color:${g.color};${style}" data-event="${esc(e.id)}" aria-label="${esc(time(e.start_at) + " " + g.name + " " + e.title)}"><span class="meta">${time(continuation ? segmentStart : e.start_at)}${continuation ? " · 續播" : ""}</span>${status ? ` <span class="${status === "直播中" ? "live" : "event-status"}">${status}</span>` : ""}<strong>${esc(g.name)}</strong><span class="event-info">${[
+  return `<button class="event ${extra} ${isLive(e) ? "is-live" : ""} ${e.status === "cancelled" ? "cancelled" : ""}" style="--color:${g.color};${style}" data-event="${esc(e.id)}" aria-label="${esc(time(e.start_at) + " " + g.name + " " + e.title + (isLive(e) ? " LIVE 直播中" : ""))}"><span class="meta">${time(continuation ? segmentStart : e.start_at)}${continuation ? " · 續播" : ""}</span>${status ? ` <span class="${status === "直播中" ? "live" : "event-status"}">${status === "直播中" ? "LIVE" : status}</span>` : ""}<strong>${esc(g.name)}</strong><span class="event-info">${[
     category,
     platforms(e),
   ]
@@ -654,7 +657,10 @@ function eventForm(e, initialStart, liveOnly = false) {
       });
       modal.close();
       await refresh();
-      if (adminOpen) admin();
+      if (adminOpen) {
+        if (me.role === "owner") admin();
+        else collaborator.render().catch((e) => toast(e.message));
+      }
       toast("行程已公開");
     } catch (error) {
       const target = $("#form-error");
@@ -742,7 +748,7 @@ const {
   toast,
   eventForm,
   manageAnniversaries: extras.manager,
-  manageReports: extras.reports,
+  manageReports: board.list,
   updatePresence: presence.badges,
   isLive,
   end,
@@ -772,11 +778,13 @@ async function refresh() {
   }
   renderFilters();
   render();
-  if (adminOpen && me?.role !== "owner") leaveAdmin(true);
+  if (adminOpen && !me) leaveAdmin(true);
   updateGreeting();
   $("#new-button").hidden = !me;
   $("#password-button").hidden = !me;
-  $("#admin-button").hidden = me?.role !== "owner";
+  $("#admin-button").hidden = !me;
+  $("#admin-button").textContent =
+    me?.role === "owner" ? "站主管理" : "協作後台";
   $("#login-button").textContent = me
     ? "登出 · " + me.display_name
     : "協作者登入";
@@ -857,10 +865,21 @@ $("#login-button").onclick = async () => {
 };
 $("#new-button").onclick = () => eventForm();
 $("#password-button").onclick = passwordForm;
+const collaborator = createCollaborator({
+  getData: () => data,
+  getUser: () => me,
+  eventForm,
+  manageAnniversaries: extras.manager,
+  board,
+  show,
+  passwordForm,
+  refresh,
+  toast,
+});
 function enterAdmin() {
   if (adminOpen) return;
-  if (me?.role !== "owner") {
-    toast("此頁面僅供站主使用，請先登入站主帳號。");
+  if (!me) {
+    toast("請先登入。");
     return;
   }
   adminOpen = true;
@@ -868,7 +887,10 @@ function enterAdmin() {
   hoverPanel.hide();
   $("#public-workspace").hidden = true;
   $("#admin-workspace").hidden = false;
-  admin();
+  $("#admin-workspace h2").textContent =
+    me.role === "owner" ? "站主後台" : "協作者後台";
+  if (me.role === "owner") admin();
+  else collaborator.render().catch((e) => toast(e.message));
   location.hash = "admin";
 }
 function leaveAdmin(force = false) {

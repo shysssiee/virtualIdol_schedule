@@ -1,3 +1,4 @@
+import { createBoard } from "./board.js";
 import { addMember, memberEntryHtml, bindMemberEntry } from "./member-entry.js";
 import { siteTitle } from "./site-title.js";
 import { lunarLabel, holidayLabel } from "./almanac.js";
@@ -350,81 +351,12 @@ export function createExtras({
       .querySelectorAll("[data-report]")
       .forEach((b) => (b.onclick = () => report(b.dataset.report)));
   }
+  const board = createBoard({ getUser, show, toast });
   function report(id) {
-    show(
-      '<h2>回報站主</h2><form id="report-form"><label>需要修正的內容<textarea name="content" required maxlength="3000"></textarea></label><button>送出回報</button><p class="error"></p></form>',
-    );
-    $("#report-form").onsubmit = async (ev) => {
-      ev.preventDefault();
-      const f = ev.currentTarget,
-        b = f.querySelector("button");
-      b.disabled = true;
-      try {
-        await save("event_reports", {
-          id: crypto.randomUUID(),
-          event_id: id,
-          reporter_id: getUser().id,
-          content: new FormData(f).get("content"),
-          resolved: false,
-        });
-        $("#modal").close();
-        toast("已送至站主後台");
-      } catch (e) {
-        f.querySelector(".error").textContent = e.message;
-        b.disabled = false;
-      }
-    };
+    board.form(null, id);
   }
   async function reports(root) {
-    root.innerHTML = "<h2>行程修正回報</h2>";
-    try {
-      const { data: rows, error } = await client
-        .from("event_reports")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      root.innerHTML +=
-        "<p>先在總覽修改行程，完成後將回報標記已處理。</p>" +
-        rows
-          .map(
-            (x) =>
-              '<article class="settings-card"><h3>' +
-              esc(
-                getData().events.find((e) => e.id === x.event_id)?.title ||
-                  "行程已刪除",
-              ) +
-              "</h3><p>回報者 UUID：" +
-              esc(x.reporter_id) +
-              " · " +
-              esc(x.created_at) +
-              '</p><p style="white-space:pre-wrap">' +
-              esc(x.content) +
-              '</p><button data-resolve="' +
-              x.id +
-              '" ' +
-              (x.resolved ? "disabled" : "") +
-              ">" +
-              (x.resolved ? "已處理" : "標記已處理") +
-              "</button></article>",
-          )
-          .join("");
-      root.querySelectorAll("[data-resolve]").forEach(
-        (b) =>
-          (b.onclick = async () => {
-            try {
-              await save("event_reports", {
-                ...rows.find((x) => x.id === b.dataset.resolve),
-                resolved: true,
-              });
-              await reports(root);
-            } catch (e) {
-              toast(e.message);
-            }
-          }),
-      );
-    } catch (e) {
-      root.innerHTML += '<p class="error">' + esc(e.message) + "</p>";
-    }
+    return board.list(root);
   }
   function range() {
     show(
