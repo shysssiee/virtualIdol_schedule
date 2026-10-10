@@ -1,3 +1,4 @@
+import { downloadSharePage } from "./site-title.js";
 import { client, save, remove, loadProfiles } from "./data.js";
 import { escape as esc, dayKey, time } from "./calendar.js";
 import { zoneLabel, validZone } from "./timezone.js";
@@ -138,7 +139,15 @@ export function createAdmin({
                       "members",
                       data.members.filter((m) => m.group_id === g.id),
                       "members-" + g.id,
-                    )}</details>`,
+                    )}<div class="member-anniversaries">${(
+                      data.anniversaries || []
+                    )
+                      .filter((a) => a.group_id === g.id)
+                      .map(
+                        (a) =>
+                          `<p>${a.kind === "birthday" ? "🎂" : "🎉"} ${esc(a.member_id ? data.members.find((m) => m.id === a.member_id)?.name || a.name : "全團")} · ${esc(a.name)} · ${esc(a.original_date)}</p>`,
+                      )
+                      .join("")}</div></details>`,
                 )
                 .join("")
             : list(catalog, data[catalog])
@@ -251,7 +260,15 @@ export function createAdmin({
     } else {
       const settings = data.site_settings[0] || {};
       $("#admin-content").innerHTML =
-        `<h1>網站設定</h1><form id="settings-form" class="settings-card"><label>網站名稱<input name="name" maxlength="80" required value="${esc(settings.name || "星曆")}"></label><label>Google 問題回報表單網址（選填）<input type="url" name="report_url" placeholder="https://forms.gle/…" value="${esc(settings.report_url || "")}"></label><label>網站預設顯示時區<select name="default_timezone">${["auto", "Asia/Taipei", "Asia/Seoul", "Asia/Tokyo", "America/New_York", "America/Los_Angeles", "Europe/London", "UTC"].map((z) => `<option value="${z}" ${z === (settings.default_timezone || "auto") ? "selected" : ""}>${z === "auto" ? "自動：讀者裝置時區" : esc(zoneLabel(z))}</option>`).join("")}</select></label><p class="muted">讀者預設採用裝置時區；選「網站預設」時套用這裡的設定。讀者手動選擇優先保留。</p><button class="primary">儲存設定</button><p id="settings-error" class="error"></p></form>`;
+        `<h1>網站設定</h1><form id="settings-form" class="settings-card"><label>網站名稱<input name="name" maxlength="80" required value="${esc(settings.name || "星曆")}"></label><label>Google 問題回報表單網址（選填）<input type="url" name="report_url" placeholder="https://forms.gle/…" value="${esc(settings.report_url || "")}"></label><label>網站預設顯示時區<select name="default_timezone">${["auto", "Asia/Taipei", "Asia/Seoul", "Asia/Tokyo", "America/New_York", "America/Los_Angeles", "Europe/London", "UTC"].map((z) => `<option value="${z}" ${z === (settings.default_timezone || "auto") ? "selected" : ""}>${z === "auto" ? "自動：讀者裝置時區" : esc(zoneLabel(z))}</option>`).join("")}</select></label><p class="muted">讀者預設採用裝置時區；選「網站預設」時套用這裡的設定。讀者手動選擇優先保留。</p><button class="primary">儲存設定</button><p id="settings-error" class="error"></p></form><div class="settings-card"><h2>社群分享標題</h2><p class="muted">先儲存站名，再下載 index.html，上傳覆蓋 GitHub 發布資料夾中的同名檔案。社群預覽會使用新站名；舊連結可能仍有平台快取。</p><button id="download-share-page">下載分享標題更新檔</button></div>`;
+      $("#download-share-page").onclick = async () => {
+        try {
+          await downloadSharePage(getData().site_settings[0]?.name);
+          toast("已下載 index.html，請上傳至 GitHub 發布資料夾覆蓋同名檔案。");
+        } catch (error) {
+          toast(error.message);
+        }
+      };
       $("#settings-form").onsubmit = async (event) => {
         event.preventDefault();
         const b = event.target.querySelector("button");

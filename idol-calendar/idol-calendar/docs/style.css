@@ -930,6 +930,9 @@ td button {
 }
 
 @media (max-width: 760px) {
+  #public-workspace #groups {
+    max-height: 300px;
+  }
   header {
     height: auto;
     min-height: 0;
@@ -1264,16 +1267,20 @@ td button {
   .month .cell {
     height: 180px;
   }
-  .month .cell:has(.anniversary-icon) .day-number {width:24px;height:24px;font-size:15px;}
+  .month .cell:has(.anniversary-icon) .day-number {
+    width: 24px;
+    height: 24px;
+    font-size: 15px;
+  }
   .month .event.pill {
-    display:block;
-    height:32px;
-    min-height:32px;
+    display: block;
+    height: 32px;
+    min-height: 32px;
     gap: 2px;
     padding: 3px 2px;
   }
   .month .event.pill .meta {
-    display:block;
+    display: block;
     font-size: 9px;
   }
   .month .event.pill strong {
@@ -1287,4 +1294,86 @@ td button {
   .local-clock span:nth-of-type(1) {
     grid-row: 2;
   }
+}
+
+/* Account status and consistent event actions. */
+#groups {
+  max-height: min(46vh, 420px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding-right: 5px;
+}
+#groups .group {
+  padding: 8px 0;
+}
+#groups summary {
+  font-size: 12px;
+}
+.account-avatar {
+  position: relative;
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  margin-right: 9px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #edeef6;
+  color: #42465f;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.account-avatar::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 9px;
+  height: 9px;
+  background: #a2a6b2;
+  border: 2px solid white;
+  border-radius: 50%;
+}
+.account-avatar.online::after {
+  background: #22a865;
+}
+.account-avatar.unavailable::after {
+  background: #d69d35;
+}
+#tooltip,
+.event-dialog {
+  border: 2px solid color-mix(in srgb, var(--event-color, #686b86) 65%, white);
+}
+#tooltip button,
+#tooltip a.platform-link,
+.event-dialog button,
+.event-dialog a.platform-link {
+  background: #fff;
+  border: 1px solid color-mix(in srgb, var(--event-color, #686b86) 48%, white);
+  border-radius: 9px;
+  min-height: 42px;
+  padding: 9px 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+#tooltip button:hover,
+#tooltip a.platform-link:hover,
+.event-dialog button:hover,
+.event-dialog a.platform-link:hover {
+  background: color-mix(in srgb, var(--event-color, #686b86) 14%, white);
+}
+#tooltip .close,
+.event-dialog .close {
+  padding: 0;
+  width: 42px;
+  min-width: 42px;
+  font-size: 25px;
 }

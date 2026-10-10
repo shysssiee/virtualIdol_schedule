@@ -1,4 +1,4 @@
-# Virtual Idol 星曆 — v1.2 r3
+# Virtual Idol 星曆 — v1.2 r4
 虛擬偶像直播行程與年度紀念日網站。GitHub Pages 提供網頁，Supabase 提供資料庫與登入。
 
 - [安裝與升級](安裝說明.md)

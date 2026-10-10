@@ -1,3 +1,5 @@
+import { addMember, memberEntryHtml, bindMemberEntry } from "./member-entry.js";
+import { siteTitle } from "./site-title.js";
 import { lunarLabel, holidayLabel } from "./almanac.js";
 import { save, remove, client } from "./data.js";
 import { escape as esc, dayKey, time } from "./calendar.js";
@@ -186,9 +188,12 @@ export function createExtras({
             (g) => '<option value="' + g.id + '">' + esc(g.name) + "</option>",
           )
           .join("") +
-        '</select></label><label>成員（生日可選）<select name="member_id"></select></label><label>名字／紀念日名稱<input name="name" required maxlength="160"></label><label>出生年月日／原始紀念日期<input name="original_date" type="date" required></label><p class="muted">僅輸入一次，未來每年自動顯示。2月29日只在閏年當天顯示。</p><button>儲存</button><p class="error"></p></form>',
+        '</select></label><label>成員（全團紀念日可不選）<select name="member_id"></select></label><label>名字／紀念日名稱<input name="name" required maxlength="160"></label><label>出生年月日／原始紀念日期<input name="original_date" type="date" required></label><p class="muted">僅輸入一次，未來每年自動顯示。2月29日只在閏年當天顯示。</p><button>儲存</button><p class="error"></p></form>',
     );
     const f = $("#ann-form");
+    f.elements.member_id
+      .closest("label")
+      .insertAdjacentHTML("afterend", memberEntryHtml());
     function members() {
       f.elements.member_id.innerHTML =
         '<option value="">全團／自行填寫</option>' +
@@ -199,6 +204,17 @@ export function createExtras({
           )
           .join("");
     }
+    bindMemberEntry(
+      f,
+      d,
+      () => f.elements.group_id.value,
+      (m) => {
+        members();
+        f.elements.member_id.value = m.id;
+        if (f.elements.kind.value === "birthday")
+          f.elements.name.value = m.name;
+      },
+    );
     f.elements.group_id.onchange = members;
     members();
     f.elements.member_id.onchange = () => {
@@ -213,15 +229,20 @@ export function createExtras({
     }
     f.onsubmit = async (ev) => {
       ev.preventDefault();
-      const b = f.querySelector("button");
+      const b = f.querySelector("button:not([type=button])");
       b.disabled = true;
       try {
         const v = new FormData(f);
+        let memberId = v.get("member_id") || null;
+        if (v.get("kind") === "birthday" && !memberId) {
+          const m = await addMember(d, v.get("group_id"), v.get("name"));
+          memberId = m.id;
+        }
         await save("anniversaries", {
           id: item?.id || crypto.randomUUID(),
           kind: v.get("kind"),
           group_id: v.get("group_id"),
-          member_id: v.get("member_id") || null,
+          member_id: memberId,
           name: v.get("name").trim(),
           original_date: v.get("original_date"),
           created_by: item?.created_by || me.id,
@@ -237,7 +258,7 @@ export function createExtras({
   }
   function choose(start) {
     show(
-      '<h2>新增內容</h2><button id="choose-live">直播行程</button><button id="choose-anniversary">生日／紀念日</button><button id="my-anniversaries">管理我的紀念日</button>',
+      '<h2>新增內容</h2><div class="content-choices"><button id="choose-live">直播行程</button><button id="choose-anniversary">生日／紀念日</button><button id="my-anniversaries">管理我的紀念日</button></div>',
     );
     $("#choose-live").onclick = () => openLive(start);
     $("#choose-anniversary").onclick = () => form();
@@ -286,7 +307,10 @@ export function createExtras({
           u.hash = "event=" + b.dataset.share;
           try {
             if (navigator.share)
-              await navigator.share({ title: "直播行程", url: u.href });
+              await navigator.share({
+                title: siteTitle(getData().site_settings[0]?.name),
+                url: u.href,
+              });
             else {
               await navigator.clipboard.writeText(u.href);
               toast("連結已複製");
