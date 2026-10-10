@@ -1,3 +1,5 @@
+import { backendHome } from "./backend-home.js";
+import { backupPage } from "./backup.js";
 import { paginate, pageSizeOptions } from "./pagination.js";
 import { renderLoginHistory } from "./login-history.js";
 import { downloadSharePage } from "./site-title.js";
@@ -28,7 +30,7 @@ export function createAdmin({
     ["anniversaries", "生日／紀念日"],
   ];
   const allowed = () => getUser()?.role === "owner";
-  let section = "overview",
+  let section = "home",
     catalog = "groups",
     profiles = [],
     page = 0,
@@ -47,11 +49,13 @@ export function createAdmin({
     if (!allowed()) return;
     const ticket = ++request;
     $("#admin-nav").innerHTML = [
-      ["overview", "總覽／行程管理"],
+      ["home", "首頁"],
+      ["overview", "行程管理"],
       ["catalog", "團體與共用分類"],
       ["collaborators", "協作者管理"],
       ["settings", "網站設定"],
       ["reports", "建議／問題留言板"],
+      ["backup", "網站備份下載"],
     ]
       .map(
         ([id, name]) =>
@@ -104,9 +108,17 @@ export function createAdmin({
   function renderSection() {
     const data = getData();
     $("#admin-status").hidden = true;
+    if (section === "home") {
+      backendHome($("#admin-content"));
+      return;
+    }
+    if (section === "backup") {
+      backupPage($("#admin-content"), toast);
+      return;
+    }
     if (section === "overview") {
       $("#admin-content").innerHTML =
-        `<h1>總覽／行程管理</h1><p class="muted">所有過去與未來行程永久保留，只有站主主動刪除才移除。時間依日曆選擇的顯示時區。</p><div class="admin-filters"><label>搜尋標題／團體／新增者<input id="admin-search" type="search"></label><label>團體<select id="admin-group"><option value="">全部團體</option>${data.groups.map((g) => `<option value="${g.id}">${esc(g.name)}</option>`).join("")}</select></label><label>新增者<select id="admin-creator"><option value="">所有新增者</option>${profiles.map((p) => `<option value="${p.id}">${esc(p.display_name)}${p.revoked ? "（已移除）" : ""}</option>`).join("")}</select></label><label>從日期<input id="admin-from" type="date"></label><label>至日期<input id="admin-to" type="date"></label></div><div class="table-toolbar"><button id="admin-new">新增行程</button><button id="admin-refresh">重新整理</button><label>每頁顯示<select id="admin-page-size">${pageSizeOptions(pageSize)}</select></label></div><div id="event-table"></div>`;
+        `<h1>行程管理</h1><p class="muted">所有過去與未來行程永久保留，只有站主主動刪除才移除。時間依日曆選擇的顯示時區。</p><div class="admin-filters"><label>搜尋標題／團體／新增者<input id="admin-search" type="search"></label><label>團體<select id="admin-group"><option value="">全部團體</option>${data.groups.map((g) => `<option value="${g.id}">${esc(g.name)}</option>`).join("")}</select></label><label>新增者<select id="admin-creator"><option value="">所有新增者</option>${profiles.map((p) => `<option value="${p.id}">${esc(p.display_name)}${p.revoked ? "（已移除）" : ""}</option>`).join("")}</select></label><label>從日期<input id="admin-from" type="date"></label><label>至日期<input id="admin-to" type="date"></label></div><div class="table-toolbar"><button id="admin-new">新增行程</button><button id="admin-refresh">重新整理</button><label>每頁顯示<select id="admin-page-size">${pageSizeOptions(pageSize)}</select></label></div><div id="event-table"></div>`;
       $("#admin-new").onclick = () => eventForm();
       $("#admin-refresh").onclick = async () => {
         try {
@@ -348,7 +360,7 @@ export function createAdmin({
                   )
                   .filter(Boolean)
                   .join(" / "),
-              )}</td><td>${status(e)}</td><td>${esc(creator(e))}</td><td>${e.updated_at ? dayKey(e.updated_at) + " " + time(e.updated_at) : "—"}</td><td><button data-admin-edit="${e.id}">修改</button><button data-admin-delete="${e.id}">刪除</button></td></tr>`,
+              )}</td><td>${status(e)}</td><td>${esc(creator(e))}</td><td>${e.updated_at ? dayKey(e.updated_at) + " " + time(e.updated_at) : "—"}</td><td><button data-admin-edit="${e.id}">修改</button><button data-admin-delete="${e.id}">刪除</button>${isLive(e) ? `<button data-end-live="${e.id}">結束直播</button>` : ""}</td></tr>`,
           )
           .join("") || '<tr><td colspan="9">沒有符合條件的行程</td></tr>'
       }</tbody></table></div><div class="actions"><button id="admin-prev" ${page === 0 ? "disabled" : ""}>上一頁</button><button id="admin-next" ${page === pages - 1 ? "disabled" : ""}>下一頁</button></div>`;
@@ -360,6 +372,25 @@ export function createAdmin({
       page++;
       renderOverview();
     };
+    document.querySelectorAll("[data-end-live]").forEach(
+      (b) =>
+        (b.onclick = async () => {
+          if (!confirm("確定結束直播提示？行程仍會保留。")) return;
+          b.disabled = true;
+          try {
+            const { error } = await client.rpc("end_live", {
+              event_id: b.dataset.endLive,
+            });
+            if (error) throw error;
+            await refresh();
+            renderOverview();
+            toast("直播已手動結束");
+          } catch (e) {
+            toast(e.message);
+            b.disabled = false;
+          }
+        }),
+    );
     document
       .querySelectorAll("[data-admin-edit]")
       .forEach(

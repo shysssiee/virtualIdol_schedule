@@ -7,7 +7,7 @@ export const dayKey = (date, tz = zone) => dateKey(date, tz);
 export const time = (date, tz = zone) => clockTime(date, tz);
 export const MAX_DURATION = 2 * 60 * 60 * 1000;
 export const end = (e) => new Date(e.start_at).getTime() + MAX_DURATION;
-export const VERSION = "v1.2 r7";
+export const VERSION = "v1.3";
 export function groupOptions(group, items, field) {
   return (group?.[field] || [])
     .map((id) => items.find((item) => item.id === id))
@@ -17,6 +17,10 @@ export const isLive = (e, now = Date.now()) =>
   e.status === "scheduled" &&
   new Date(e.start_at).getTime() <= now &&
   now < end(e);
+export const isUpcoming = (e, now = Date.now()) =>
+  e.status === "scheduled" &&
+  Date.parse(e.start_at) > now &&
+  Date.parse(e.start_at) - now <= 60 * 60 * 1000;
 export const escape = (s) =>
   String(s ?? "").replace(
     /[&<>"']/g,

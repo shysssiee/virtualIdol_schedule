@@ -1719,3 +1719,36 @@ nav button {
   color: #777b94;
   font-weight: normal;
 }
+
+.upcoming {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: #8a4b00;
+  background: #fff0cc;
+  border: 1px solid #d7a34e;
+  border-radius: 4px;
+  padding: 1px 3px;
+  font-size: 10px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+.month .event.pill .upcoming {
+  display: inline-flex;
+  font-size: 9px;
+  margin-right: 3px;
+}
+.month .event.color-bar .upcoming {
+  display: none;
+}
+.event-detail h2 .upcoming {
+  margin-left: 8px;
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .month .event.pill .upcoming {
+    font-size: 7px;
+    padding: 0 1px;
+    margin-right: 1px;
+  }
+}

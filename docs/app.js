@@ -1,3 +1,4 @@
+import { startVisitorPresence } from "./visitor-presence.js";
 import { visitorForm } from "./visitor-forms.js";
 import { startAutoRefresh } from "./auto-refresh.js";
 import { createBoard } from "./board.js";
@@ -38,6 +39,7 @@ import {
   time,
   end,
   isLive,
+  isUpcoming,
   escape as esc,
   shift,
   dayEvents,
@@ -160,12 +162,14 @@ function card(e, extra = "", style = "", segmentStart = 0) {
   const status =
     e.status === "cancelled"
       ? "已取消"
-      : isLive(e)
-        ? "直播中"
-        : end(e) <= Date.now() || e.status === "ended"
-          ? "已結束"
-          : "";
-  return `<button class="event ${extra} ${isLive(e) ? "is-live" : ""} ${e.status === "cancelled" ? "cancelled" : ""}" style="--color:${g.color};${style}" data-event="${esc(e.id)}" aria-label="${esc(time(e.start_at) + " " + g.name + " " + e.title + (isLive(e) ? " LIVE 直播中" : ""))}">${status ? ` <span class="${status === "直播中" ? "live" : "event-status"}">${status === "直播中" ? "LIVE" : status}</span>` : ""}<span class="meta">${time(continuation ? segmentStart : e.start_at)}${continuation ? " · 續播" : ""}</span><strong>${esc(g.name)}</strong><span class="event-info">${[
+      : isUpcoming(e)
+        ? "即將直播"
+        : isLive(e)
+          ? "直播中"
+          : end(e) <= Date.now() || e.status === "ended"
+            ? "已結束"
+            : "";
+  return `<button class="event ${extra} ${isLive(e) ? "is-live" : ""} ${e.status === "cancelled" ? "cancelled" : ""}" style="--color:${g.color};${style}" data-event="${esc(e.id)}" aria-label="${esc(time(e.start_at) + " " + g.name + " " + e.title + (isLive(e) ? " LIVE 直播中" : isUpcoming(e) ? " 即將直播" : ""))}">${status ? ` <span class="${status === "直播中" ? "live" : status === "即將直播" ? "upcoming" : "event-status"}">${status === "直播中" ? "LIVE" : status}</span>` : ""}<span class="meta">${time(continuation ? segmentStart : e.start_at)}${continuation ? " · 續播" : ""}</span><strong>${esc(g.name)}</strong><span class="event-info">${[
     category,
     platforms(e),
   ]
@@ -357,7 +361,7 @@ function render() {
     )
     .join("");
   $("#calendar").innerHTML = html;
-  $("#count").textContent = `${new Set(visible.map((e) => e.id)).size} 場行程`;
+
   $("#history-month")?.addEventListener("change", (e) => {
     historyMonth = e.target.value;
     render();
@@ -450,7 +454,7 @@ function detail(e) {
     : /聲音/.test(category)
       ? "🔊 "
       : "";
-  return `<div class="event-detail" style="--color:${group(e).color}"><h3>${esc(group(e).name)} · ${esc(people(e))}</h3><h2>${esc(e.title)}${isLive(e) ? '<span class="detail-live-badge">直播中</span>' : ""}${e.members_only ? '<span class="members-only-badge">屬於付費會員限定</span>' : ""}</h2><p>${dayKey(e.start_at)}　${time(e.start_at)}（${esc(zoneLabel(displayZone, new Date(e.start_at)))}）</p><p>${icon}${esc(category)} ${e.status === "cancelled" ? " · 已取消" : ""}</p><p style="white-space:pre-wrap">${esc(e.description)}</p></div>`;
+  return `<div class="event-detail" style="--color:${group(e).color}"><h3>${esc(group(e).name)} · ${esc(people(e))}</h3><h2>${esc(e.title)}${isLive(e) ? '<span class="detail-live-badge">直播中</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : ""}${e.members_only ? '<span class="members-only-badge">屬於付費會員限定</span>' : ""}</h2><p>${dayKey(e.start_at)}　${time(e.start_at)}（${esc(zoneLabel(displayZone, new Date(e.start_at)))}）</p><p>${icon}${esc(category)} ${e.status === "cancelled" ? " · 已取消" : ""}</p><p style="white-space:pre-wrap">${esc(e.description)}</p></div>`;
 }
 function platformLinks(e) {
   return e.links
@@ -473,10 +477,11 @@ function bindCards() {
     b.onclick = () => {
       show(
         detail(e) +
-          `<div>${platformLinks(e)}</div><p class="muted">直播提醒依預定時間顯示，開始後兩小時停止；並非平台開播確認。</p>${extras.shareHtml(e)}${me && (me.role === "owner" || e.created_by === me.id) ? '<div class="actions"><button id="edit-event">編輯行程</button>' + (me.role === "owner" ? '<button id="delete-event">刪除行程</button>' : "") + "</div>" : ""}`,
+          `<div>${platformLinks(e)}</div><p class="muted">直播提醒依預定時間顯示，開始後兩小時停止；並非平台開播確認。</p>${extras.shareHtml(e)}${me && (me.role === "owner" || e.created_by === me.id) ? '<div class="actions"><button id="edit-event">編輯行程</button>' + (isLive(e) ? '<button id="end-live">結束直播</button>' : "") + (me.role === "owner" ? '<button id="delete-event">刪除行程</button>' : "") + "</div>" : ""}`,
       );
       styleEventDialog(e);
       extras.bindShare($("#modal-body"));
+      $("#end-live")?.addEventListener("click", () => finishLive(e));
       $("#edit-event")?.addEventListener("click", () => eventForm(e));
       $("#delete-event")?.addEventListener("click", async () => {
         if (!confirm("確定刪除這筆行程？")) return;
@@ -510,6 +515,19 @@ function bindCards() {
     };
     b.onmouseleave = hoverPanel.leave;
   });
+}
+async function finishLive(e) {
+  if (!confirm("確定結束直播提示？行程仍會保留。")) return;
+  try {
+    const { error } = await client.rpc("end_live", { event_id: e.id });
+    if (error) throw error;
+    modal.close();
+    hoverPanel.hide();
+    await refresh();
+    toast("直播已手動結束");
+  } catch (error) {
+    toast(error.message);
+  }
 }
 function options(table, value) {
   return data[table]
@@ -642,21 +660,25 @@ function eventForm(e, initialStart, liveOnly = false) {
             throw Error("連結僅接受 http 或 https。");
           return { platform_id: i.dataset.platformUrl, url: url.href };
         });
-      await save("events", {
-        id: e?.id || crypto.randomUUID(),
-        title: f.get("title").trim(),
-        group_id: f.get("group_id"),
-        category_id: f.get("category_id") || null,
-        member_ids: f.getAll("member_ids"),
-        members_only: f.has("members_only"),
-        input_timezone: formZone,
-        start_at: start.toISOString(),
-        end_at: null,
-        status: f.get("status"),
-        description: f.get("description"),
-        links,
-        created_by: e?.created_by || me.id,
-      });
+      await save(
+        "events",
+        {
+          id: e?.id || crypto.randomUUID(),
+          title: f.get("title").trim(),
+          group_id: f.get("group_id"),
+          category_id: f.get("category_id") || null,
+          member_ids: f.getAll("member_ids"),
+          members_only: f.has("members_only"),
+          input_timezone: formZone,
+          start_at: start.toISOString(),
+          end_at: null,
+          status: f.get("status"),
+          description: f.get("description"),
+          links,
+          created_by: e?.created_by || me.id,
+        },
+        { existing: !!e },
+      );
       modal.close();
       await refresh();
       if (adminOpen) {
@@ -890,8 +912,7 @@ function enterAdmin() {
   hoverPanel.hide();
   $("#public-workspace").hidden = true;
   $("#admin-workspace").hidden = false;
-  $("#admin-workspace h2").textContent =
-    me.role === "owner" ? "站主後台" : "協作者後台";
+  $("#admin-workspace h2").textContent = "本站後台";
   if (me.role === "owner") admin();
   else collaborator.render().catch((e) => toast(e.message));
   location.hash = "admin";
@@ -1058,3 +1079,5 @@ window.addEventListener("keydown", (event) => {
 
 $("#apply-button").onclick = () => visitorForm("application", { show, toast });
 $("#report-link").onclick = () => visitorForm("report", { show, toast });
+
+startVisitorPresence(client, $("#count"));

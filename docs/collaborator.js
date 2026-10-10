@@ -1,3 +1,4 @@
+import { backendHome } from "./backend-home.js";
 import { paginate, pageSizeOptions } from "./pagination.js";
 import { renderLoginHistory } from "./login-history.js";
 import { client } from "./data.js";
@@ -16,7 +17,7 @@ export function createCollaborator({
   refresh,
   toast,
 }) {
-  let section = "events",
+  let section = "home",
     timer,
     page = 0,
     pageSize = 10,
@@ -41,6 +42,7 @@ export function createCollaborator({
       me = getUser();
     if (!me) return;
     document.querySelector("#admin-nav").innerHTML = [
+      ["home", "首頁"],
       ["events", "行程管理"],
       ["members", "成員"],
       ["anniversaries", "生日／紀念日"],
@@ -61,6 +63,10 @@ export function createCollaborator({
         }),
     );
     const r = root();
+    if (section === "home") {
+      backendHome(root());
+      return;
+    }
     if (section === "events") {
       const result = await client.rpc("event_creator_names", {});
       if (result.error) toast("新增者名稱無法讀取，請執行本次補充 SQL。");
@@ -165,7 +171,7 @@ export function createCollaborator({
                   )
                   .filter(Boolean)
                   .join(" / "),
-              )}</td><td>${status(e)}</td><td>${esc(creator(e))}</td><td>${e.updated_at ? dayKey(e.updated_at) + " " + time(e.updated_at) : "—"}</td><td>${e.created_by === getUser().id ? `<button data-admin-edit="${e.id}">修改</button>` : `<button data-feedback-event="${e.id}">回報站主</button>`}</td></tr>`,
+              )}</td><td>${status(e)}</td><td>${esc(creator(e))}</td><td>${e.updated_at ? dayKey(e.updated_at) + " " + time(e.updated_at) : "—"}</td><td>${e.created_by === getUser().id ? `<button data-admin-edit="${e.id}">修改</button>${isLive(e) ? `<button data-end-live="${e.id}">結束直播</button>` : ""}` : `<button data-feedback-event="${e.id}">回報站主</button>`}</td></tr>`,
           )
           .join("") || '<tr><td colspan="9">沒有符合條件的行程</td></tr>'
       }</tbody></table></div><div class="actions"><button id="admin-prev" ${page === 0 ? "disabled" : ""}>上一頁</button><button id="admin-next" ${page === pages - 1 ? "disabled" : ""}>下一頁</button></div>`;
@@ -177,6 +183,25 @@ export function createCollaborator({
       page++;
       renderOverview();
     };
+    document.querySelectorAll("[data-end-live]").forEach(
+      (b) =>
+        (b.onclick = async () => {
+          if (!confirm("確定結束直播提示？行程仍會保留。")) return;
+          b.disabled = true;
+          try {
+            const { error } = await client.rpc("end_live", {
+              event_id: b.dataset.endLive,
+            });
+            if (error) throw error;
+            await refresh();
+            renderOverview();
+            toast("直播已手動結束");
+          } catch (e) {
+            toast(e.message);
+            b.disabled = false;
+          }
+        }),
+    );
     document
       .querySelectorAll("[data-admin-edit]")
       .forEach(
