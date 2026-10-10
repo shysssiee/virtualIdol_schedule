@@ -1991,3 +1991,36 @@ nav button {
 }
 
 .day-schedule-item strong > .live, .day-schedule-item strong > .upcoming { margin-right: 6px; display: inline-flex; vertical-align: middle; }
+
+/* Date cells choose their layout from available space, including tablet rotation. */
+.month .cell { container-type: inline-size; }
+.month .day-events { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; align-content: start; }
+.month .day-events .group-summary { margin: 0; }
+.month .day-events .more-events { grid-column: 1 / -1; margin: 0; }
+@container (min-width: 180px) {
+  .month .day-events { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+  .month .group-summary { padding-inline: 5px; height: 30px; min-height: 30px; }
+  .month .group-summary strong { font-size: 11px; }
+  .month .group-summary:has(.live), .month .group-summary:has(.upcoming) { flex-wrap: wrap; height: 40px; min-height: 40px; gap: 1px; align-content: center; }
+  .month .group-summary:has(.live) strong, .month .group-summary:has(.upcoming) strong { width: 100%; }
+}
+@media (min-width: 601px) and (max-width: 1400px) {
+  #public-workspace { display: block; padding: 20px; }
+  #public-workspace > aside { position: static; margin-bottom: 16px; padding: 14px 18px; }
+  #public-workspace > aside:not(.expanded) > :not(#filter-toggle):not(.local-clock) { display: none !important; }
+  #filter-toggle { display: block; width: 100%; min-height: 44px; }
+  #public-workspace .local-clock { margin-bottom: 10px; padding-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  #public-workspace .local-clock b { font-size: 24px; }
+  #public-workspace > aside.expanded #groups { max-height: 300px; }
+  #group-legend { display: flex; flex-wrap: wrap; gap: 12px 16px; }
+  .legend-item[data-photo-group] { min-height: 36px; }
+  dialog { position: fixed; inset: 0; margin: auto; width: min(640px, calc(100vw - 48px)); max-height: calc(100dvh - 48px); padding: 28px; overflow-y: auto; }
+  dialog .actions { gap: 12px; flex-wrap: wrap; }
+  dialog button, dialog a.platform-link { min-height: 44px; }
+  footer { text-align: center; justify-content: center; }
+}
+@media (max-width: 600px) {
+  .month .day-events { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+}
+
+@media (min-width: 1350px) { .month .cell { height: 220px; } }

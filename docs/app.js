@@ -350,7 +350,8 @@ function render() {
         );
       visible.push(...items);
       const bundles = groupDay(items);
-      const limit = matchMedia("(max-width:600px)").matches ? 2 : 3;
+      const twoColumns = !matchMedia("(max-width:600px)").matches && $("#calendar").getBoundingClientRect().width / 7 - 15 >= 180;
+      const limit = twoColumns ? 6 : matchMedia("(max-width:600px)").matches ? 2 : 3;
       html += `<div data-day-list="${civilKey(d)}" class="cell ${d.getUTCMonth() !== anchor.getUTCMonth() ? "outside" : ""} ${i % 7 === 0 ? "sunday" : i % 7 === 6 ? "saturday" : ""}"><button type="button" data-day-list="${civilKey(d)}" aria-label="${civilKey(d)} 查看當日行程" class="day-number ${civilKey(d) === dayKey(new Date()) ? "is-today" : ""}">${d.getUTCDate()}</button>${extras.dateExtras(civilKey(d))}<div class="day-events">${bundles
         .slice(0, limit)
         .map((bundle) => groupSummary(bundle, civilKey(d)))

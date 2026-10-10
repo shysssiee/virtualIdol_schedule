@@ -115,6 +115,9 @@ export function bindGroupPhotos(root, groups) {
     tip.style.top =
       Math.max(8, r.top >= 160 ? r.top - 158 : r.bottom + 8) + "px";
   };
+  // Replace dismissal callbacks on every render so they reference the current preview.
+  tip.dismiss = hide;
+  hide();
   root.querySelectorAll("[data-photo-group]").forEach((node) => {
     node.onmouseenter = () => {
       if (matchMedia("(hover:hover)").matches) show(node);
@@ -124,8 +127,12 @@ export function bindGroupPhotos(root, groups) {
     };
     node.onfocus = () => show(node);
     node.onblur = hide;
-    node.onclick = () => {
-      if (!matchMedia("(hover:hover)").matches && current === node) hide();
+    node.onclick = (event) => {
+      if (event.pointerType === "touch") {
+        if (current === node && !tip.hidden) return;
+        show(node);
+      }
+      else if (!matchMedia("(hover:hover)").matches && current === node) hide();
       else show(node);
     };
     node.onkeydown = (e) => {
@@ -140,9 +147,10 @@ export function bindGroupPhotos(root, groups) {
   tip.onmouseleave = hide;
   if (!tip.dataset.bound) {
     document.addEventListener("pointerdown", (e) => {
-      if (!e.target.closest("[data-photo-group],#group-photo-tip")) hide();
+      if (!e.target.closest("[data-photo-group],#group-photo-tip")) tip.dismiss?.();
     });
-    window.addEventListener("scroll", hide, { passive: true });
+    window.addEventListener("scroll", () => tip.dismiss?.(), { passive: true });
+    window.addEventListener("resize", () => tip.dismiss?.(), { passive: true });
     tip.dataset.bound = "true";
   }
 }
