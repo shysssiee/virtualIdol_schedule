@@ -1,3 +1,5 @@
+import { paginate, pageSizeOptions } from "./pagination.js";
+import { renderLoginHistory } from "./login-history.js";
 import { downloadSharePage } from "./site-title.js";
 import { client, save, remove, loadProfiles } from "./data.js";
 import { escape as esc, dayKey, time } from "./calendar.js";
@@ -29,6 +31,7 @@ export function createAdmin({
     catalog = "groups",
     profiles = [],
     page = 0,
+    pageSize = 10,
     request = 0;
   const dirty = new Map();
   const controls = (item) =>
@@ -102,7 +105,7 @@ export function createAdmin({
     $("#admin-status").hidden = true;
     if (section === "overview") {
       $("#admin-content").innerHTML =
-        `<h1>總覽／行程管理</h1><p class="muted">所有過去與未來行程永久保留，只有站主主動刪除才移除。時間依日曆選擇的顯示時區。</p><div class="admin-filters"><label>搜尋標題／團體／新增者<input id="admin-search" type="search"></label><label>團體<select id="admin-group"><option value="">全部團體</option>${data.groups.map((g) => `<option value="${g.id}">${esc(g.name)}</option>`).join("")}</select></label><label>新增者<select id="admin-creator"><option value="">所有新增者</option>${profiles.map((p) => `<option value="${p.id}">${esc(p.display_name)}${p.revoked ? "（已移除）" : ""}</option>`).join("")}</select></label><label>從日期<input id="admin-from" type="date"></label><label>至日期<input id="admin-to" type="date"></label></div><button id="admin-new">新增行程</button><button id="admin-refresh">重新整理</button><div id="event-table"></div>`;
+        `<h1>總覽／行程管理</h1><p class="muted">所有過去與未來行程永久保留，只有站主主動刪除才移除。時間依日曆選擇的顯示時區。</p><div class="admin-filters"><label>搜尋標題／團體／新增者<input id="admin-search" type="search"></label><label>團體<select id="admin-group"><option value="">全部團體</option>${data.groups.map((g) => `<option value="${g.id}">${esc(g.name)}</option>`).join("")}</select></label><label>新增者<select id="admin-creator"><option value="">所有新增者</option>${profiles.map((p) => `<option value="${p.id}">${esc(p.display_name)}${p.revoked ? "（已移除）" : ""}</option>`).join("")}</select></label><label>從日期<input id="admin-from" type="date"></label><label>至日期<input id="admin-to" type="date"></label></div><div class="table-toolbar"><button id="admin-new">新增行程</button><button id="admin-refresh">重新整理</button><label>每頁顯示<select id="admin-page-size">${pageSizeOptions(pageSize)}</select></label></div><div id="event-table"></div>`;
       $("#admin-new").onclick = () => eventForm();
       $("#admin-refresh").onclick = async () => {
         try {
@@ -125,6 +128,11 @@ export function createAdmin({
           page = 0;
           renderOverview();
         };
+      $("#admin-page-size").onchange = () => {
+        pageSize = Number($("#admin-page-size").value);
+        page = 0;
+        renderOverview();
+      };
       renderOverview();
     } else if (section === "reports") {
       manageReports($("#admin-content"));
@@ -185,6 +193,13 @@ export function createAdmin({
               `<div class="admin-row"><span class="row-name"><span class="account-avatar" data-presence-user="${esc(p.id)}" title="正在取得在線狀態" aria-label="正在取得在線狀態">${esc(Array.from(p.display_name)[0] || "人")}</span>${esc(p.display_name)} · ${p.role === "owner" ? "站主" : p.active ? "已啟用" : "已停用"}</span>${p.role !== "owner" ? `<button data-toggle="${p.id}">${p.active ? "停用" : "啟用"}</button><button data-revoke="${p.id}">移除授權</button>` : ""}</div>`,
           )
           .join("")}</div>`;
+      $("#admin-content").insertAdjacentHTML(
+        "beforeend",
+        '<section id="login-history" class="login-history"></section>',
+      );
+      renderLoginHistory($("#login-history"), { owner: true }).catch((e) =>
+        toast(e.message),
+      );
       updatePresence($("#profiles-list"));
       $("#grant-form").onsubmit = async (event) => {
         event.preventDefault();
@@ -331,12 +346,12 @@ export function createAdmin({
         );
       })
       .sort((a, b) => Date.parse(b.start_at) - Date.parse(a.start_at));
-    const pages = Math.max(1, Math.ceil(rows.length / 50));
-    page = Math.min(page, pages - 1);
+    const pagination = paginate(rows, page, pageSize),
+      pages = pagination.pages;
+    page = pagination.page;
     $("#event-table").innerHTML =
-      `<p class="muted">共 ${rows.length} 場 · 第 ${page + 1} / ${pages} 頁</p><div class="table-scroll"><table><thead><tr>${["開始時間", "團體", "標題", "分類", "平台", "狀態", "新增者", "最後更新", "操作"].map((n) => `<th>${n}</th>`).join("")}</tr></thead><tbody>${
-        rows
-          .slice(page * 50, page * 50 + 50)
+      `<p class="muted">共 ${rows.length} 筆 · 第 ${page + 1} / ${pages} 頁</p><div class="table-scroll"><table><thead><tr>${["開始時間", "團體", "標題", "分類", "平台", "狀態", "新增者", "最後更新", "操作"].map((n) => `<th>${n}</th>`).join("")}</tr></thead><tbody>${
+        pagination.rows
           .map(
             (e) =>
               `<tr><td>${dayKey(e.start_at)}<br>${time(e.start_at)}</td><td>${esc(data.groups.find((g) => g.id === e.group_id)?.name)}</td><td>${esc(e.title)}</td><td>${esc(data.categories.find((c) => c.id === e.category_id)?.name)}</td><td>${esc(

@@ -1396,6 +1396,7 @@ td button {
   margin: 12px 0;
 }
 .member-entry label {
+  margin: 0;
   flex: 1;
   min-width: 180px;
 }
@@ -1617,4 +1618,66 @@ nav button {
   font-size: 12px;
   line-height: 1.3;
   white-space: nowrap;
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+}
+.table-toolbar label {
+  margin: 0;
+  min-width: 112px;
+}
+.table-toolbar button,
+.table-toolbar select,
+.form-actions button {
+  height: 44px;
+}
+.table-toolbar button,
+.form-actions button,
+#ann-form button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+#ann-form label,
+#ann-form p {
+  text-align: left;
+}
+#ann-form input,
+#ann-form select,
+#ann-form button,
+.member-entry input,
+.member-entry button {
+  min-height: 44px;
+}
+#ann-form input,
+#ann-form select {
+  text-align: left;
+}
+.member-entry input,
+.member-entry button {
+  height: 44px;
+}
+.member-entry button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.login-history {
+  margin-top: 28px;
+}
+.login-history th,
+.login-history td {
+  text-align: left;
 }

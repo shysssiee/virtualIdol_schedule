@@ -1,3 +1,4 @@
+import { startAutoRefresh } from "./auto-refresh.js";
 import { createBoard } from "./board.js";
 import { createCollaborator } from "./collaborator.js";
 import { greeting } from "./greeting.js";
@@ -679,7 +680,7 @@ function login() {
     return;
   }
   show(
-    '<h2>協作者登入</h2><p class="muted">帳號由站主建立，不開放自行註冊。</p><form id="login-form"><label>Email<input name="email" type="email" autocomplete="username" required></label><label>密碼<input name="password" type="password" autocomplete="current-password" required></label><p id="form-error" class="error"></p><button type="submit" class="primary">登入</button><button type="button" id="reset">忘記密碼</button></form>',
+    '<h2>協作者登入</h2><p class="muted">帳號由站主建立，不開放自行註冊。</p><form id="login-form"><label>Email<input name="email" type="email" autocomplete="username" required></label><label>密碼<input name="password" type="password" autocomplete="current-password" required></label><p id="form-error" class="error"></p><div class="form-actions"><button type="submit" class="primary">登入</button><button type="button" id="reset">忘記密碼</button></div></form>',
   );
   $("#login-form").onsubmit = async (e) => {
     e.preventDefault();
@@ -1008,10 +1009,14 @@ if (client) {
   client.auth.onAuthStateChange((event) => {
     if (event === "PASSWORD_RECOVERY") passwordForm();
   });
-  setInterval(() => {
-    if (!modal.open && !adminOpen && $("#tooltip").hidden)
-      refresh().catch(() => {});
-  }, 60000);
+  const autoRefresh = startAutoRefresh({
+    refresh,
+    canRefresh: () => !modal.open && !adminOpen && $("#tooltip").hidden,
+  });
+  modal.addEventListener("close", autoRefresh.check);
+  window.addEventListener("pagehide", (event) => {
+    if (!event.persisted) autoRefresh.stop();
+  });
 }
 setInterval(() => {
   if (data && !modal.open && !adminOpen && $("#tooltip").hidden) render();

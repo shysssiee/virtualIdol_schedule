@@ -40,7 +40,7 @@ export function createBoard({ getUser, show, toast }) {
       const rows = await rpc("board_list");
       root.insertAdjacentHTML(
         "beforeend",
-        '<div class="actions"><button id="board-new">發表建議／問題</button><button id="board-refresh">重新整理</button><label>狀態<select id="board-filter"><option value="">全部</option><option value="false">未處理</option><option value="true">已處理</option></select></label></div><div id="board-rows"></div>',
+        '<div class="table-toolbar"><button id="board-new">發表建議／問題</button><button id="board-refresh">重新整理</button><label>狀態<select id="board-filter"><option value="">全部</option><option value="false">未處理</option><option value="true">已處理</option></select></label></div><div id="board-rows"></div>',
       );
       const render = () => {
         const status = root.querySelector("#board-filter").value;
