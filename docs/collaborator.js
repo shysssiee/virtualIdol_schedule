@@ -42,7 +42,8 @@ export function createCollaborator({
     if (!me) return;
     document.querySelector("#admin-nav").innerHTML = [
       ["events", "行程管理"],
-      ["members", "成員與紀念日"],
+      ["members", "成員"],
+      ["anniversaries", "生日／紀念日"],
       ["directory", "協作者名單"],
       ["board", "建議／問題留言板"],
       ["account", "我的帳號"],
@@ -91,13 +92,13 @@ export function createCollaborator({
       renderOverview();
     } else if (section === "members") {
       r.innerHTML =
-        '<h1>成員與紀念日</h1><label>團體<select id="collab-group">' +
+        '<h1>成員</h1><label>團體<select id="collab-group">' +
         data.groups
           .map((g) => `<option value="${g.id}">${esc(g.name)}</option>`)
           .join("") +
         "</select></label>" +
         memberEntryHtml() +
-        '<div id="collab-members"></div><div id="collab-anniversaries"></div>';
+        '<div id="collab-members"></div>';
       const renderMembers = () => {
         r.querySelector("#collab-members").textContent = data.members
           .filter((m) => m.group_id === r.querySelector("#collab-group").value)
@@ -112,7 +113,8 @@ export function createCollaborator({
         renderMembers,
       );
       renderMembers();
-      manageAnniversaries(r.querySelector("#collab-anniversaries"));
+    } else if (section === "anniversaries") {
+      manageAnniversaries(r);
     } else if (section === "directory") {
       r.innerHTML = '<h1>協作者名單</h1><div id="directory-rows">讀取中…</div>';
       await directory();

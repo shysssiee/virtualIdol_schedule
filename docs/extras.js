@@ -1,3 +1,5 @@
+import { anniversaryManager } from "./anniversary-manager.js";
+import { anniversaryDate, bindBirthdayYear } from "./anniversaries.js";
 import { createBoard } from "./board.js";
 import { addMember, memberEntryHtml, bindMemberEntry } from "./member-entry.js";
 import { siteTitle } from "./site-title.js";
@@ -94,7 +96,11 @@ export function createExtras({
             " · " +
             esc(x.name) +
             "</h3><p>" +
-            esc(x.original_date) +
+            esc(
+              x.year_unknown
+                ? x.original_date.slice(5) + "（出生年份未知）"
+                : x.original_date,
+            ) +
             " · " +
             esc(x.label) +
             "</p></article>",
@@ -122,61 +128,15 @@ export function createExtras({
     });
   }
   function manager(root) {
-    const me = getUser(),
-      d = getData(),
-      items = (d.anniversaries || []).filter(
-        (x) => me.role === "owner" || x.created_by === me.id,
-      );
-    root.innerHTML =
-      '<h2>生日／紀念日</h2><button id="new-anniversary">新增紀念日</button>' +
-      items
-        .map(
-          (x) =>
-            '<div class="admin-row">' +
-            (x.kind === "birthday" ? "🎂" : "🎉") +
-            " " +
-            esc(d.groups.find((g) => g.id === x.group_id)?.name) +
-            " · " +
-            esc(x.name) +
-            " · " +
-            x.original_date +
-            '<button data-ann-edit="' +
-            x.id +
-            '">修改</button><button data-ann-delete="' +
-            x.id +
-            '">刪除</button></div>',
-        )
-        .join("");
-    root.querySelector("#new-anniversary").onclick = () => form();
-    root
-      .querySelectorAll("[data-ann-edit]")
-      .forEach(
-        (b) =>
-          (b.onclick = () =>
-            form(items.find((x) => x.id === b.dataset.annEdit))),
-      );
-    root.querySelectorAll("[data-ann-delete]").forEach(
-      (b) =>
-        (b.onclick = () => {
-          const id = b.dataset.annDelete;
-          show(
-            '<h2>刪除紀念日</h2><p>刪除後不再每年顯示。</p><button id="confirm-ann-delete">確定刪除</button>',
-          );
-          $("#confirm-ann-delete").onclick = async () => {
-            try {
-              await remove("anniversaries", id);
-              $("#modal").close();
-              await refresh();
-              toast("已刪除紀念日");
-              if (root.isConnected) manager(root);
-            } catch (e) {
-              toast(e.message);
-            }
-          };
-        }),
-    );
+    anniversaryManager(root, {
+      getData,
+      getUser,
+      openForm: form,
+      refresh,
+      toast,
+    });
   }
-  function form(item) {
+  function form(item, onSaved) {
     const d = getData(),
       me = getUser();
     if (!me) return;
@@ -189,7 +149,7 @@ export function createExtras({
             (g) => '<option value="' + g.id + '">' + esc(g.name) + "</option>",
           )
           .join("") +
-        '</select></label><label>成員（全團紀念日可不選）<select name="member_id"></select></label><label>名字／紀念日名稱<input name="name" required maxlength="160"></label><label>出生年月日／原始紀念日期<input name="original_date" type="date" required></label><p class="muted">僅輸入一次，未來每年自動顯示。2月29日只在閏年當天顯示。</p><button>儲存</button><p class="error"></p></form>',
+        '</select></label><label>成員（全團紀念日可不選）<select name="member_id"></select></label><label>名字／紀念日名稱<input name="name" required maxlength="160"></label><label>出生年月日／原始紀念日期<input name="original_date" type="date" required></label><label class="members-only-option" id="birthday-year"><input name="year_unknown" type="checkbox">出生年份未知（只顯示生日，不計算歲數）</label><p class="muted">僅輸入一次，未來每年自動顯示。2月29日只在閏年當天顯示。</p><button>儲存</button><p class="error"></p></form>',
     );
     const f = $("#ann-form");
     f.elements.member_id
@@ -228,6 +188,19 @@ export function createExtras({
       members();
       f.elements.member_id.value = item.member_id || "";
     }
+    const unknown = f.elements.year_unknown,
+      date = f.elements.original_date;
+    unknown.checked = !!item?.year_unknown;
+    bindBirthdayYear(date, unknown);
+    const updateKind = () => {
+      $("#birthday-year").hidden = f.elements.kind.value !== "birthday";
+      if (f.elements.kind.value !== "birthday" && unknown.checked) {
+        unknown.checked = false;
+        unknown.onchange();
+      }
+    };
+    f.elements.kind.onchange = updateKind;
+    updateKind();
     f.onsubmit = async (ev) => {
       ev.preventDefault();
       const b = f.querySelector("button:not([type=button])");
@@ -245,12 +218,14 @@ export function createExtras({
           group_id: v.get("group_id"),
           member_id: memberId,
           name: v.get("name").trim(),
-          original_date: v.get("original_date"),
+          original_date: originalDate,
+          year_unknown: v.get("kind") === "birthday" && unknown.checked,
           created_by: item?.created_by || me.id,
         });
         $("#modal").close();
         await refresh();
         toast("紀念日已儲存，每年自動顯示");
+        onSaved?.();
       } catch (e) {
         f.querySelector(".error").textContent = e.message;
         b.disabled = false;

@@ -1,17 +1,24 @@
 export function occurrence(item, key) {
   const y = Number(key.slice(0, 4)),
     original = Number(item.original_date.slice(0, 4));
-  if (key.slice(5) !== item.original_date.slice(5) || y < original) return null;
-  const years = y - original;
+  if (
+    key.slice(5) !== item.original_date.slice(5) ||
+    (!item.year_unknown && y < original)
+  )
+    return null;
+  const years =
+    item.year_unknown && item.kind === "birthday" ? null : y - original;
   return {
     ...item,
     years,
     icon: item.kind === "birthday" ? "🎂" : "🎉",
     label:
       item.kind === "birthday"
-        ? years
-          ? years + " 歲生日"
-          : "出生紀念日"
+        ? item.year_unknown
+          ? "生日"
+          : years
+            ? years + " 歲生日"
+            : "出生紀念日"
         : item.kind === "debut"
           ? years
             ? "出道 " + years + " 週年"
@@ -73,4 +80,34 @@ export function calendarFile(e, title) {
       })
       .join("\r\n") + "\r\n"
   );
+}
+
+export function anniversaryDate(value, unknown = false) {
+  const raw = value.trim(),
+    date = unknown ? "2000-" + raw : raw;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date))
+    throw Error(unknown ? "請輸入月日，例如05-26。" : "請輸入完整年月日。");
+  const parsed = new Date(date + "T12:00:00Z");
+  if (
+    !Number.isFinite(parsed.getTime()) ||
+    parsed.toISOString().slice(0, 10) !== date
+  )
+    throw Error("日期不正確。");
+  return date;
+}
+export function bindBirthdayYear(input, checkbox) {
+  const update = () => {
+    const value = input.value;
+    input.type = checkbox.checked ? "text" : "date";
+    if (checkbox.checked) {
+      input.placeholder = "MM-DD，例如05-26";
+      input.pattern = "[0-9]{2}-[0-9]{2}";
+      input.value = value.slice(-5);
+    } else {
+      input.removeAttribute("pattern");
+      input.value = /^\d{4}-/.test(value) ? value : "";
+    }
+  };
+  checkbox.onchange = update;
+  update();
 }

@@ -1,3 +1,4 @@
+import { visitorForm } from "./visitor-forms.js";
 import { startAutoRefresh } from "./auto-refresh.js";
 import { createBoard } from "./board.js";
 import { createCollaborator } from "./collaborator.js";
@@ -764,9 +765,8 @@ async function refresh() {
   $("#site-credit").textContent = "架設網站：shysssiee　版本：" + VERSION;
   const settings = data.site_settings[0] || {};
   applyZone(settings.default_timezone || "auto");
-  const report = $("#report-link");
-  report.hidden = !/^https:\/\//i.test(settings.report_url || "");
-  report.href = report.hidden ? "#" : settings.report_url;
+  $("#report-link").hidden = !!me;
+  $("#apply-button").hidden = !!me;
   const freshVisit = selected === null;
   if (freshVisit) selected = data.groups.map((g) => g.id);
   selected = selected.filter((id) => data.groups.some((g) => g.id === id));
@@ -1055,3 +1055,6 @@ if (document.modelContext?.registerTool) {
 window.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !modal.open) hoverPanel.hide();
 });
+
+$("#apply-button").onclick = () => visitorForm("application", { show, toast });
+$("#report-link").onclick = () => visitorForm("report", { show, toast });

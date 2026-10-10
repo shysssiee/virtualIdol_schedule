@@ -1681,3 +1681,41 @@ nav button {
 .login-history td {
   text-align: left;
 }
+
+.anniversary-table {
+  min-width: 900px;
+}
+.anniversary-table td:last-child {
+  min-width: 160px;
+}
+.anniversary-table td {
+  vertical-align: top;
+}
+.anniversary-table .form-actions {
+  flex-wrap: nowrap;
+  margin: 0;
+}
+.anniversary-table input:not([type="checkbox"]),
+.anniversary-table select {
+  min-width: 140px;
+}
+.anniversary-table label {
+  margin: 8px 0;
+}
+.form-honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+#visitor-form input,
+#visitor-form select,
+#visitor-form button {
+  min-height: 44px;
+}
+.board-row small {
+  font-size: 12px;
+  color: #777b94;
+  font-weight: normal;
+}

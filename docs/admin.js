@@ -25,6 +25,7 @@ export function createAdmin({
     ["members", "成員"],
     ["categories", "活動分類"],
     ["platforms", "直播平台"],
+    ["anniversaries", "生日／紀念日"],
   ];
   const allowed = () => getUser()?.role === "owner";
   let section = "overview",
@@ -138,27 +139,23 @@ export function createAdmin({
       manageReports($("#admin-content"));
     } else if (section === "catalog") {
       $("#admin-content").innerHTML =
-        `<h1>團體與共用分類</h1><p class="muted">共用分類與平台新增一次，再到團體設定勾選。拖曳或上下移動後，請按「儲存順序」。</p><div class="catalog-tabs">${catalogs.map(([id, name]) => `<button data-catalog-tab="${id}" class="${id === catalog ? "primary" : ""}">${name}</button>`).join("")}</div><div class="actions"><button class="primary" data-add="${catalog}">新增${catalogs.find((c) => c[0] === catalog)[1]}</button>${catalog === "members" ? '<button id="expand-members">全部展開</button><button id="collapse-members">全部收起</button>' : ""}</div>${
-          catalog === "members"
-            ? data.groups
-                .map(
-                  (g) =>
-                    `<details class="member-section"><summary>${esc(g.name)}（${data.members.filter((m) => m.group_id === g.id).length} 位成員）</summary>${list(
-                      "members",
-                      data.members.filter((m) => m.group_id === g.id),
-                      "members-" + g.id,
-                    )}<div class="member-anniversaries">${(
-                      data.anniversaries || []
-                    )
-                      .filter((a) => a.group_id === g.id)
+        `<h1>團體與共用分類</h1><p class="muted">共用分類與平台新增一次，再到團體設定勾選。拖曳或上下移動後，請按「儲存順序」。</p><div class="catalog-tabs">${catalogs.map(([id, name]) => `<button data-catalog-tab="${id}" class="${id === catalog ? "primary" : ""}">${name}</button>`).join("")}</div>${
+          catalog === "anniversaries"
+            ? '<div id="anniversaries-manager"></div>'
+            : `<div class="actions"><button class="primary" data-add="${catalog}">新增${catalogs.find((c) => c[0] === catalog)[1]}</button>${catalog === "members" ? '<button id="expand-members">全部展開</button><button id="collapse-members">全部收起</button>' : ""}</div>${
+                catalog === "members"
+                  ? data.groups
                       .map(
-                        (a) =>
-                          `<p>${a.kind === "birthday" ? "🎂" : "🎉"} ${esc(a.member_id ? data.members.find((m) => m.id === a.member_id)?.name || a.name : "全團")} · ${esc(a.name)} · ${esc(a.original_date)}</p>`,
+                        (g) =>
+                          `<details class="member-section"><summary>${esc(g.name)}（${data.members.filter((m) => m.group_id === g.id).length} 位成員）</summary>${list(
+                            "members",
+                            data.members.filter((m) => m.group_id === g.id),
+                            "members-" + g.id,
+                          )}</details>`,
                       )
-                      .join("")}</div></details>`,
-                )
-                .join("")
-            : list(catalog, data[catalog])
+                      .join("")
+                  : list(catalog, data[catalog])
+              }`
         }`;
       document.querySelectorAll("[data-catalog-tab]").forEach(
         (b) =>
@@ -178,11 +175,10 @@ export function createAdmin({
             document
               .querySelectorAll(".member-section")
               .forEach((d) => (d.open = open));
-      $("#admin-content").insertAdjacentHTML(
-        "beforeend",
-        '<div id="anniversaries-manager" class="settings-card"></div>',
-      );
-      manageAnniversaries($("#anniversaries-manager"));
+      if (catalog === "anniversaries") {
+        manageAnniversaries($("#anniversaries-manager"));
+        return;
+      }
       bindCatalog();
     } else if (section === "collaborators") {
       $("#admin-content").innerHTML =
@@ -275,7 +271,7 @@ export function createAdmin({
     } else {
       const settings = data.site_settings[0] || {};
       $("#admin-content").innerHTML =
-        `<h1>網站設定</h1><form id="settings-form" class="settings-card"><label>網站名稱<input name="name" maxlength="80" required value="${esc(settings.name || "星曆")}"></label><label>Google 問題回報表單網址（選填）<input type="url" name="report_url" placeholder="https://forms.gle/…" value="${esc(settings.report_url || "")}"></label><label>網站預設顯示時區<select name="default_timezone">${["auto", "Asia/Taipei", "Asia/Seoul", "Asia/Tokyo", "America/New_York", "America/Los_Angeles", "Europe/London", "UTC"].map((z) => `<option value="${z}" ${z === (settings.default_timezone || "auto") ? "selected" : ""}>${z === "auto" ? "自動：讀者裝置時區" : esc(zoneLabel(z))}</option>`).join("")}</select></label><p class="muted">讀者預設採用裝置時區；選「網站預設」時套用這裡的設定。讀者手動選擇優先保留。</p><button class="primary">儲存設定</button><p id="settings-error" class="error"></p></form><div class="settings-card"><h2>社群分享標題</h2><p class="muted">已設定 Calendar Pages 自動部署：儲存站名後，下次排程部署會同步分享標題；也可到 GitHub Actions 立即執行。尚未設定自動部署時，可使用下方下載檔案手動更新。社群平台舊快取可能延後更新。</p><button id="download-share-page">下載分享標題更新檔</button></div>`;
+        `<h1>網站設定</h1><form id="settings-form" class="settings-card"><label>網站名稱<input name="name" maxlength="80" required value="${esc(settings.name || "星曆")}"></label><label>網站預設顯示時區<select name="default_timezone">${["auto", "Asia/Taipei", "Asia/Seoul", "Asia/Tokyo", "America/New_York", "America/Los_Angeles", "Europe/London", "UTC"].map((z) => `<option value="${z}" ${z === (settings.default_timezone || "auto") ? "selected" : ""}>${z === "auto" ? "自動：讀者裝置時區" : esc(zoneLabel(z))}</option>`).join("")}</select></label><p class="muted">讀者預設採用裝置時區；選「網站預設」時套用這裡的設定。讀者手動選擇優先保留。</p><button class="primary">儲存設定</button><p id="settings-error" class="error"></p></form><div class="settings-card"><h2>社群分享標題</h2><p class="muted">已設定 Calendar Pages 自動部署：儲存站名後，下次排程部署會同步分享標題；也可到 GitHub Actions 立即執行。尚未設定自動部署時，可使用下方下載檔案手動更新。社群平台舊快取可能延後更新。</p><button id="download-share-page">下載分享標題更新檔</button></div>`;
       $("#download-share-page").onclick = async () => {
         try {
           await downloadSharePage(getData().site_settings[0]?.name);
@@ -294,21 +290,11 @@ export function createAdmin({
             report_url = f.get("report_url").trim(),
             default_timezone = f.get("default_timezone");
           if (!name) throw Error("請輸入網站名稱");
-          if (report_url) {
-            const u = new URL(report_url);
-            if (
-              u.protocol !== "https:" ||
-              !["forms.gle", "docs.google.com"].includes(u.hostname)
-            )
-              throw Error(
-                "請填入 https 的 Google 表單網址（forms.gle 或 docs.google.com）。",
-              );
-          }
           if (default_timezone !== "auto" && !validZone(default_timezone))
             throw Error("時區無效");
           const { error } = await client
             .from("site_settings")
-            .update({ name, report_url, default_timezone })
+            .update({ name, default_timezone })
             .eq("singleton", true)
             .select("singleton")
             .single();
