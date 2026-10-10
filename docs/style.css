@@ -1997,7 +1997,7 @@ nav button {
 .month .day-events { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; align-content: start; }
 .month .day-events .group-summary { margin: 0; }
 .month .day-events .more-events { grid-column: 1 / -1; margin: 0; }
-@container (min-width: 180px) {
+@container (min-width: 165px) {
   .month .day-events { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
   .month .group-summary { padding-inline: 5px; height: 30px; min-height: 30px; }
   .month .group-summary strong { font-size: 11px; }

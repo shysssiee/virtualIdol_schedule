@@ -1,7 +1,7 @@
 import { showUrlImport } from "./url-import.js";
 import { matchImportGroup, matchImportPlatform } from "./url-import-core.js";
 import { groupDay, newEventStatus, duplicates, eventChanges } from "./v14.js";
-import { bindGroupPhotos } from "./group-photo.js";
+import { bindGroupPhotos } from "./group-photo.js?v=1.4-layout2";
 import {
   templateHtml,
   bindTemplates,
@@ -350,7 +350,7 @@ function render() {
         );
       visible.push(...items);
       const bundles = groupDay(items);
-      const twoColumns = !matchMedia("(max-width:600px)").matches && $("#calendar").getBoundingClientRect().width / 7 - 15 >= 180;
+      const twoColumns = !matchMedia("(max-width:600px)").matches && $("#calendar").getBoundingClientRect().width / 7 - 15 >= 165;
       const limit = twoColumns ? 6 : matchMedia("(max-width:600px)").matches ? 2 : 3;
       html += `<div data-day-list="${civilKey(d)}" class="cell ${d.getUTCMonth() !== anchor.getUTCMonth() ? "outside" : ""} ${i % 7 === 0 ? "sunday" : i % 7 === 6 ? "saturday" : ""}"><button type="button" data-day-list="${civilKey(d)}" aria-label="${civilKey(d)} 查看當日行程" class="day-number ${civilKey(d) === dayKey(new Date()) ? "is-today" : ""}">${d.getUTCDate()}</button>${extras.dateExtras(civilKey(d))}<div class="day-events">${bundles
         .slice(0, limit)
