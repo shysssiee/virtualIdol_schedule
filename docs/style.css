@@ -2030,4 +2030,9 @@ nav button {
   .month .day-events { grid-template-columns: minmax(0, 1fr); gap: 4px; }
 }
 
-@media (min-width: 1280px) { .month .cell { height: 280px; } }
+/* Desktop weeks size themselves from the tallest date; phones retain their existing height. */
+@media (min-width: 1280px) {
+  .month { grid-auto-rows: auto; align-items: stretch; }
+  .month .cell { height: auto; min-height: 220px; }
+  .month .day-events { flex-shrink: 0; overflow: visible; }
+}
