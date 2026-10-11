@@ -1,4 +1,4 @@
-import { parseBatch, prepareRow } from './batch-import-core.js?v=1.4-batch4';
+import { parseBatch, prepareRow } from './batch-import-core.js?v=1.4-r3';
 import { escape as esc } from './calendar.js';
 import { save } from './data.js';
 

@@ -32,7 +32,7 @@ export function parseBatch(text) {
     confirmed: row.confirmed === true,
   }));
 }
-export function prepareRow(row, data, existing = data.events, now = Date.now()) {
+export function prepareRow(row, data, existing = data.events, now = Date.now(), { optionalSource = false } = {}) {
   const errors = [];
   const group = data.groups.find(g => g.name === row.group);
   if (!group) errors.push('請選擇已建立的團體');
@@ -43,7 +43,7 @@ export function prepareRow(row, data, existing = data.events, now = Date.now()) 
     errors.push('日期／時間無效');
   if (!row.confirmed) errors.push('公告或時間尚未確認');
   let source;
-  try { source = new URL(row.source); if (source.protocol !== 'https:' || source.username || source.password) throw Error(); }
+  try { if (row.source || !optionalSource) { source = new URL(row.source); if (source.protocol !== 'https:' || source.username || source.password) throw Error(); } }
   catch { errors.push('請填入有效的 HTTPS 官方來源'); }
   const title = row.title.trim() || `${group?.name || row.group} LIVE`;
   if ([...title].length > 160) errors.push('標題不可超過 160 字');
@@ -57,7 +57,7 @@ export function prepareRow(row, data, existing = data.events, now = Date.now()) 
     start_at: Number.isFinite(stamp) ? new Date(stamp).toISOString() : null,
     input_timezone: 'Asia/Taipei', end_at: null, category_id: null,
     members_only: false, status: newEventStatus(start, now),
-    description: `官方公告來源：${row.source}`, links: [] };
+    description: row.source ? `官方公告來源：${row.source}` : '', links: [] };
   if (group && Number.isFinite(stamp) && duplicates(existing, { ...item, id: null }).length) errors.push('同團／同時間已有行程');
   const platform = importPlatform(row, data);
   if (platform) {

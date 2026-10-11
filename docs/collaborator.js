@@ -1,4 +1,5 @@
-import { backendHome } from "./backend-home.js";
+import { batchEntryPage } from './batch-entry.js?v=1.4-r3';
+import { backendHome } from "./backend-home.js?v=1.4-r3";
 import { paginate, pageSizeOptions } from "./pagination.js";
 import { accountPage } from "./account.js";
 import { client } from "./data.js";
@@ -17,6 +18,7 @@ export function createCollaborator({
   refresh,
   toast,
 }) {
+  let returnSection = "home";
   let section = "home",
     timer,
     page = 0,
@@ -44,6 +46,7 @@ export function createCollaborator({
     document.querySelector("#admin-nav").innerHTML = [
       ["home", "首頁"],
       ["events", "行程管理"],
+      ["batch-entry", "批次匯入行程"],
       ["members", "成員"],
       ["anniversaries", "生日／紀念日"],
       ["directory", "協作者名單"],
@@ -58,6 +61,7 @@ export function createCollaborator({
     document.querySelectorAll("[data-collab-section]").forEach(
       (b) =>
         (b.onclick = () => {
+          if (b.dataset.collabSection === "batch-entry" && section !== "batch-entry") returnSection = section;
           section = b.dataset.collabSection;
           render().catch((e) => toast(e.message));
         }),
@@ -65,6 +69,10 @@ export function createCollaborator({
     const r = root();
     if (section === "home") {
       backendHome(root());
+      return;
+    }
+    if (section === "batch-entry") {
+      batchEntryPage(r,{getData,getUser,refresh,onReturn:()=>{section=returnSection;render().catch(e=>toast(e.message));}});
       return;
     }
     if (section === "events") {

@@ -1,8 +1,9 @@
+import { batchEntryPage } from './batch-entry.js?v=1.4-r3';
 import { memberName } from "./v14.js";
-import { batchImportPage } from "./batch-import.js?v=1.4-batch4";
+import { batchImportPage } from "./batch-import.js?v=1.4-r3";
 import { photoEditorHtml, bindPhotoEditor } from "./group-photo.js";
 import { accountPage } from "./account.js";
-import { backendHome } from "./backend-home.js?v=1.4-batch4";
+import { backendHome } from "./backend-home.js?v=1.4-r3";
 import { backupPage } from "./backup.js";
 import { paginate, pageSizeOptions } from "./pagination.js";
 import { renderLoginHistory } from "./login-history.js";
@@ -35,6 +36,7 @@ export function createAdmin({
     ["anniversaries", "生日／紀念日"],
   ];
   const allowed = () => getUser()?.role === "owner";
+  let returnSection = "home";
   let section = "home",
     catalog = "groups",
     profiles = [],
@@ -56,7 +58,8 @@ export function createAdmin({
     $("#admin-nav").innerHTML = [
       ["home", "首頁"],
       ["overview", "行程管理"],
-      ["batch", "待新增行程匯入"],
+      ["batch-entry", "批次匯入行程"],
+      ["batch", "JSON 行程匯入（站主）"],
       ["catalog", "團體與共用分類"],
       ["collaborators", "協作者管理"],
       ["settings", "網站設定"],
@@ -76,6 +79,7 @@ export function createAdmin({
           (b.onclick = () => {
             if (!canLeave()) return;
             dirty.clear();
+            if (b.dataset.section === "batch-entry" && section !== "batch-entry") returnSection = section;
             section = b.dataset.section;
             page = 0;
             admin();
@@ -117,6 +121,10 @@ export function createAdmin({
     $("#admin-status").hidden = true;
     if (section === "home") {
       backendHome($("#admin-content"));
+      return;
+    }
+    if (section === "batch-entry") {
+      batchEntryPage($("#admin-content"), {getData,getUser,refresh,onReturn:()=>{section=returnSection;admin();}});
       return;
     }
     if (section === "batch") {

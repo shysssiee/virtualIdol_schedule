@@ -2036,3 +2036,19 @@ nav button {
   .month .cell { height: auto; min-height: 220px; }
   .month .day-events { flex-shrink: 0; overflow: visible; }
 }
+
+/* v1.4.r3 single-group batch entry */
+.batch-entry > h1,.batch-entry > p,.batch-dialog { text-align:center; }
+.batch-group { display:block; max-width:420px; margin:24px auto; text-align:center; }
+.batch-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); gap:20px; align-items:stretch; }
+.batch-card { border:1px solid var(--line); border-radius:14px; padding:20px; background:white; }
+.batch-card-heading { display:flex; flex-direction:column; align-items:center; gap:12px; margin-bottom:18px; }
+.batch-card-heading h2 { margin:0; font-size:20px; }
+.batch-card fieldset { border:0; padding:0; margin:0; min-width:0; display:grid; gap:14px; }
+.batch-card label { display:flex; flex-direction:column; gap:6px; text-align:center; margin:0; }
+.batch-card input:not([type=checkbox]),.batch-card select,.batch-group select { width:100%; min-height:44px; box-sizing:border-box; margin:0; }
+.batch-card .batch-members-only { flex-direction:row; justify-content:center; align-items:center; min-height:44px; }
+.batch-result { text-align:center; overflow-wrap:anywhere; min-height:24px; }
+.batch-actions,.batch-dialog .actions { justify-content:center; gap:14px; margin-top:20px; }
+.batch-actions button,.batch-dialog button { min-width:120px; min-height:44px; }
+#batch-entry-status { text-align:center; color:#a32d43; }

@@ -9,11 +9,11 @@ import {
 } from "./event-tools.js";
 import { defaultEventTitle, templateValues } from "./event-template.js";
 import { startIdleSession } from "./idle-session.js";
-import { startVisitorPresence } from "./visitor-presence.js";
+
 import { visitorForm } from "./visitor-forms.js";
 import { startAutoRefresh } from "./auto-refresh.js";
 import { createBoard } from "./board.js";
-import { createCollaborator } from "./collaborator.js";
+import { createCollaborator } from "./collaborator.js?v=1.4-r3";
 import { greeting } from "./greeting.js";
 import { memberEntryHtml, bindMemberEntry } from "./member-entry.js";
 import { updateSiteMetadata } from "./site-title.js";
@@ -31,7 +31,7 @@ import {
   zoneLabel,
   parts,
 } from "./timezone.js";
-import { createAdmin } from "./admin.js?v=1.4-batch4";
+import { createAdmin } from "./admin.js?v=1.4-r3";
 import {
   configured,
   client,
@@ -55,7 +55,7 @@ import {
   shift,
   dayEvents,
   layout,
-} from "./calendar.js";
+} from "./calendar.js?v=1.4-r3";
 const $ = (s) => document.querySelector(s);
 let data,
   me,
@@ -1392,7 +1392,7 @@ window.addEventListener("keydown", (event) => {
 $("#apply-button").onclick = () => visitorForm("application", { show, toast });
 $("#report-link").onclick = () => visitorForm("report", { show, toast });
 
-startVisitorPresence(client, $("#count"));
+
 
 if (client)
   startIdleSession({
