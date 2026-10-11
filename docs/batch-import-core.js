@@ -1,5 +1,25 @@
 import { duplicates, newEventStatus } from './v14.js';
 
+export function importPlatform(row, data) {
+  if (row.platform === 'source-only') return '';
+  if (row.platform) return row.platform;
+  try {
+    const url = new URL(row.source);
+    if (url.protocol !== 'https:' || url.username || url.password) return '';
+    const id = url.hostname === 'youtu.be' ? url.pathname.slice(1) :
+      ['youtube.com', 'www.youtube.com', 'm.youtube.com'].includes(url.hostname) ?
+        (url.pathname === '/watch' ? url.searchParams.get('v') : url.pathname.match(/^\/live\/([^/]+)$/)?.[1]) : null;
+    if (/^[\w-]{11}$/.test(id || '')) return data.platforms.find(p => p.name.toUpperCase() === 'YOUTUBE')?.name || 'YOUTUBE';
+    const key = name => name.toUpperCase().replace(/[\s/_:-]/g, '');
+    if (['x.com','www.x.com','twitter.com','www.twitter.com','mobile.twitter.com'].includes(url.hostname) &&
+        (/^\/[A-Za-z0-9_]+\/status\/\d+\/?$/.test(url.pathname) || /^\/i\/spaces\/[A-Za-z0-9]+\/?$/.test(url.pathname)))
+      return data.platforms.find(p => ['X','TWITTER','XTWITTER','XSPACE','XSPACES','TWITTERSPACE','TWITTERSPACES','SPACE','SPACES','X推特'].includes(key(p.name)))?.name || 'X/SPACE';
+    if (['weverse.io','www.weverse.io'].includes(url.hostname) && /^\/[A-Za-z0-9_-]+\/live\/\d+-\d+\/?$/.test(url.pathname))
+      return data.platforms.find(p => key(p.name) === 'WEVERSE')?.name || 'Weverse';
+  } catch {}
+  return '';
+}
+
 export function parseBatch(text) {
   const input = JSON.parse(text);
   if (input.version !== 1 || !Array.isArray(input.events) || input.events.length > 100)
@@ -39,8 +59,9 @@ export function prepareRow(row, data, existing = data.events, now = Date.now()) 
     members_only: false, status: newEventStatus(start, now),
     description: `官方公告來源：${row.source}`, links: [] };
   if (group && Number.isFinite(stamp) && duplicates(existing, { ...item, id: null }).length) errors.push('同團／同時間已有行程');
-  if (row.platform) {
-    const p = data.platforms.find(p => p.name.toUpperCase() === row.platform.toUpperCase());
+  const platform = importPlatform(row, data);
+  if (platform) {
+    const p = data.platforms.find(p => p.name.toUpperCase() === platform.toUpperCase());
     if (!p || !(group?.platform_ids || []).includes(p.id)) errors.push('團體尚未啟用此平台');
     else if (source) item.links.push({ platform_id: p.id, url: source.href });
   }
