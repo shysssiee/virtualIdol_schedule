@@ -13,7 +13,7 @@ import { startIdleSession } from "./idle-session.js";
 import { visitorForm } from "./visitor-forms.js";
 import { startAutoRefresh } from "./auto-refresh.js";
 import { createBoard } from "./board.js";
-import { createCollaborator } from "./collaborator.js?v=1.4-r3";
+import { createCollaborator } from "./collaborator.js?v=1.4-r3-layout1-layout1";
 import { greeting } from "./greeting.js";
 import { memberEntryHtml, bindMemberEntry } from "./member-entry.js";
 import { updateSiteMetadata } from "./site-title.js";
@@ -31,7 +31,7 @@ import {
   zoneLabel,
   parts,
 } from "./timezone.js";
-import { createAdmin } from "./admin.js?v=1.4-r3";
+import { createAdmin } from "./admin.js?v=1.4-r3-layout1";
 import {
   configured,
   client,
@@ -55,7 +55,7 @@ import {
   shift,
   dayEvents,
   layout,
-} from "./calendar.js?v=1.4-r3";
+} from "./calendar.js?v=1.4-r3-layout1";
 const $ = (s) => document.querySelector(s);
 let data,
   me,

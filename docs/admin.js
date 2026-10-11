@@ -1,9 +1,9 @@
-import { batchEntryPage } from './batch-entry.js?v=1.4-r3';
+import { batchEntryPage } from './batch-entry.js?v=1.4-r3-layout1';
 import { memberName } from "./v14.js";
-import { batchImportPage } from "./batch-import.js?v=1.4-r3";
+import { batchImportPage } from "./batch-import.js?v=1.4-r3-layout1";
 import { photoEditorHtml, bindPhotoEditor } from "./group-photo.js";
 import { accountPage } from "./account.js";
-import { backendHome } from "./backend-home.js?v=1.4-r3";
+import { backendHome } from "./backend-home.js?v=1.4-r3-layout1";
 import { backupPage } from "./backup.js";
 import { paginate, pageSizeOptions } from "./pagination.js";
 import { renderLoginHistory } from "./login-history.js";
@@ -59,7 +59,7 @@ export function createAdmin({
       ["home", "首頁"],
       ["overview", "行程管理"],
       ["batch-entry", "批次匯入行程"],
-      ["batch", "JSON 行程匯入（站主）"],
+      ["batch", "JSON 行程匯入"],
       ["catalog", "團體與共用分類"],
       ["collaborators", "協作者管理"],
       ["settings", "網站設定"],

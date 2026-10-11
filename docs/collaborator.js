@@ -1,5 +1,5 @@
 import { batchEntryPage } from './batch-entry.js?v=1.4-r3';
-import { backendHome } from "./backend-home.js?v=1.4-r3";
+import { backendHome } from "./backend-home.js?v=1.4-r3-layout1";
 import { paginate, pageSizeOptions } from "./pagination.js";
 import { accountPage } from "./account.js";
 import { client } from "./data.js";
