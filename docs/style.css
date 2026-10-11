@@ -1999,6 +1999,13 @@ nav button {
 .month .day-events .more-events { grid-column: 1 / -1; margin: 0; }
 @container (min-width: 165px) {
   .month .day-events { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+  .month .day-events > .group-summary:nth-child(-n+4) { grid-column: 1; }
+  .month .day-events > .group-summary:nth-child(n+5) { grid-column: 2; }
+  .month .day-events > .group-summary:nth-child(4n+1) { grid-row: 1; }
+  .month .day-events > .group-summary:nth-child(4n+2) { grid-row: 2; }
+  .month .day-events > .group-summary:nth-child(4n+3) { grid-row: 3; }
+  .month .day-events > .group-summary:nth-child(4n+4) { grid-row: 4; }
+  .month .day-events > .more-events { grid-row: 5; }
   .month .group-summary { padding-inline: 5px; height: 30px; min-height: 30px; }
   .month .group-summary strong { font-size: 11px; }
   .month .group-summary:has(.live), .month .group-summary:has(.upcoming) { flex-wrap: wrap; height: 40px; min-height: 40px; gap: 1px; align-content: center; }
@@ -2023,4 +2030,4 @@ nav button {
   .month .day-events { grid-template-columns: minmax(0, 1fr); gap: 4px; }
 }
 
-@media (min-width: 1350px) { .month .cell { height: 220px; } }
+@media (min-width: 1280px) { .month .cell { height: 280px; } }
