@@ -2,11 +2,15 @@ import { parseBatch, prepareRow } from './batch-import-core.js';
 import { escape as esc } from './calendar.js';
 import { save } from './data.js';
 
-export function batchImportPage(root, { getData, getUser, refresh }) {
+export function batchImportPage(root, { getData, getUser, refresh, onComplete = () => {} }) {
   if (getUser()?.role !== 'owner') return;
   let rows = [], busy = false;
   root.innerHTML = `<h1>待新增行程匯入</h1><p>上傳查詢整理的 JSON 檔，確認官方公告與台灣時間，再勾選儲存。待確認與重複場次不會自動發布。</p><div class="actions"><button id="batch-template">下載空白範本</button><label>選擇匯入檔<input id="batch-file" type="file" accept=".json,application/json"></label></div><p class="muted">時間一律為台灣 UTC+8；成員可留空。平台留空時，來源只保存在行程說明，不當作直播連結。</p><p id="batch-message" role="status"></p><div id="batch-preview" style="overflow-x:auto"></div><button id="batch-save" class="primary" disabled>儲存勾選行程</button>`;
   const q = s => root.querySelector(s);
+  const controls = document.createElement('div');
+  controls.className = 'actions';
+  controls.innerHTML = '<button id="batch-all" disabled>全選</button><button id="batch-none" disabled>取消全選</button><span id="batch-selection" role="status"></span>';
+  q('#batch-preview').before(controls);
   const message = text => { q('#batch-message').textContent = text; };
   function checks() {
     const seen = [...getData().events];
@@ -26,6 +30,30 @@ export function batchImportPage(root, { getData, getUser, refresh }) {
       q(`[data-check="${i}"]`).textContent = result.errors.join('；') || '可新增';
     });
     q('#batch-save').disabled = busy || !root.querySelector('[data-pick]:checked');
+    const eligible = [...root.querySelectorAll('[data-pick]')].filter(box => !box.disabled);
+    const selected = eligible.filter(box => box.checked).length;
+    q('#batch-all').disabled = busy || !eligible.length || selected === eligible.length;
+    q('#batch-none').disabled = busy || !selected;
+    q('#batch-selection').textContent = `已勾選 ${selected}／${eligible.length} 筆可新增行程`;
+  }
+  q('#batch-all').onclick = () => {
+    if (busy) return;
+    root.querySelectorAll('[data-pick]').forEach(box => { if (!box.disabled) box.checked = true; });
+    updateChecks();
+  };
+  q('#batch-none').onclick = () => {
+    if (busy) return;
+    root.querySelectorAll('[data-pick]').forEach(box => { box.checked = false; });
+    updateChecks();
+  };
+  function success(count) {
+    const dialog = document.createElement('dialog');
+    dialog.setAttribute('aria-labelledby', 'batch-success-title');
+    dialog.innerHTML = `<h2 id="batch-success-title">更新成功</h2><p>已成功新增 ${count} 筆行程。</p><button class="primary" autofocus>返回行程管理</button>`;
+    document.body.append(dialog);
+    dialog.querySelector('button').onclick = () => dialog.close();
+    dialog.addEventListener('close', () => { dialog.remove(); onComplete(); }, { once: true });
+    dialog.showModal();
   }
   function render() {
     const data = getData();
@@ -63,12 +91,15 @@ export function batchImportPage(root, { getData, getUser, refresh }) {
     const picks = [...root.querySelectorAll('[data-pick]:checked')].map(b => Number(b.dataset.pick));
     if (!picks.length) return;
     busy = true;
+    q('#batch-save').textContent = '儲存中…';
+    message(`正在儲存 ${picks.length} 筆，請稍候…`);
     root.querySelectorAll('input,select,button').forEach(el => el.disabled = true);
-    let count = 0;
+    let count = 0, completed = false;
     try {
       await refresh();
       const seen = [...getData().events];
       for (const i of picks) {
+        message(`正在處理第 ${picks.indexOf(i) + 1}／${picks.length} 筆，已儲存 ${count} 筆…`);
         if (getUser()?.role !== 'owner') throw Error('站主登入已失效，請重新登入。');
         const result = prepareRow(rows[i], getData(), seen);
         try {
@@ -79,15 +110,19 @@ export function batchImportPage(root, { getData, getUser, refresh }) {
           q(`[data-result="${i}"]`).textContent = '儲存成功';
         } catch (error) { q(`[data-result="${i}"]`).textContent = `未儲存：${error.message}`; }
       }
-      await refresh(); message(`本次已儲存 ${count} 筆。未儲存的項目請檢查後重試。`);
+      await refresh();
+      completed = count === picks.length;
+      message(completed ? `更新成功！已新增 ${count} 筆行程。` : `已儲存 ${count} 筆；${picks.length - count} 筆未儲存，請依各列提示修正後重試。`);
     } catch (error) { message(`已儲存 ${count} 筆；${error.message}`); }
     finally {
       busy = false;
+      q('#batch-save').textContent = '儲存勾選行程';
       root.querySelectorAll('input,select,button').forEach(el => el.disabled = false);
       root.querySelectorAll('[data-row]').forEach(tr => {
         if (rows[Number(tr.dataset.row)].saved) tr.querySelectorAll('[data-field]').forEach(el => el.disabled = true);
       });
       updateChecks();
     }
+    if (completed) success(count);
   };
 }

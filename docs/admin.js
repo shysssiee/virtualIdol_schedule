@@ -1,8 +1,8 @@
 import { memberName } from "./v14.js";
-import { batchImportPage } from "./batch-import.js";
+import { batchImportPage } from "./batch-import.js?v=1.4-batch2";
 import { photoEditorHtml, bindPhotoEditor } from "./group-photo.js";
 import { accountPage } from "./account.js";
-import { backendHome } from "./backend-home.js?v=1.4-batch1";
+import { backendHome } from "./backend-home.js?v=1.4-batch2";
 import { backupPage } from "./backup.js";
 import { paginate, pageSizeOptions } from "./pagination.js";
 import { renderLoginHistory } from "./login-history.js";
@@ -120,7 +120,11 @@ export function createAdmin({
       return;
     }
     if (section === "batch") {
-      batchImportPage($("#admin-content"), { getData, getUser, refresh });
+      batchImportPage($("#admin-content"), { getData, getUser, refresh, onComplete: () => {
+        section = "overview";
+        page = 0;
+        admin();
+      } });
       return;
     }
     if (section === "account") {
