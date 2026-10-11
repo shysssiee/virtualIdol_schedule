@@ -31,7 +31,7 @@ import {
   zoneLabel,
   parts,
 } from "./timezone.js";
-import { createAdmin } from "./admin.js";
+import { createAdmin } from "./admin.js?v=1.4-batch1";
 import {
   configured,
   client,

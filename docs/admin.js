@@ -1,7 +1,8 @@
 import { memberName } from "./v14.js";
+import { batchImportPage } from "./batch-import.js";
 import { photoEditorHtml, bindPhotoEditor } from "./group-photo.js";
 import { accountPage } from "./account.js";
-import { backendHome } from "./backend-home.js";
+import { backendHome } from "./backend-home.js?v=1.4-batch1";
 import { backupPage } from "./backup.js";
 import { paginate, pageSizeOptions } from "./pagination.js";
 import { renderLoginHistory } from "./login-history.js";
@@ -55,6 +56,7 @@ export function createAdmin({
     $("#admin-nav").innerHTML = [
       ["home", "首頁"],
       ["overview", "行程管理"],
+      ["batch", "待新增行程匯入"],
       ["catalog", "團體與共用分類"],
       ["collaborators", "協作者管理"],
       ["settings", "網站設定"],
@@ -115,6 +117,10 @@ export function createAdmin({
     $("#admin-status").hidden = true;
     if (section === "home") {
       backendHome($("#admin-content"));
+      return;
+    }
+    if (section === "batch") {
+      batchImportPage($("#admin-content"), { getData, getUser, refresh });
       return;
     }
     if (section === "account") {
