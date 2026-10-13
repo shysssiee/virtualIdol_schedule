@@ -1,9 +1,10 @@
-import { batchEntryPage } from './batch-entry.js?v=1.4-r3';
-import { backendHome } from "./backend-home.js?v=1.4-r3-layout1";
+import { byLastUpdate } from './management-state.js?v=1.4-20261013';
+import { batchEntryPage } from './batch-entry.js?v=1.4-20261013';
+import { backendHome } from "./backend-home.js?v=1.4-20261013";
 import { paginate, pageSizeOptions } from "./pagination.js";
 import { accountPage } from "./account.js";
 import { client } from "./data.js";
-import { escape as esc, time, dayKey } from "./calendar.js";
+import { escape as esc, time, dayKey } from "./calendar.js?v=1.4-20261013";
 import { memberEntryHtml, bindMemberEntry } from "./member-entry.js";
 export function createCollaborator({
   isLive,
@@ -157,7 +158,7 @@ export function createCollaborator({
             [e.title, name, creator(e)].join(" ").toLowerCase().includes(query))
         );
       })
-      .sort((a, b) => Date.parse(b.start_at) - Date.parse(a.start_at));
+      .sort(byLastUpdate);
     const pagination = paginate(rows, page, pageSize),
       pages = pagination.pages;
     page = pagination.page;

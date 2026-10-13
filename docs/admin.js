@@ -1,15 +1,16 @@
-import { batchEntryPage } from './batch-entry.js?v=1.4-r3-layout1';
+import { byLastUpdate } from './management-state.js?v=1.4-20261013';
+import { batchEntryPage } from './batch-entry.js?v=1.4-20261013';
 import { memberName } from "./v14.js";
-import { batchImportPage } from "./batch-import.js?v=1.4-r3-layout1";
+import { batchImportPage } from "./batch-import.js?v=1.4-20261013";
 import { photoEditorHtml, bindPhotoEditor } from "./group-photo.js";
 import { accountPage } from "./account.js";
-import { backendHome } from "./backend-home.js?v=1.4-r3-layout1";
+import { backendHome } from "./backend-home.js?v=1.4-20261013";
 import { backupPage } from "./backup.js";
 import { paginate, pageSizeOptions } from "./pagination.js";
 import { renderLoginHistory } from "./login-history.js";
 import { downloadSharePage } from "./site-title.js";
 import { client, save, remove, loadProfiles } from "./data.js";
-import { escape as esc, dayKey, time } from "./calendar.js";
+import { escape as esc, dayKey, time } from "./calendar.js?v=1.4-20261013";
 import { zoneLabel, validZone } from "./timezone.js";
 import { bindSorting } from "./sorting.js";
 
@@ -375,7 +376,7 @@ export function createAdmin({
             [e.title, name, creator(e)].join(" ").toLowerCase().includes(query))
         );
       })
-      .sort((a, b) => Date.parse(b.start_at) - Date.parse(a.start_at));
+      .sort(byLastUpdate);
     const pagination = paginate(rows, page, pageSize),
       pages = pagination.pages;
     page = pagination.page;

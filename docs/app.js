@@ -1,3 +1,4 @@
+import { eventState } from './management-state.js?v=1.4-20261013';
 import { showUrlImport } from "./url-import.js";
 import { matchImportGroup, matchImportPlatform } from "./url-import-core.js";
 import { groupDay, newEventStatus, duplicates, eventChanges } from "./v14.js";
@@ -18,7 +19,7 @@ import { greeting } from "./greeting.js";
 import { memberEntryHtml, bindMemberEntry } from "./member-entry.js";
 import { updateSiteMetadata } from "./site-title.js";
 import { createPresence } from "./presence.js";
-import { createExtras } from "./extras.js";
+import { createExtras } from "./extras.js?v=1.4-20261013";
 import { createHoverPanel } from "./hover.js";
 import {
   civilKey,
@@ -31,7 +32,7 @@ import {
   zoneLabel,
   parts,
 } from "./timezone.js";
-import { createAdmin } from "./admin.js?v=1.4-r3-layout1";
+import { createAdmin } from "./admin.js?v=1.4-20261013";
 import {
   configured,
   client,
@@ -55,7 +56,7 @@ import {
   shift,
   dayEvents,
   layout,
-} from "./calendar.js?v=1.4-r3-layout1";
+} from "./calendar.js?v=1.4-20261013";
 const $ = (s) => document.querySelector(s);
 let data,
   me,
@@ -191,7 +192,7 @@ function showGroupDay(key, id) {
     `<h2>${esc(g.name)} · ${esc(key)}</h2><p>當日 ${items.length} 場直播</p><div class="day-schedule-list">${items
       .map(
         (e) =>
-          `<button class="day-schedule-item" data-event="${esc(e.id)}" style="--color:${esc(g.color)}"><strong>${isLive(e) ? '<span class="live">LIVE</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : ""}${time(e.start_at)} · ${esc(
+          `<button class="day-schedule-item" data-event="${esc(e.id)}" style="--color:${esc(g.color)}"><strong>${isLive(e) ? '<span class="live">LIVE</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : eventState(e) === "已結束" ? "已結束 · " : e.status === "cancelled" ? "已取消 · " : ""}${time(e.start_at)} · ${esc(
             e.member_ids
               .map((id) => data.members.find((m) => m.id === id)?.name)
               .filter(Boolean)
@@ -207,16 +208,8 @@ function card(e, extra = "", style = "", segmentStart = 0) {
   const g = group(e);
   const category =
     data.categories.find((c) => c.id === e.category_id)?.name || "";
-  const status =
-    e.status === "cancelled"
-      ? "已取消"
-      : isUpcoming(e)
-        ? "即將直播"
-        : isLive(e)
-          ? "直播中"
-          : end(e) <= Date.now() || e.status === "ended"
-            ? "已結束"
-            : "";
+  const state = eventState(e);
+  const status = state === "預定" ? "" : state;
   return `<button class="event ${extra} ${isLive(e) ? "is-live" : ""} ${e.status === "cancelled" ? "cancelled" : ""}" style="--color:${g.color};${style}" data-event="${esc(e.id)}" aria-label="${esc(time(e.start_at) + " " + g.name + " " + e.title + (isLive(e) ? " LIVE 直播中" : isUpcoming(e) ? " 即將直播" : ""))}">${status ? ` <span class="${status === "直播中" ? "live" : status === "即將直播" ? "upcoming" : "event-status"}">${status === "直播中" ? "LIVE" : status}</span>` : ""}<span class="meta">${time(continuation ? segmentStart : e.start_at)}${continuation ? " · 續播" : ""}</span><strong>${esc(g.name)}</strong><span class="event-info">${[
     category,
     platforms(e),
@@ -510,7 +503,7 @@ function showDayList(key, shouldScroll = true) {
   const items = dayEvents(filtered(), civilDate(key)).sort(
     (a, b) => Date.parse(a.start_at) - Date.parse(b.start_at),
   );
-  const content = `<h2>${esc(key)} 當日行程</h2><p class="muted">${extras.dayAlmanac(key).map(esc).join(" · ")}</p><div class="day-schedule-list">${items.map((e) => `<button data-event="${esc(e.id)}" class="day-schedule-item" style="--color:${esc(group(e).color)}"><strong>${isLive(e) ? '<span class="live">LIVE</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : e.status === "ended" ? "已結束 · " : ""}${time(e.start_at)} · ${esc(group(e).name)}</strong><span>${esc(e.title)}${e.members_only ? " · 屬於付費會員限定" : ""}</span></button>`).join("") || "<p>當日暫無行程</p>"}</div>${me ? '<button id="day-add-event" class="primary">＋ 新增行程</button>' : ""}`;
+  const content = `<h2>${esc(key)} 當日行程</h2><p class="muted">${extras.dayAlmanac(key).map(esc).join(" · ")}</p><div class="day-schedule-list">${items.map((e) => `<button data-event="${esc(e.id)}" class="day-schedule-item" style="--color:${esc(group(e).color)}"><strong>${isLive(e) ? '<span class="live">LIVE</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : eventState(e) === "已結束" ? "已結束 · " : ""}${time(e.start_at)} · ${esc(group(e).name)}</strong><span>${esc(e.title)}${e.members_only ? " · 屬於付費會員限定" : ""}</span></button>`).join("") || "<p>當日暫無行程</p>"}</div>${me ? '<button id="day-add-event" class="primary">＋ 新增行程</button>' : ""}`;
   if (matchMedia("(max-width:600px)").matches) {
     const panel = document.querySelector("#mobile-day-panel");
     panel.hidden = false;
@@ -531,7 +524,7 @@ function detail(e) {
     : /聲音/.test(category)
       ? "🔊 "
       : "";
-  return `<div class="event-detail" style="--color:${group(e).color}"><h3>${esc(group(e).name)} · ${esc(people(e))}</h3><h2>${esc(e.title)}${e.previous_start_at ? ' <span class="time-change">時間異動</span>' : ""}${isLive(e) ? '<span class="detail-live-badge">直播中</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : ""}${e.members_only ? '<span class="members-only-badge">屬於付費會員限定</span>' : ""}</h2>${e.previous_start_at ? `<p class="muted">原時間：${dayKey(e.previous_start_at)} ${time(e.previous_start_at)} → 新時間：${dayKey(e.start_at)} ${time(e.start_at)}</p>` : ""}<p>${dayKey(e.start_at)}　${time(e.start_at)}（${esc(zoneLabel(displayZone, new Date(e.start_at)))}）</p><p>${icon}${esc(category)} ${e.status === "cancelled" ? " · 已取消" : ""}</p><p style="white-space:pre-wrap">${esc(e.description)}</p></div>`;
+  return `<div class="event-detail" style="--color:${group(e).color}"><h3>${esc(group(e).name)} · ${esc(people(e))}</h3><h2>${esc(e.title)}${e.previous_start_at ? ' <span class="time-change">時間異動</span>' : ""}${isLive(e) ? '<span class="detail-live-badge">直播中</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : ""}${e.members_only ? '<span class="members-only-badge">屬於付費會員限定</span>' : ""}</h2>${e.previous_start_at ? `<p class="muted">原時間：${dayKey(e.previous_start_at)} ${time(e.previous_start_at)} → 新時間：${dayKey(e.start_at)} ${time(e.start_at)}</p>` : ""}<p>${dayKey(e.start_at)}　${time(e.start_at)}（${esc(zoneLabel(displayZone, new Date(e.start_at)))}）</p><p>${icon}${esc(category)}  · ${eventState(e)}</p><p style="white-space:pre-wrap">${esc(e.description)}</p></div>`;
 }
 function platformLinks(e) {
   return e.links

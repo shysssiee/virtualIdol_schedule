@@ -1,4 +1,6 @@
-import { save, remove } from "./data.js";
+import { canManageAnniversary } from './management-state.js?v=1.4-20261013';
+import { showAnniversaryHistory } from './anniversary-history.js?v=1.4-20261013';
+import { client, save, remove } from "./data.js";
 import { escape as esc } from "./calendar.js";
 import { paginate, pageSizeOptions } from "./pagination.js";
 import { anniversaryDate, bindBirthdayYear } from "./anniversaries.js";
@@ -9,6 +11,7 @@ export function anniversaryManager(
   let page = 0,
     size = 10,
     editing = null;
+  let authors = new Map();
   const me = getUser(),
     names = { birthday: "生日", debut: "出道日", anniversary: "其他紀念日" };
   const groupName = (x) =>
@@ -19,7 +22,7 @@ export function anniversaryManager(
       : x.kind === "birthday"
         ? x.name
         : "全團";
-  root.innerHTML = `<h2>生日／紀念日</h2><p class="muted">${me.role === "owner" ? "管理所有生日與紀念日。" : "管理自己新增的生日與紀念日。"}出生年份未知時只顯示生日，不計算歲數。</p><div class="admin-filters"><label>搜尋團體／成員／名稱<input data-ann-search type="search"></label><label>團體<select data-ann-group><option value="">全部團體</option>${getData()
+  root.innerHTML = `<h2>生日／紀念日</h2><p class="muted">${me.role === "owner" ? "管理所有生日與紀念日。" : "查看全部生日與紀念日；只能修改、刪除自己新增的資料。"}出生年份未知時只顯示生日，不計算歲數。</p><div class="admin-filters"><label>搜尋團體／成員／名稱<input data-ann-search type="search"></label><label>團體<select data-ann-group><option value="">全部團體</option>${getData()
     .groups.map((g) => `<option value="${esc(g.id)}">${esc(g.name)}</option>`)
     .join(
       "",
@@ -43,7 +46,7 @@ export function anniversaryManager(
     const rows = (d.anniversaries || [])
       .filter(
         (x) =>
-          (me.role === "owner" || x.created_by === me.id) &&
+          
           (!group || x.group_id === group) &&
           (!kind || x.kind === kind) &&
           (!query ||
@@ -61,7 +64,7 @@ export function anniversaryManager(
       );
     const result = paginate(rows, page, size);
     page = result.page;
-    table.innerHTML = `<p class="muted">共 ${result.total} 筆 · 第 ${page + 1} / ${result.pages} 頁</p><div class="table-scroll"><table class="anniversary-table"><thead><tr><th>團體</th><th>成員名字／全團</th><th>生日</th><th>出道日</th><th>其他紀念日</th><th>操作</th></tr></thead><tbody>${result.rows.map((x) => row(x, d)).join("") || '<tr><td colspan="6">沒有符合條件的紀念日</td></tr>'}</tbody></table></div><div class="form-actions"><button data-ann-prev ${page === 0 ? "disabled" : ""}>上一頁</button><button data-ann-next ${page === result.pages - 1 ? "disabled" : ""}>下一頁</button></div>`;
+    table.innerHTML = `<p class="muted">共 ${result.total} 筆 · 第 ${page + 1} / ${result.pages} 頁</p><div class="table-scroll"><table class="anniversary-table"><thead><tr><th>團體</th><th>成員名字／全團</th><th>生日</th><th>出道日</th><th>其他紀念日</th><th>新增者／新增時間</th><th>操作</th></tr></thead><tbody>${result.rows.map((x) => row(x, d)).join("") || '<tr><td colspan="7">沒有符合條件的紀念日</td></tr>'}</tbody></table></div><div class="form-actions"><button data-ann-prev ${page === 0 ? "disabled" : ""}>上一頁</button><button data-ann-next ${page === result.pages - 1 ? "disabled" : ""}>下一頁</button></div>`;
     $("[data-ann-prev]").onclick = () => {
       if (discard()) {
         editing = null;
@@ -79,7 +82,7 @@ export function anniversaryManager(
     table.querySelectorAll("[data-ann-edit]").forEach(
       (b) =>
         (b.onclick = () => {
-          if (discard()) {
+          if (canManageAnniversary(getUser(),d.anniversaries.find(x=>x.id===b.dataset.annEdit)) && discard()) {
             editing = b.dataset.annEdit;
             render();
           }
@@ -89,6 +92,7 @@ export function anniversaryManager(
       (b) =>
         (b.onclick = async () => {
           const x = d.anniversaries.find((x) => x.id === b.dataset.annDelete);
+          if (!canManageAnniversary(getUser(),x)) return;
           if (!confirm(`刪除「${x.name}」？刪除後不再每年顯示。`)) return;
           b.disabled = true;
           try {
@@ -102,6 +106,7 @@ export function anniversaryManager(
           }
         }),
     );
+    table.querySelectorAll("[data-ann-history]").forEach(b=>b.onclick=()=>showAnniversaryHistory(b.dataset.annHistory,getData()));
     const tr = table.querySelector("[data-ann-editing]");
     if (tr) {
       const x = d.anniversaries.find((x) => x.id === editing),
@@ -129,6 +134,7 @@ export function anniversaryManager(
         const b = tr.querySelector("[data-row-save]");
         b.disabled = true;
         try {
+          if (!canManageAnniversary(getUser(),x)) throw Error("只能修改自己新增的資料。");
           const name = tr.querySelector("[data-row-name]").value.trim();
           if (!name || name.length > 160) throw Error("請填寫1至160字的名稱。");
           const value = {
@@ -154,14 +160,14 @@ export function anniversaryManager(
     }
   }
   function row(x, d) {
-    const editingRow = x.id === editing,
+    const editingRow = x.id === editing && canManageAnniversary(getUser(),x),
       date = x.year_unknown
         ? x.original_date.slice(5) + "（年份未知）"
         : x.original_date;
     const dateCell = editingRow
       ? `<input data-row-date aria-label="${names[x.kind]}日期" type="date" value="${x.original_date}" required>${x.kind === "birthday" ? `<label class="members-only-option"><input data-row-unknown type="checkbox" ${x.year_unknown ? "checked" : ""}>出生年份未知</label>` : ""}`
       : esc(date);
-    return `<tr ${editingRow ? "data-ann-editing" : ""}><td>${editingRow ? `<select data-row-group aria-label="團體">${d.groups.map((g) => `<option value="${g.id}" ${g.id === x.group_id ? "selected" : ""}>${esc(g.name)}</option>`).join("")}</select>` : esc(groupName(x))}</td><td>${editingRow ? `<select data-row-member aria-label="成員"></select><label>名稱<input data-row-name maxlength="160" value="${esc(x.name)}"></label>` : esc(memberName(x))}</td><td>${x.kind === "birthday" ? dateCell : "—"}</td><td>${x.kind === "debut" ? dateCell : "—"}</td><td>${x.kind === "anniversary" ? (editingRow ? dateCell : `${esc(x.name)}<br>${dateCell}`) : "—"}</td><td>${editingRow ? '<div class="form-actions"><button data-row-save>儲存</button><button data-row-cancel>取消</button></div><p class="error" role="status"></p>' : `<div class="form-actions"><button data-ann-edit="${x.id}">修改</button><button data-ann-delete="${x.id}">刪除</button></div>`}</td></tr>`;
+    return `<tr ${editingRow ? "data-ann-editing" : ""}><td>${editingRow ? `<select data-row-group aria-label="團體">${d.groups.map((g) => `<option value="${g.id}" ${g.id === x.group_id ? "selected" : ""}>${esc(g.name)}</option>`).join("")}</select>` : esc(groupName(x))}</td><td>${editingRow ? `<select data-row-member aria-label="成員"></select><label>名稱<input data-row-name maxlength="160" value="${esc(x.name)}"></label>` : esc(memberName(x))}</td><td>${x.kind === "birthday" ? dateCell : "—"}</td><td>${x.kind === "debut" ? dateCell : "—"}</td><td>${x.kind === "anniversary" ? (editingRow ? dateCell : `${esc(x.name)}<br>${dateCell}`) : "—"}</td><td>${esc(authors.get(x.id) || (x.created_by===me.id?me.display_name:"未知新增者"))}<br>${esc(x.created_at ? new Date(x.created_at).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",hour12:false}) : "—")}</td><td>${editingRow ? '<div class="form-actions"><button data-row-save>儲存</button><button data-row-cancel>取消</button></div><p class="error" role="status"></p>' : `<div class="form-actions">${canManageAnniversary(getUser(),x)?`<button data-ann-edit="${x.id}">修改</button><button data-ann-delete="${x.id}">刪除</button>`:""}<button data-ann-history="${x.id}">修改紀錄</button></div>`}</td></tr>`;
   }
   for (const selector of [
     "[data-ann-search]",
@@ -202,4 +208,10 @@ export function anniversaryManager(
     }
   };
   render();
+  client?.rpc('anniversary_creator_names',{}).then(({data,error})=>{
+    if (!root.isConnected) return;
+    if(error){toast('新增者讀取失敗，請先執行本次生日紀錄 SQL。');return;}
+    authors=new Map((data||[]).map(x=>[x.anniversary_id,x.nickname]));
+    if(!editing)render();
+  }).catch(e=>toast(e.message));
 }
