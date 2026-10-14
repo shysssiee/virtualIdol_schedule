@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -13,9 +13,10 @@
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23292c4a'/%3E%3Cpath d='M16 5l3 7 8 4-8 3-3 8-3-8-8-3 8-4z' fill='%23fff'/%3E%3C/svg%3E"
     />
     <link rel="stylesheet" href="style.css?v=1.4-20261013" />
+    <link rel="stylesheet" href="lucian-ui.css?v=1.4-20261014" />
     <script src="config.js"></script>
     <script src="./vendor/korean-lunar-calendar.min.js"></script>
-    <script type="module" src="app.js?v=1.4-20261013"></script>
+    <script type="module" src="app.js?v=1.4-20261014"></script>
   </head>
   <body>
     <header>
@@ -104,17 +105,18 @@
           </div>
         </div>
         <div class="subtoolbar">
-          <div class="views" role="group" aria-label="日曆檢視">
-            <button data-view="month" class="active">月</button
-            ><button data-view="week">週</button
-            ><button data-view="day">日</button
-            ><button data-view="list">列表</button>
+          <div class="views ux u039" data-theme="light"><div class="u039-tabs" role="tablist" aria-label="日曆檢視"><span class="u039-pill" aria-hidden="true"></span>
+            <button class="u039-tab" role="tab" aria-controls="calendar" data-view="month">月</button
+            ><button class="u039-tab" role="tab" aria-controls="calendar" data-view="week">週</button
+            ><button class="u039-tab" role="tab" aria-controls="calendar" data-view="day">日</button
+            ><button class="u039-tab" role="tab" aria-controls="calendar" data-view="list">列表</button>
+          </div>
           </div>
           <div id="group-legend" aria-label="團體顏色圖例"></div>
           
         </div>
         <section id="update-notice" class="update-notice" hidden></section>
-        <div id="calendar"></div>
+        <div id="calendar" role="tabpanel"></div>
         <section
           id="mobile-day-panel"
           class="mobile-day-panel"
@@ -131,6 +133,7 @@
           >
         </footer>
       </main>
+      <aside id="today-panel" class="today-panel"><details id="today-details"><summary>今日行程</summary><p id="today-date" class="today-date"></p><div id="today-items" class="today-items"></div><p class="today-note">直播中優先顯示；結束後恢復時間排序。<br>直播提醒最長顯示兩小時，並非平台開播確認。</p></details></aside>
     </div>
     <section id="admin-workspace" class="admin-workspace" hidden="">
       <aside class="admin-sidebar">
@@ -148,6 +151,6 @@
       <button class="close" aria-label="關閉">×</button>
       <div id="modal-body"></div>
     </dialog>
-    <div id="toast" role="status" hidden=""></div>
+    <div id="toast" class="ux u070" data-theme="light"><div class="u070-zone" role="region" aria-label="操作通知" tabindex="-1"><p class="u070-empty"></p><div class="u070-live" aria-live="polite"></div></div></div>
   </body>
 </html>

@@ -1,3 +1,5 @@
+import {liveFirst,liveBundles} from './live-order.js?v=1.4-20261014';
+import {createToasts,syncTabs,bindTabs} from './lucian-ui.js?v=1.4-20261014';
 import { eventState } from './management-state.js?v=1.4-20261013';
 import { showUrlImport } from "./url-import.js";
 import { matchImportGroup, matchImportPlatform } from "./url-import-core.js";
@@ -14,7 +16,7 @@ import { startIdleSession } from "./idle-session.js";
 import { visitorForm } from "./visitor-forms.js";
 import { startAutoRefresh } from "./auto-refresh.js";
 import { createBoard } from "./board.js";
-import { createCollaborator } from "./collaborator.js?v=1.4-r3-layout1-layout1";
+import { createCollaborator } from "./collaborator.js?v=1.4-20261014";
 import { greeting } from "./greeting.js";
 import { memberEntryHtml, bindMemberEntry } from "./member-entry.js";
 import { updateSiteMetadata } from "./site-title.js";
@@ -32,7 +34,7 @@ import {
   zoneLabel,
   parts,
 } from "./timezone.js";
-import { createAdmin } from "./admin.js?v=1.4-20261013";
+import { createAdmin } from "./admin.js?v=1.4-20261014";
 import {
   configured,
   client,
@@ -87,7 +89,10 @@ modal.addEventListener("click", (e) => {
       modal.close();
   }
 });
+const notify = createToasts($("#toast"));
 function toast(message) {
+  (modal.open ? modal : document.body).append($("#toast"));
+  notify(message, /失敗|錯誤|無法/.test(message) ? "err" : /成功|已儲存|已更新|已公開|已刪除|已手動結束/.test(message) ? "ok" : "info");
   if (modal.open) {
     let status = $("#modal-status");
     if (!status) {
@@ -106,10 +111,9 @@ function toast(message) {
     $("#admin-status").textContent = message;
     return;
   }
-  $("#toast").textContent = message;
-  $("#toast").hidden = false;
-  setTimeout(() => ($("#toast").hidden = true), 4000);
+
 }
+modal.addEventListener("close", () => document.body.append($("#toast")));
 function show(content) {
   modal.classList.remove("event-dialog");
   modal.style.removeProperty("--event-color");
@@ -182,7 +186,7 @@ function groupSummary(bundle, key) {
 function showGroupDay(key, id) {
   const items = dayEvents(filtered(), civilDate(key))
     .filter((e) => e.group_id === id)
-    .sort((a, b) => Date.parse(a.start_at) - Date.parse(b.start_at));
+    .sort(liveFirst);
   if (items.length === 1) {
     openEvent(items[0]);
     return;
@@ -233,6 +237,21 @@ function filtered() {
         )),
   );
 }
+function renderToday() {
+ $("#today-panel").hidden = history;
+ const key=dayKey(new Date());
+ $("#today-date").textContent=key+" · "+zoneLabel(displayZone);
+ const items=dayEvents(filtered(),civilDate(key)).sort(liveFirst);
+ $("#today-items").innerHTML=items.map(e=>{
+  const state=eventState(e);
+  return `<button class="today-item" data-event="${esc(e.id)}" style="--color:${esc(group(e).color)}"><span class="today-item-head"><span class="today-state ${state==='直播中'?'live':''}">${esc(state)}</span><time>${time(e.start_at)}</time></span><strong>${esc(group(e).name)} · ${esc(people(e))}</strong><span class="today-item-title">${esc(e.title)}</span></button>`;
+ }).join('') || '<p class="muted">今天沒有符合目前篩選的行程。</p>';
+ $("#today-items").querySelectorAll('[data-event]').forEach(b=>b.onclick=()=>openEvent(data.events.find(e=>e.id===b.dataset.event))); 
+}
+const todayWide=matchMedia('(min-width:1400px)');
+function todayLayout(){ $("#today-details").open=todayWide.matches; }
+todayLayout();todayWide.addEventListener('change',todayLayout);
+bindTabs($(".views"),value=>{view=value;render();});
 function renderFilters() {
   const query = $("#search").value.trim().toLowerCase();
   $("#groups").innerHTML =
@@ -342,7 +361,7 @@ function render() {
           (a, b) => Date.parse(a.start_at) - Date.parse(b.start_at),
         );
       visible.push(...items);
-      const bundles = groupDay(items);
+      const bundles = liveBundles(groupDay(items));
       const twoColumns = !matchMedia("(max-width:600px)").matches && $("#calendar").getBoundingClientRect().width / 7 - 15 >= 165;
       const limit = twoColumns ? 8 : matchMedia("(max-width:600px)").matches ? 2 : 3;
       html += `<div data-day-list="${civilKey(d)}" class="cell ${d.getUTCMonth() !== anchor.getUTCMonth() ? "outside" : ""} ${i % 7 === 0 ? "sunday" : i % 7 === 6 ? "saturday" : ""}"><button type="button" data-day-list="${civilKey(d)}" aria-label="${civilKey(d)} 查看當日行程" class="day-number ${civilKey(d) === dayKey(new Date()) ? "is-today" : ""}">${d.getUTCDate()}</button>${extras.dateExtras(civilKey(d))}<div class="day-events">${bundles
@@ -406,6 +425,8 @@ function render() {
     )
     .join("");
   $("#calendar").innerHTML = html;
+  syncTabs($(".views"), view);
+  renderToday();
   bindGroupPhotos($("#group-legend"), data.groups);
   document
     .querySelectorAll("[data-group-day]")
@@ -488,6 +509,7 @@ function render() {
   }
 }
 function records(events) {
+  if (!history) events = [...events].sort(liveFirst);
   return events.length
     ? events
         .map(
@@ -500,9 +522,7 @@ function records(events) {
 let selectedDay = null;
 function showDayList(key, shouldScroll = true) {
   selectedDay = key;
-  const items = dayEvents(filtered(), civilDate(key)).sort(
-    (a, b) => Date.parse(a.start_at) - Date.parse(b.start_at),
-  );
+  const items = dayEvents(filtered(), civilDate(key)).sort(liveFirst);
   const content = `<h2>${esc(key)} 當日行程</h2><p class="muted">${extras.dayAlmanac(key).map(esc).join(" · ")}</p><div class="day-schedule-list">${items.map((e) => `<button data-event="${esc(e.id)}" class="day-schedule-item" style="--color:${esc(group(e).color)}"><strong>${isLive(e) ? '<span class="live">LIVE</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : eventState(e) === "已結束" ? "已結束 · " : ""}${time(e.start_at)} · ${esc(group(e).name)}</strong><span>${esc(e.title)}${e.members_only ? " · 屬於付費會員限定" : ""}</span></button>`).join("") || "<p>當日暫無行程</p>"}</div>${me ? '<button id="day-add-event" class="primary">＋ 新增行程</button>' : ""}`;
   if (matchMedia("(max-width:600px)").matches) {
     const panel = document.querySelector("#mobile-day-panel");
@@ -1345,7 +1365,10 @@ if (client) {
   });
 }
 setInterval(() => {
-  if (data && !modal.open && !adminOpen && $("#tooltip").hidden) render();
+  if (data && !adminOpen) {
+    if (!modal.open && $("#tooltip").hidden) render();
+    else renderToday();
+  }
 }, 30000);
 window.addEventListener(
   "scroll",
