@@ -1,6 +1,6 @@
 import { byLastUpdate } from './management-state.js?v=1.4-20261013';
 import { batchEntryPage } from './batch-entry.js?v=1.4-20261013';
-import { backendHome } from "./backend-home.js?v=1.4-20261014?v=1.4-20261013";
+import { backendHome } from "./backend-home.js?v=1.4-20261015?v=1.4-20261013";
 import { paginate, pageSizeOptions } from "./pagination.js";
 import { accountPage } from "./account.js";
 import { client } from "./data.js";

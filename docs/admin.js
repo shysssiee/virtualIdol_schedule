@@ -4,7 +4,7 @@ import { memberName } from "./v14.js";
 import { batchImportPage } from "./batch-import.js?v=1.4-20261013";
 import { photoEditorHtml, bindPhotoEditor } from "./group-photo.js";
 import { accountPage } from "./account.js";
-import { backendHome } from "./backend-home.js?v=1.4-20261014?v=1.4-20261013";
+import { backendHome } from "./backend-home.js?v=1.4-20261015?v=1.4-20261013";
 import { backupPage } from "./backup.js";
 import { paginate, pageSizeOptions } from "./pagination.js";
 import { renderLoginHistory } from "./login-history.js";

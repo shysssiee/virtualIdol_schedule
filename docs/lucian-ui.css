@@ -189,3 +189,13 @@
  #toast.u070 { right:16px;bottom:16px; }
 }
 @media(prefers-reduced-motion:reduce){.u039 *,.u070 *{animation:none!important;transition:none!important;}}
+
+.today-panel { max-height:calc(100vh - 40px);overflow:auto; }
+.today-panel summary { display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:20px; }
+.today-panel summary::after { content:'⌄';font-size:16px; }
+.today-panel details[open] > summary::after { content:'⌃'; }
+#today-details { margin-top:22px;padding-top:20px;border-top:1px solid var(--line); }
+.anniversary-items { max-height:280px; }
+.anniversary-item { border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:8px;margin:0; }
+.anniversary-today { background:#f7eaf3;color:#883563; }
+@media(max-width:1399px){.today-panel { max-height:none;overflow:visible; }}

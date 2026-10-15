@@ -1,5 +1,6 @@
-import {liveFirst,liveBundles} from './live-order.js?v=1.4-20261014';
-import {createToasts,syncTabs,bindTabs} from './lucian-ui.js?v=1.4-20261014';
+import {upcomingAnniversaries} from './upcoming-anniversaries.js?v=1.4-20261015';
+import {liveFirst,liveBundles} from './live-order.js?v=1.4-20261015';
+import {createToasts,syncTabs,bindTabs} from './lucian-ui.js?v=1.4-20261015';
 import { eventState } from './management-state.js?v=1.4-20261013';
 import { showUrlImport } from "./url-import.js";
 import { matchImportGroup, matchImportPlatform } from "./url-import-core.js";
@@ -16,7 +17,7 @@ import { startIdleSession } from "./idle-session.js";
 import { visitorForm } from "./visitor-forms.js";
 import { startAutoRefresh } from "./auto-refresh.js";
 import { createBoard } from "./board.js";
-import { createCollaborator } from "./collaborator.js?v=1.4-20261014";
+import { createCollaborator } from "./collaborator.js?v=1.4-20261015";
 import { greeting } from "./greeting.js";
 import { memberEntryHtml, bindMemberEntry } from "./member-entry.js";
 import { updateSiteMetadata } from "./site-title.js";
@@ -34,7 +35,7 @@ import {
   zoneLabel,
   parts,
 } from "./timezone.js";
-import { createAdmin } from "./admin.js?v=1.4-20261014";
+import { createAdmin } from "./admin.js?v=1.4-20261015";
 import {
   configured,
   client,
@@ -241,15 +242,22 @@ function renderToday() {
  $("#today-panel").hidden = history;
  const key=dayKey(new Date());
  $("#today-date").textContent=key+" · "+zoneLabel(displayZone);
+ const upcoming=upcomingAnniversaries(data.anniversaries||[],key,selected,memberSelection);
+ const through=shift(civilDate(key),7);
+ $("#anniversary-range").textContent=`${key} ～ ${civilKey(through)}`;
+ $("#anniversary-items").innerHTML=upcoming.map(x=>{
+  const g=data.groups.find(g=>g.id===x.group_id);
+  return `<article class="today-item anniversary-item" style="--color:${esc(g?.color||'#777777')}"><span class="today-item-head"><time datetime="${esc(x.date)}">${esc(x.date.slice(5).replace('-','/'))}</time><span class="today-state ${x.days===0?'anniversary-today':''}">${x.days===0?'今天':`還有 ${x.days} 天`}</span></span><strong>${x.icon} ${esc(g?.name||'未分類')}</strong><span class="today-item-title">${esc(x.name)} · ${esc(x.label)}</span></article>`;
+ }).join('') || '<p class="muted">無</p>';
  const items=dayEvents(filtered(),civilDate(key)).sort(liveFirst);
  $("#today-items").innerHTML=items.map(e=>{
   const state=eventState(e);
   return `<button class="today-item" data-event="${esc(e.id)}" style="--color:${esc(group(e).color)}"><span class="today-item-head"><span class="today-state ${state==='直播中'?'live':''}">${esc(state)}</span><time>${time(e.start_at)}</time></span><strong>${esc(group(e).name)} · ${esc(people(e))}</strong><span class="today-item-title">${esc(e.title)}</span></button>`;
- }).join('') || '<p class="muted">今天沒有符合目前篩選的行程。</p>';
+ }).join('') || '<p class="muted">無</p>';
  $("#today-items").querySelectorAll('[data-event]').forEach(b=>b.onclick=()=>openEvent(data.events.find(e=>e.id===b.dataset.event))); 
 }
 const todayWide=matchMedia('(min-width:1400px)');
-function todayLayout(){ $("#today-details").open=todayWide.matches; }
+function todayLayout(){ ["#today-details","#anniversary-details"].forEach(id=>$(id).open=todayWide.matches); }
 todayLayout();todayWide.addEventListener('change',todayLayout);
 bindTabs($(".views"),value=>{view=value;render();});
 function renderFilters() {
