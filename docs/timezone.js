@@ -1,3 +1,4 @@
+import {t} from './i18n.js?v=1.4-20261021';
 // Stored timestamps are absolute instants. Calendar dates are floating UTC dates.
 export const INPUT_ZONES = ["Asia/Taipei", "Asia/Seoul"];
 export function validZone(zone) {
@@ -97,5 +98,5 @@ export function zoneLabel(zone, date = new Date()) {
     .formatToParts(date)
     .find((p) => p.type === "timeZoneName")
     .value.replace("GMT", "UTC");
-  return `${zone === "Asia/Taipei" ? "台灣" : zone === "Asia/Seoul" ? "韓國" : zone}（${offset}）`;
+  return `${t(zone === "Asia/Taipei" ? "台灣時間" : ["Asia/Hong_Kong","Asia/Macau","Asia/Macao"].includes(zone) ? "香港／澳門時間" : zone === "Asia/Seoul" ? "韓國時間" : zone === "Asia/Tokyo" ? "日本時間" : zone === "America/New_York" ? "紐約時間" : zone === "America/Los_Angeles" ? "洛杉磯時間" : zone === "Europe/London" ? "倫敦時間" : zone)}（${offset}）`;
 }

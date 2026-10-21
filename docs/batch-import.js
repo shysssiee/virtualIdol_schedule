@@ -1,6 +1,6 @@
-import { parseBatch, prepareRow } from './batch-import-core.js?v=1.4-r3';
-import { escape as esc } from './calendar.js';
-import { save } from './data.js';
+import { parseBatch, prepareRow } from './batch-import-core.js?v=1.4-20261021';
+import { escape as esc } from './calendar.js?v=1.4-20261021';
+import { save } from './data.js?v=1.4-20261021';
 
 export function batchImportPage(root, { getData, getUser, refresh, onComplete = () => {} }) {
   if (getUser()?.role !== 'owner') return;

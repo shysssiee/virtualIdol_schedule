@@ -1,18 +1,18 @@
-import { byLastUpdate } from './management-state.js?v=1.4-20261013';
-import { batchEntryPage } from './batch-entry.js?v=1.4-20261013';
-import { memberName } from "./v14.js";
-import { batchImportPage } from "./batch-import.js?v=1.4-20261013";
-import { photoEditorHtml, bindPhotoEditor } from "./group-photo.js";
-import { accountPage } from "./account.js";
-import { backendHome } from "./backend-home.js?v=1.4-20261015?v=1.4-20261013";
-import { backupPage } from "./backup.js";
-import { paginate, pageSizeOptions } from "./pagination.js";
-import { renderLoginHistory } from "./login-history.js";
-import { downloadSharePage } from "./site-title.js";
-import { client, save, remove, loadProfiles } from "./data.js";
-import { escape as esc, dayKey, time } from "./calendar.js?v=1.4-20261013";
-import { zoneLabel, validZone } from "./timezone.js";
-import { bindSorting } from "./sorting.js";
+import { byLastUpdate } from './management-state.js?v=1.4-20261021';
+import { batchEntryPage } from './batch-entry.js?v=1.4-20261021';
+import { memberName } from "./v14.js?v=1.4-20261021";
+import { batchImportPage } from "./batch-import.js?v=1.4-20261021";
+import { photoEditorHtml, bindPhotoEditor } from "./group-photo.js?v=1.4-20261021";
+import { accountPage } from "./account.js?v=1.4-20261021";
+import { backendHome } from "./backend-home.js?v=1.4-20261021";
+import { backupPage } from "./backup.js?v=1.4-20261021";
+import { paginate, pageSizeOptions } from "./pagination.js?v=1.4-20261021";
+import { renderLoginHistory } from "./login-history.js?v=1.4-20261021";
+import { downloadSharePage } from "./site-title.js?v=1.4-20261021";
+import { client, save, remove, loadProfiles } from "./data.js?v=1.4-20261021";
+import { escape as esc, dayKey, time } from "./calendar.js?v=1.4-20261021";
+import { zoneLabel, validZone } from "./timezone.js?v=1.4-20261021";
+import { bindSorting } from "./sorting.js?v=1.4-20261021";
 
 export function createAdmin({
   getData,

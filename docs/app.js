@@ -1,29 +1,31 @@
-import {upcomingAnniversaries} from './upcoming-anniversaries.js?v=1.4-20261015';
-import {liveFirst,liveBundles} from './live-order.js?v=1.4-20261015';
-import {createToasts,syncTabs,bindTabs} from './lucian-ui.js?v=1.4-20261015';
-import { eventState } from './management-state.js?v=1.4-20261013';
-import { showUrlImport } from "./url-import.js";
-import { matchImportGroup, matchImportPlatform } from "./url-import-core.js";
-import { groupDay, newEventStatus, duplicates, eventChanges } from "./v14.js";
-import { bindGroupPhotos } from "./group-photo.js?v=1.4-layout3";
+import {initLanguage,t,locale,getLanguage} from './i18n.js?v=1.4-20261021';
+import {youtubePreviewHtml,bindYouTubePreviews} from './youtube-preview.js?v=1.4-20261021';
+import {upcomingAnniversaries} from './upcoming-anniversaries.js?v=1.4-20261021';
+import {liveFirst,liveBundles} from './live-order.js?v=1.4-20261021';
+import {createToasts,syncTabs,bindTabs} from './lucian-ui.js?v=1.4-20261021';
+import { eventState } from './management-state.js?v=1.4-20261021';
+import { showUrlImport } from "./url-import.js?v=1.4-20261021";
+import { matchImportGroup, matchImportPlatform } from "./url-import-core.js?v=1.4-20261021";
+import { groupDay, newEventStatus, duplicates, eventChanges } from "./v14.js?v=1.4-20261021";
+import { bindGroupPhotos } from "./group-photo.js?v=1.4-20261021";
 import {
   templateHtml,
   bindTemplates,
   showEventHistory,
-} from "./event-tools.js";
-import { defaultEventTitle, templateValues } from "./event-template.js";
-import { startIdleSession } from "./idle-session.js";
+} from "./event-tools.js?v=1.4-20261021";
+import { defaultEventTitle, templateValues } from "./event-template.js?v=1.4-20261021";
+import { startIdleSession } from "./idle-session.js?v=1.4-20261021";
 
-import { visitorForm } from "./visitor-forms.js";
-import { startAutoRefresh } from "./auto-refresh.js";
-import { createBoard } from "./board.js";
-import { createCollaborator } from "./collaborator.js?v=1.4-20261015";
-import { greeting } from "./greeting.js";
-import { memberEntryHtml, bindMemberEntry } from "./member-entry.js";
-import { updateSiteMetadata } from "./site-title.js";
-import { createPresence } from "./presence.js";
-import { createExtras } from "./extras.js?v=1.4-20261013";
-import { createHoverPanel } from "./hover.js";
+import { visitorForm } from "./visitor-forms.js?v=1.4-20261021";
+import { startAutoRefresh } from "./auto-refresh.js?v=1.4-20261021";
+import { createBoard } from "./board.js?v=1.4-20261021";
+import { createCollaborator } from "./collaborator.js?v=1.4-20261021";
+import { greeting } from "./greeting.js?v=1.4-20261021";
+import { memberEntryHtml, bindMemberEntry } from "./member-entry.js?v=1.4-20261021";
+import { updateSiteMetadata } from "./site-title.js?v=1.4-20261021";
+import { createPresence } from "./presence.js?v=1.4-20261021";
+import { createExtras } from "./extras.js?v=1.4-20261021";
+import { createHoverPanel } from "./hover.js?v=1.4-20261021";
 import {
   civilKey,
   civilDate,
@@ -34,8 +36,8 @@ import {
   validZone,
   zoneLabel,
   parts,
-} from "./timezone.js";
-import { createAdmin } from "./admin.js?v=1.4-20261015";
+} from "./timezone.js?v=1.4-20261021";
+import { createAdmin } from "./admin.js?v=1.4-20261021";
 import {
   configured,
   client,
@@ -44,7 +46,7 @@ import {
   profile,
   save,
   remove,
-} from "./data.js";
+} from "./data.js?v=1.4-20261021";
 import {
   setZone,
   MAX_DURATION,
@@ -59,7 +61,7 @@ import {
   shift,
   dayEvents,
   layout,
-} from "./calendar.js?v=1.4-20261013";
+} from "./calendar.js?v=1.4-20261021";
 const $ = (s) => document.querySelector(s);
 let data,
   me,
@@ -121,6 +123,7 @@ function show(content) {
   $("#modal").style.background = "white";
   hoverPanel.hide();
   $("#modal-body").innerHTML = content;
+  bindYouTubePreviews($("#modal-body"));
   modal.showModal();
 }
 const presence = createPresence(client, () => me);
@@ -182,7 +185,7 @@ function groupSummary(bundle, key) {
   const g = data.groups.find((g) => g.id === bundle.id),
     live = bundle.items.some((e) => isLive(e)),
     upcoming = bundle.items.some((e) => isUpcoming(e));
-  return `<button class="event pill group-summary" style="--color:${esc(g.color)}" data-group-day="${key}" data-group-id="${esc(g.id)}" aria-label="${esc(g.name)} ${bundle.items.length} 場直播">${live ? '<span class="live">LIVE</span>' : upcoming ? '<span class="upcoming">即將直播</span>' : ""}<strong>${esc(g.name)}${bundle.items.length > 1 ? " ＋" : ""}</strong></button>`;
+  return `<button class="event pill group-summary" style="--color:${esc(g.color)}" data-group-day="${key}" data-group-id="${esc(g.id)}" aria-label="${esc(g.name)} ${bundle.items.length} 場直播">${live ? '<span class="live">LIVE</span>' : upcoming ? '<span class="upcoming">即將直播</span>' : ""}<strong><span data-user-content>${esc(g.name)}</span>${bundle.items.length > 1 ? " ＋" : ""}</strong></button>`;
 }
 function showGroupDay(key, id) {
   const items = dayEvents(filtered(), civilDate(key))
@@ -202,7 +205,7 @@ function showGroupDay(key, id) {
               .map((id) => data.members.find((m) => m.id === id)?.name)
               .filter(Boolean)
               .join("、") || "全團",
-          )}</strong><span>${esc(e.title)}</span></button>`,
+          )}</strong><span><span data-user-content>${esc(e.title)}</span></span></button>`,
       )
       .join("")}</div>`,
   );
@@ -215,7 +218,7 @@ function card(e, extra = "", style = "", segmentStart = 0) {
     data.categories.find((c) => c.id === e.category_id)?.name || "";
   const state = eventState(e);
   const status = state === "預定" ? "" : state;
-  return `<button class="event ${extra} ${isLive(e) ? "is-live" : ""} ${e.status === "cancelled" ? "cancelled" : ""}" style="--color:${g.color};${style}" data-event="${esc(e.id)}" aria-label="${esc(time(e.start_at) + " " + g.name + " " + e.title + (isLive(e) ? " LIVE 直播中" : isUpcoming(e) ? " 即將直播" : ""))}">${status ? ` <span class="${status === "直播中" ? "live" : status === "即將直播" ? "upcoming" : "event-status"}">${status === "直播中" ? "LIVE" : status}</span>` : ""}<span class="meta">${time(continuation ? segmentStart : e.start_at)}${continuation ? " · 續播" : ""}</span><strong>${esc(g.name)}</strong><span class="event-info">${[
+  return `<button class="event ${extra} ${isLive(e) ? "is-live" : ""} ${e.status === "cancelled" ? "cancelled" : ""}" style="--color:${g.color};${style}" data-event="${esc(e.id)}" aria-label="${esc(time(e.start_at) + " " + g.name + " " + e.title + (isLive(e) ? " LIVE 直播中" : isUpcoming(e) ? " 即將直播" : ""))}">${status ? ` <span class="${status === "直播中" ? "live" : status === "即將直播" ? "upcoming" : "event-status"}">${status === "直播中" ? "LIVE" : status}</span>` : ""}<span class="meta">${time(continuation ? segmentStart : e.start_at)}${continuation ? " · 續播" : ""}</span><strong data-user-content>${esc(g.name)}</strong><span class="event-info">${[
     category,
     platforms(e),
   ]
@@ -247,12 +250,12 @@ function renderToday() {
  $("#anniversary-range").textContent=`${key} ～ ${civilKey(through)}`;
  $("#anniversary-items").innerHTML=upcoming.map(x=>{
   const g=data.groups.find(g=>g.id===x.group_id);
-  return `<article class="today-item anniversary-item" style="--color:${esc(g?.color||'#777777')}"><span class="today-item-head"><time datetime="${esc(x.date)}">${esc(x.date.slice(5).replace('-','/'))}</time><span class="today-state ${x.days===0?'anniversary-today':''}">${x.days===0?'今天':`還有 ${x.days} 天`}</span></span><strong>${x.icon} ${esc(g?.name||'未分類')}</strong><span class="today-item-title">${esc(x.name)} · ${esc(x.label)}</span></article>`;
+  return `<article class="today-item anniversary-item" style="--color:${esc(g?.color||'#777777')}"><span class="today-item-head"><time datetime="${esc(x.date)}">${esc(x.date.slice(5).replace('-','/'))}</time><span class="today-state ${x.days===0?'anniversary-today':''}">${x.days===0?'今天':`還有 ${x.days} 天`}</span></span><strong>${x.icon} <span data-user-content>${esc(g?.name||'未分類')}</span></strong><span class="today-item-title"><span data-user-content>${esc(x.name)}</span> · ${esc(x.label)}</span></article>`;
  }).join('') || '<p class="muted">無</p>';
  const items=dayEvents(filtered(),civilDate(key)).sort(liveFirst);
  $("#today-items").innerHTML=items.map(e=>{
   const state=eventState(e);
-  return `<button class="today-item" data-event="${esc(e.id)}" style="--color:${esc(group(e).color)}"><span class="today-item-head"><span class="today-state ${state==='直播中'?'live':''}">${esc(state)}</span><time>${time(e.start_at)}</time></span><strong>${esc(group(e).name)} · ${esc(people(e))}</strong><span class="today-item-title">${esc(e.title)}</span></button>`;
+  return `<button class="today-item" data-event="${esc(e.id)}" style="--color:${esc(group(e).color)}"><span class="today-item-head"><span class="today-state ${state==='直播中'?'live':''}">${esc(state)}</span><time>${time(e.start_at)}</time></span><strong><span data-user-content>${esc(group(e).name)}</span> · ${people(e)==="全團"?"<span>全團</span>":`<span data-user-content>${esc(people(e))}</span>`}</strong><span class="today-item-title"><span data-user-content>${esc(e.title)}</span></span></button>`;
  }).join('') || '<p class="muted">無</p>';
  $("#today-items").querySelectorAll('[data-event]').forEach(b=>b.onclick=()=>openEvent(data.events.find(e=>e.id===b.dataset.event))); 
 }
@@ -267,11 +270,11 @@ function renderFilters() {
       .filter((g) => g.name.toLowerCase().includes(query))
       .map(
         (g) =>
-          `<div class="group"><label><input type="checkbox" data-group="${esc(g.id)}" ${selected.includes(g.id) ? "checked" : ""}><span class="dot" style="--color:${g.color}"></span>${esc(g.name)}</label><details><summary>成員 / 紀錄</summary><button data-history="${esc(g.id)}">查看過往紀錄</button>${data.members
+          `<div class="group"><label><input type="checkbox" data-group="${esc(g.id)}" ${selected.includes(g.id) ? "checked" : ""}><span class="dot" style="--color:${g.color}"></span><span data-user-content>${esc(g.name)}</span></label><details><summary>成員 / 紀錄</summary><button data-history="${esc(g.id)}">查看過往紀錄</button>${data.members
             .filter((m) => m.group_id === g.id)
             .map(
               (m) =>
-                `<label><input type="checkbox" data-member="${esc(m.id)}" data-parent="${esc(g.id)}" ${!memberSelection.has(g.id) || memberSelection.get(g.id).includes(m.id) ? "checked" : ""}>${esc(m.name)}</label>`,
+                `<label><input type="checkbox" data-member="${esc(m.id)}" data-parent="${esc(g.id)}" ${!memberSelection.has(g.id) || memberSelection.get(g.id).includes(m.id) ? "checked" : ""}><span data-user-content>${esc(m.name)}</span></label>`,
             )
             .join("")}</details></div>`,
       )
@@ -353,10 +356,10 @@ function render() {
     const start = shift(first, -first.getUTCDay());
     html =
       '<div class="month">' +
-      ["SUN 日", "MON 一", "TUE 二", "WED 三", "THU 四", "FRI 五", "SAT 六"]
+      Array.from({length:7},(_,i)=>getLanguage()==="zh-Hant"?["SUN 日", "MON 一", "TUE 二", "WED 三", "THU 四", "FRI 五", "SAT 六"][i]:new Intl.DateTimeFormat(locale(),{weekday:"short",timeZone:"UTC"}).format(new Date(Date.UTC(2026,9,18+i))))
         .map(
           (x) =>
-            `<div class="weekday"><span class="weekday-en">${x.split(" ")[0]}</span> ${x.split(" ")[1]}</div>`,
+            `<div class="weekday"><span class="weekday-en">${x.split(" ")[0]}</span> ${x.split(" ")[1]||""}</div>`,
         )
         .join("");
     const daysInMonth = new Date(
@@ -405,7 +408,7 @@ function render() {
         (a, b) => Date.parse(a.start_at) - Date.parse(b.start_at),
       );
       visible.push(...items);
-      html += `<section class="time-day"><button class="time-head" type="button" ${me ? `data-create-date="${civilKey(d)}"` : "disabled"}>${d.getUTCMonth() + 1}/${d.getUTCDate()} ${["日", "一", "二", "三", "四", "五", "六"][d.getUTCDay()]}</button><div class="time-body" style="height:${duration}px" ${me ? `data-create-date="${civilKey(d)}" data-midnight="${midnight}"` : ""}>${Array.from({ length: Math.ceil(duration / 60) }, (_, h) => `<span class="hour" style="top:${h * 60}px">${time(midnight + h * 3600000)}</span>`).join("")}${layout(
+      html += `<section class="time-day"><button class="time-head" type="button" ${me ? `data-create-date="${civilKey(d)}"` : "disabled"}>${d.getUTCMonth() + 1}/${d.getUTCDate()} ${new Intl.DateTimeFormat(locale(),{weekday:"short",timeZone:"UTC"}).format(d)}</button><div class="time-body" style="height:${duration}px" ${me ? `data-create-date="${civilKey(d)}" data-midnight="${midnight}"` : ""}>${Array.from({ length: Math.ceil(duration / 60) }, (_, h) => `<span class="hour" style="top:${h * 60}px">${time(midnight + h * 3600000)}</span>`).join("")}${layout(
         items,
       )
         .map((r) => {
@@ -429,7 +432,7 @@ function render() {
     .filter((g) => selected.includes(g.id))
     .map(
       (g) =>
-        `<span class="legend-item" ${g.photo_data ? `tabindex="0" role="button" aria-label="查看 ${esc(g.name)} 團體照片" data-photo-group="${esc(g.id)}"` : ""}><span class="dot" style="--color:${esc(g.color)}"></span>${esc(g.name)}</span>`,
+        `<span class="legend-item" ${g.photo_data ? `tabindex="0" role="button" aria-label="查看 ${esc(g.name)} 團體照片" data-photo-group="${esc(g.id)}"` : ""}><span class="dot" style="--color:${esc(g.color)}"></span><span data-user-content>${esc(g.name)}</span></span>`,
     )
     .join("");
   $("#calendar").innerHTML = html;
@@ -522,7 +525,7 @@ function records(events) {
     ? events
         .map(
           (e) =>
-            `<article class="record"><div class="record-date">${dayKey(e.start_at)}<br><span>${esc(group(e).name)}</span></div>${card(e)}</article>`,
+            `<article class="record"><div class="record-date">${dayKey(e.start_at)}<br><span><span data-user-content>${esc(group(e).name)}</span></span></div>${card(e)}</article>`,
         )
         .join("")
     : '<div class="empty">目前沒有符合條件的行程</div>';
@@ -531,7 +534,7 @@ let selectedDay = null;
 function showDayList(key, shouldScroll = true) {
   selectedDay = key;
   const items = dayEvents(filtered(), civilDate(key)).sort(liveFirst);
-  const content = `<h2>${esc(key)} 當日行程</h2><p class="muted">${extras.dayAlmanac(key).map(esc).join(" · ")}</p><div class="day-schedule-list">${items.map((e) => `<button data-event="${esc(e.id)}" class="day-schedule-item" style="--color:${esc(group(e).color)}"><strong>${isLive(e) ? '<span class="live">LIVE</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : eventState(e) === "已結束" ? "已結束 · " : ""}${time(e.start_at)} · ${esc(group(e).name)}</strong><span>${esc(e.title)}${e.members_only ? " · 屬於付費會員限定" : ""}</span></button>`).join("") || "<p>當日暫無行程</p>"}</div>${me ? '<button id="day-add-event" class="primary">＋ 新增行程</button>' : ""}`;
+  const content = `<h2>${esc(key)} 當日行程</h2><p class="muted">${extras.dayAlmanac(key).map(esc).join(" · ")}</p><div class="day-schedule-list">${items.map((e) => `<button data-event="${esc(e.id)}" class="day-schedule-item" style="--color:${esc(group(e).color)}"><strong>${isLive(e) ? '<span class="live">LIVE</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : eventState(e) === "已結束" ? "已結束 · " : ""}${time(e.start_at)} · <span data-user-content>${esc(group(e).name)}</span></strong><span><span data-user-content>${esc(e.title)}</span>${e.members_only ? " · 屬於付費會員限定" : ""}</span></button>`).join("") || "<p>當日暫無行程</p>"}</div>${me ? '<button id="day-add-event" class="primary">＋ 新增行程</button>' : ""}`;
   if (matchMedia("(max-width:600px)").matches) {
     const panel = document.querySelector("#mobile-day-panel");
     panel.hidden = false;
@@ -544,7 +547,7 @@ function showDayList(key, shouldScroll = true) {
   );
   bindCards();
 }
-function detail(e) {
+function detail(e, withImage = false) {
   const category =
     data.categories.find((c) => c.id === e.category_id)?.name || "";
   const icon = /可視/.test(category)
@@ -552,14 +555,14 @@ function detail(e) {
     : /聲音/.test(category)
       ? "🔊 "
       : "";
-  return `<div class="event-detail" style="--color:${group(e).color}"><h3>${esc(group(e).name)} · ${esc(people(e))}</h3><h2>${esc(e.title)}${e.previous_start_at ? ' <span class="time-change">時間異動</span>' : ""}${isLive(e) ? '<span class="detail-live-badge">直播中</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : ""}${e.members_only ? '<span class="members-only-badge">屬於付費會員限定</span>' : ""}</h2>${e.previous_start_at ? `<p class="muted">原時間：${dayKey(e.previous_start_at)} ${time(e.previous_start_at)} → 新時間：${dayKey(e.start_at)} ${time(e.start_at)}</p>` : ""}<p>${dayKey(e.start_at)}　${time(e.start_at)}（${esc(zoneLabel(displayZone, new Date(e.start_at)))}）</p><p>${icon}${esc(category)}  · ${eventState(e)}</p><p style="white-space:pre-wrap">${esc(e.description)}</p></div>`;
+  return `${withImage ? youtubePreviewHtml(e) : ""}<div class="event-detail" style="--color:${group(e).color}"><h3><span data-user-content>${esc(group(e).name)}</span> · ${people(e)==="全團"?"<span>全團</span>":`<span data-user-content>${esc(people(e))}</span>`}</h3><h2><span data-user-content>${esc(e.title)}</span>${e.previous_start_at ? ' <span class="time-change">時間異動</span>' : ""}${isLive(e) ? '<span class="detail-live-badge">直播中</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : ""}${e.members_only ? '<span class="members-only-badge">屬於付費會員限定</span>' : ""}</h2>${e.previous_start_at ? `<p class="muted">原時間：${dayKey(e.previous_start_at)} ${time(e.previous_start_at)} → 新時間：${dayKey(e.start_at)} ${time(e.start_at)}</p>` : ""}<p>${dayKey(e.start_at)}　${time(e.start_at)}（<span data-zone-label="${esc(displayZone)}" data-zone-instant="${esc(e.start_at)}">${esc(zoneLabel(displayZone, new Date(e.start_at)))}</span>）</p><p>${icon}<span>${esc(category)}</span> · <span>${eventState(e)}</span></p><p style="white-space:pre-wrap"><span data-user-content>${esc(e.description)}</span></p></div>`;
 }
 function platformLinks(e) {
   return e.links
     .filter((l) => /^https?:\/\//i.test(l.url))
     .map(
       (l) =>
-        `<a class="platform-link" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(data.platforms.find((p) => p.id === l.platform_id)?.name)} · 開啟直播</a>`,
+        `<a class="platform-link" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(data.platforms.find((p) => p.id === l.platform_id)?.name)} · <span>開啟直播</span></a>`,
     )
     .join("");
 }
@@ -571,7 +574,7 @@ function styleEventDialog(e) {
 }
 function openEvent(e) {
   show(
-    detail(e) +
+    detail(e, true) +
       `<div>${platformLinks(e)}</div><p class="muted">直播提醒依預定時間顯示，開始後兩小時停止；並非平台開播確認。</p>${extras.shareHtml(e)}${me ? '<button id="event-history">修改紀錄</button>' : ""}${me && (me.role === "owner" || e.created_by === me.id) ? '<div class="actions"><button id="edit-event">編輯行程</button>' + (isLive(e) ? '<button id="end-live">結束直播</button>' : "") + (me.role === "owner" ? '<button id="delete-event">刪除行程</button>' : "") + "</div>" : ""}`,
   );
   styleEventDialog(e);
@@ -582,7 +585,7 @@ function openEvent(e) {
   $("#end-live")?.addEventListener("click", () => finishLive(e));
   $("#edit-event")?.addEventListener("click", () => eventForm(e));
   $("#delete-event")?.addEventListener("click", async () => {
-    if (!confirm("確定刪除這筆行程？")) return;
+    if (!confirm(t("確定刪除這筆行程？"))) return;
     try {
       await remove("events", e.id);
       modal.close();
@@ -701,7 +704,7 @@ function eventForm(e, initialStart, liveOnly = false, imported = null) {
         .filter((m) => m.group_id === g.id)
         .map(
           (m) =>
-            `<label><input type="checkbox" name="member_ids" value="${m.id}" ${initial && value.member_ids.includes(m.id) ? "checked" : ""}>${esc(m.name)}</label>`,
+            `<label><input type="checkbox" name="member_ids" value="${m.id}" ${initial && value.member_ids.includes(m.id) ? "checked" : ""}><span data-user-content>${esc(m.name)}</span></label>`,
         )
         .join("");
     let entry = form.querySelector(".member-entry");
@@ -723,7 +726,7 @@ function eventForm(e, initialStart, liveOnly = false, imported = null) {
         }
         $("#event-members").insertAdjacentHTML(
           "beforeend",
-          `<label><input type="checkbox" name="member_ids" value="${esc(m.id)}" checked>${esc(m.name)}</label>`,
+          `<label><input type="checkbox" name="member_ids" value="${esc(m.id)}" checked><span data-user-content>${esc(m.name)}</span></label>`,
         );
       },
     );
@@ -1261,7 +1264,7 @@ window.addEventListener("hashchange", () => {
     document.querySelector('[data-event="' + CSS.escape(id) + '"]')?.click();
     const e = data.events.find((x) => x.id === id);
     if (e && !modal.open) {
-      show(detail(e) + platformLinks(e) + extras.shareHtml(e));
+      show(detail(e, true) + platformLinks(e) + extras.shareHtml(e));
       styleEventDialog(e);
       extras.bindShare($("#modal-body"));
     }
@@ -1281,6 +1284,7 @@ function applyZone(defaultZone) {
     ...new Set([
       deviceZone(),
       "Asia/Taipei",
+      "Asia/Hong_Kong",
       "Asia/Seoul",
       "Asia/Tokyo",
       "America/New_York",
@@ -1296,7 +1300,7 @@ function applyZone(defaultZone) {
       .map((z) => `<option value="${esc(z)}">${esc(zoneLabel(z))}</option>`)
       .join("");
   $("#display-zone").value = zonePreference;
-  $("#zone-note").textContent = "行程顯示：" + zoneLabel(next);
+  $("#zone-note").textContent = t("行程顯示：") + zoneLabel(next);
 }
 $("#display-zone").onchange = (event) => {
   zonePreference = event.target.value;
@@ -1313,12 +1317,12 @@ function updateClock() {
   updateGreeting();
   const now = new Date(),
     p = parts(now, "Asia/Taipei");
-  const weekday = new Intl.DateTimeFormat("zh-TW", {
+  const weekday = new Intl.DateTimeFormat(locale(), {
     timeZone: "Asia/Taipei",
     weekday: "long",
   }).format(now);
   $("#taipei-clock").innerHTML =
-    `<strong>${p.year}年${p.month}月${p.day}日（${weekday}）</strong><span>中原標準時間（UTC+8）</span><b>${p.hour}:${p.minute}:${p.second}</b>`;
+    `<strong>${new Intl.DateTimeFormat(locale(),{timeZone:"Asia/Taipei",year:"numeric",month:"2-digit",day:"2-digit"}).format(now)}（${weekday}）</strong><span>${t("台灣時間")}（UTC+8）</span><b>${p.hour}:${p.minute}:${p.second}</b>`;
 }
 updateClock();
 setInterval(updateClock, 1000);
@@ -1330,7 +1334,7 @@ try {
     document.querySelector('[data-event="' + CSS.escape(id) + '"]')?.click();
     const e = data.events.find((x) => x.id === id);
     if (e && !modal.open) {
-      show(detail(e) + platformLinks(e) + extras.shareHtml(e));
+      show(detail(e, true) + platformLinks(e) + extras.shareHtml(e));
       styleEventDialog(e);
       extras.bindShare($("#modal-body"));
     }
@@ -1439,3 +1443,5 @@ if (client)
 window.addEventListener("resize", () => {
   if (data && !modal.open && !adminOpen) render();
 });
+
+initLanguage(document,()=>{applyZone(data.site_settings[0]?.default_timezone||"auto");updateClock();render();document.querySelectorAll("[data-zone-label]").forEach(el=>el.textContent=zoneLabel(el.dataset.zoneLabel,new Date(el.dataset.zoneInstant)));});

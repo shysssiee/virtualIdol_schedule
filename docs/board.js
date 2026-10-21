@@ -1,6 +1,6 @@
-import { paginate, pageSizeOptions } from "./pagination.js";
-import { client } from "./data.js";
-import { escape as esc } from "./calendar.js";
+import { paginate, pageSizeOptions } from "./pagination.js?v=1.4-20261021";
+import { client } from "./data.js?v=1.4-20261021";
+import { escape as esc } from "./calendar.js?v=1.4-20261021";
 export function createBoard({ getUser, show, toast }) {
   const $ = (s) => document.querySelector(s);
   async function rpc(name, args = {}) {

@@ -1,9 +1,9 @@
-import { canManageAnniversary } from './management-state.js?v=1.4-20261013';
-import { showAnniversaryHistory } from './anniversary-history.js?v=1.4-20261013';
-import { client, save, remove } from "./data.js";
-import { escape as esc } from "./calendar.js";
-import { paginate, pageSizeOptions } from "./pagination.js";
-import { anniversaryDate, bindBirthdayYear } from "./anniversaries.js";
+import { canManageAnniversary } from './management-state.js?v=1.4-20261021';
+import { showAnniversaryHistory } from './anniversary-history.js?v=1.4-20261021';
+import { client, save, remove } from "./data.js?v=1.4-20261021";
+import { escape as esc } from "./calendar.js?v=1.4-20261021";
+import { paginate, pageSizeOptions } from "./pagination.js?v=1.4-20261021";
+import { anniversaryDate, bindBirthdayYear } from "./anniversaries.js?v=1.4-20261021";
 export function anniversaryManager(
   root,
   { getData, getUser, openForm, refresh, toast },
