@@ -1,12 +1,12 @@
-import { anniversaryManager } from "./anniversary-manager.js?v=1.4-20261021";
-import { anniversaryDate, bindBirthdayYear } from "./anniversaries.js?v=1.4-20261021";
-import { createBoard } from "./board.js?v=1.4-20261021";
-import { addMember, memberEntryHtml, bindMemberEntry } from "./member-entry.js?v=1.4-20261021";
-import { siteTitle } from "./site-title.js?v=1.4-20261021";
-import { calendarLines } from "./regional-calendar.js?v=1.4-20261021";
-import { save, remove, client } from "./data.js?v=1.4-20261021";
-import { escape as esc, dayKey, time } from "./calendar.js?v=1.4-20261021";
-import { anniversariesOn, calendarFile } from "./anniversaries.js?v=1.4-20261021";
+import { anniversaryManager } from "./anniversary-manager.js?v=1.4-20261028";
+import { anniversaryDate, bindBirthdayYear } from "./anniversaries.js?v=1.4-20261028";
+import { createBoard } from "./board.js?v=1.4-20261028";
+import { addMember, memberEntryHtml, bindMemberEntry } from "./member-entry.js?v=1.4-20261028";
+import { siteTitle } from "./site-title.js?v=1.4-20261028";
+import { calendarLines } from "./regional-calendar.js?v=1.4-20261028";
+import { save, remove, client } from "./data.js?v=1.4-20261028";
+import { escape as esc, dayKey, time } from "./calendar.js?v=1.4-20261028";
+import { anniversariesOn, calendarFile } from "./anniversaries.js?v=1.4-20261028";
 export function createExtras({
   getData,
   getUser,

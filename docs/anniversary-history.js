@@ -1,5 +1,5 @@
-import { client } from './data.js?v=1.4-20261021';
-import { escape as esc } from './calendar.js?v=1.4-20261021';
+import { client } from './data.js?v=1.4-20261028';
+import { escape as esc } from './calendar.js?v=1.4-20261028';
 export async function showAnniversaryHistory(id,data) {
  const dialog=document.createElement('dialog');
  dialog.innerHTML='<h2>生日／紀念日修改紀錄</h2><button type="button">關閉</button><div class="ann-history">讀取中…</div>';

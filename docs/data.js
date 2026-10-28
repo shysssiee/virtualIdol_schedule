@@ -1,4 +1,4 @@
-import { memberName } from "./v14.js?v=1.4-20261021";
+import { memberName } from "./v14.js?v=1.4-20261028";
 const config = window.CALENDAR_CONFIG || {};
 export const authFlow = /type=(invite|recovery)/.test(location.hash);
 export const configured = Boolean(

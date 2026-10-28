@@ -1,18 +1,18 @@
-import { byLastUpdate } from './management-state.js?v=1.4-20261021';
-import { batchEntryPage } from './batch-entry.js?v=1.4-20261021';
-import { memberName } from "./v14.js?v=1.4-20261021";
-import { batchImportPage } from "./batch-import.js?v=1.4-20261021";
-import { photoEditorHtml, bindPhotoEditor } from "./group-photo.js?v=1.4-20261021";
-import { accountPage } from "./account.js?v=1.4-20261021";
-import { backendHome } from "./backend-home.js?v=1.4-20261021";
-import { backupPage } from "./backup.js?v=1.4-20261021";
-import { paginate, pageSizeOptions } from "./pagination.js?v=1.4-20261021";
-import { renderLoginHistory } from "./login-history.js?v=1.4-20261021";
-import { downloadSharePage } from "./site-title.js?v=1.4-20261021";
-import { client, save, remove, loadProfiles } from "./data.js?v=1.4-20261021";
-import { escape as esc, dayKey, time } from "./calendar.js?v=1.4-20261021";
-import { zoneLabel, validZone } from "./timezone.js?v=1.4-20261021";
-import { bindSorting } from "./sorting.js?v=1.4-20261021";
+import { byLastUpdate } from './management-state.js?v=1.4-20261028';
+import { batchEntryPage } from './batch-entry.js?v=1.4-20261028';
+import { memberName } from "./v14.js?v=1.4-20261028";
+import { batchImportPage } from "./batch-import.js?v=1.4-20261028";
+import { photoEditorHtml, bindPhotoEditor } from "./group-photo.js?v=1.4-20261028";
+import { accountPage } from "./account.js?v=1.4-20261028";
+import { backendHome } from "./backend-home.js?v=1.4-20261028";
+import { backupPage } from "./backup.js?v=1.4-20261028";
+import { paginate, pageSizeOptions } from "./pagination.js?v=1.4-20261028";
+import { renderLoginHistory } from "./login-history.js?v=1.4-20261028";
+import { downloadSharePage } from "./site-title.js?v=1.4-20261028";
+import { client, save, remove, loadProfiles } from "./data.js?v=1.4-20261028";
+import { escape as esc, dayKey, time } from "./calendar.js?v=1.4-20261028";
+import { zoneLabel, validZone } from "./timezone.js?v=1.4-20261028";
+import { bindSorting } from "./sorting.js?v=1.4-20261028";
 
 export function createAdmin({
   getData,

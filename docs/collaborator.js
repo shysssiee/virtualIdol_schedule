@@ -1,11 +1,11 @@
-import { byLastUpdate } from './management-state.js?v=1.4-20261021';
-import { batchEntryPage } from './batch-entry.js?v=1.4-20261021';
-import { backendHome } from "./backend-home.js?v=1.4-20261021";
-import { paginate, pageSizeOptions } from "./pagination.js?v=1.4-20261021";
-import { accountPage } from "./account.js?v=1.4-20261021";
-import { client } from "./data.js?v=1.4-20261021";
-import { escape as esc, time, dayKey } from "./calendar.js?v=1.4-20261021";
-import { memberEntryHtml, bindMemberEntry } from "./member-entry.js?v=1.4-20261021";
+import { byLastUpdate } from './management-state.js?v=1.4-20261028';
+import { batchEntryPage } from './batch-entry.js?v=1.4-20261028';
+import { backendHome } from "./backend-home.js?v=1.4-20261028";
+import { paginate, pageSizeOptions } from "./pagination.js?v=1.4-20261028";
+import { accountPage } from "./account.js?v=1.4-20261028";
+import { client } from "./data.js?v=1.4-20261028";
+import { escape as esc, time, dayKey } from "./calendar.js?v=1.4-20261028";
+import { memberEntryHtml, bindMemberEntry } from "./member-entry.js?v=1.4-20261028";
 export function createCollaborator({
   isLive,
   end,

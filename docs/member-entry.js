@@ -1,5 +1,5 @@
-import { memberName } from "./v14.js?v=1.4-20261021";
-import { client } from "./data.js?v=1.4-20261021";
+import { memberName } from "./v14.js?v=1.4-20261028";
+import { client } from "./data.js?v=1.4-20261028";
 export async function addMember(data, groupId, name) {
   const clean = memberName(name.trim());
   if (!clean || clean.length > 80) throw Error("請輸入1至80字的成員名字。");

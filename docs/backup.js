@@ -1,4 +1,4 @@
-import { client } from "./data.js?v=1.4-20261021";
+import { client } from "./data.js?v=1.4-20261028";
 export function backupPage(root, toast) {
   root.innerHTML =
     '<h1>網站備份下載</h1><p>下載目前網站資料為 JSON 備份，包含行程、團體、成員、分類、生日／紀念日、網站設定、帳號基本資料與留言。僅站主可下載。</p><p class="muted">備份含申請人的信箱與聯絡方式，請妥善保存。帳號密碼、登入金鑰與網站程式檔案不包含在內；程式檔案請另外由 GitHub 下載。此備份供保存，尚未提供自動還原功能。</p><button id="download-backup">下載目前資料備份</button><p id="backup-result" role="status"></p>';

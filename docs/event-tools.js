@@ -1,6 +1,6 @@
-import { client } from "./data.js?v=1.4-20261021";
-import { escape as esc, dayKey, time } from "./calendar.js?v=1.4-20261021";
-import { localInput } from "./timezone.js?v=1.4-20261021";
+import { client } from "./data.js?v=1.4-20261028";
+import { escape as esc, dayKey, time } from "./calendar.js?v=1.4-20261028";
+import { localInput } from "./timezone.js?v=1.4-20261028";
 export function bindTemplates(
   form,
   { getGroup, getUser, readSettings, applySettings, toast },

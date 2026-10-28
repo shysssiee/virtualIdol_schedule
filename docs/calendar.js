@@ -1,4 +1,4 @@
-import { dateKey, clockTime, dayBounds, civilKey } from "./timezone.js?v=1.4-20261021";
+import { dateKey, clockTime, dayBounds, civilKey } from "./timezone.js?v=1.4-20261028";
 let zone = "Asia/Taipei";
 export const setZone = (value) => {
   zone = value;

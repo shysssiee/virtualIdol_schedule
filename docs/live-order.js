@@ -1,4 +1,4 @@
-import {eventState} from './management-state.js?v=1.4-20261021';
+import {eventState} from './management-state.js?v=1.4-20261028';
 export function liveFirst(a,b,now=Date.now()) {
  return Number(eventState(b,now)==='直播中')-Number(eventState(a,now)==='直播中') || Date.parse(a.start_at)-Date.parse(b.start_at) || String(a.id).localeCompare(String(b.id));
 }

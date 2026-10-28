@@ -1,4 +1,4 @@
-import {getLanguage} from './i18n.js?v=1.4-20261021';
+import {getLanguage} from './i18n.js?v=1.4-20261028';
 export function greeting(name, zone, now = new Date()) {
   const hour = Number(
     new Intl.DateTimeFormat("en-GB", {

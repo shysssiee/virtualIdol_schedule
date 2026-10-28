@@ -1,6 +1,6 @@
-import { client } from "./data.js?v=1.4-20261021";
-import { escape as esc, dayKey, time } from "./calendar.js?v=1.4-20261021";
-import { pageSizeOptions } from "./pagination.js?v=1.4-20261021";
+import { client } from "./data.js?v=1.4-20261028";
+import { escape as esc, dayKey, time } from "./calendar.js?v=1.4-20261028";
+import { pageSizeOptions } from "./pagination.js?v=1.4-20261028";
 export async function renderLoginHistory(root, { owner = false } = {}) {
   let page = 0,
     size = 10,

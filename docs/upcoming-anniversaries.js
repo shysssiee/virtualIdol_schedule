@@ -1,5 +1,5 @@
-import {anniversariesOn} from './anniversaries.js?v=1.4-20261021';
-import {civilDate,civilKey} from './timezone.js?v=1.4-20261021';
+import {anniversariesOn} from './anniversaries.js?v=1.4-20261028';
+import {civilDate,civilKey} from './timezone.js?v=1.4-20261028';
 // Calendar dates, not elapsed 24-hour periods: handles year changes and DST.
 export function upcomingAnniversaries(items,today,selected,memberSelection=new Map()) {
  const results=[];

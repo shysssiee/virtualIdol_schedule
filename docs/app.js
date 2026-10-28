@@ -1,31 +1,31 @@
-import {initLanguage,t,locale,getLanguage} from './i18n.js?v=1.4-20261021';
-import {youtubePreviewHtml,bindYouTubePreviews} from './youtube-preview.js?v=1.4-20261021';
-import {upcomingAnniversaries} from './upcoming-anniversaries.js?v=1.4-20261021';
-import {liveFirst,liveBundles} from './live-order.js?v=1.4-20261021';
-import {createToasts,syncTabs,bindTabs} from './lucian-ui.js?v=1.4-20261021';
-import { eventState } from './management-state.js?v=1.4-20261021';
-import { showUrlImport } from "./url-import.js?v=1.4-20261021";
-import { matchImportGroup, matchImportPlatform } from "./url-import-core.js?v=1.4-20261021";
-import { groupDay, newEventStatus, duplicates, eventChanges } from "./v14.js?v=1.4-20261021";
-import { bindGroupPhotos } from "./group-photo.js?v=1.4-20261021";
+import {initLanguage,t,locale,getLanguage} from './i18n.js?v=1.4-20261028';
+import {youtubePreviewHtml,bindYouTubePreviews} from './youtube-preview.js?v=1.4-20261028';
+import {upcomingAnniversaries} from './upcoming-anniversaries.js?v=1.4-20261028';
+import {liveFirst,liveBundles} from './live-order.js?v=1.4-20261028';
+import {createToasts,syncTabs,bindTabs} from './lucian-ui.js?v=1.4-20261028';
+import { eventState } from './management-state.js?v=1.4-20261028';
+import { showUrlImport } from "./url-import.js?v=1.4-20261028";
+import { matchImportGroup, matchImportPlatform } from "./url-import-core.js?v=1.4-20261028";
+import { groupDay, newEventStatus, duplicates, eventChanges } from "./v14.js?v=1.4-20261028";
+import { bindGroupPhotos } from "./group-photo.js?v=1.4-20261028";
 import {
   templateHtml,
   bindTemplates,
   showEventHistory,
-} from "./event-tools.js?v=1.4-20261021";
-import { defaultEventTitle, templateValues } from "./event-template.js?v=1.4-20261021";
-import { startIdleSession } from "./idle-session.js?v=1.4-20261021";
+} from "./event-tools.js?v=1.4-20261028";
+import { defaultEventTitle, templateValues } from "./event-template.js?v=1.4-20261028";
+import { startIdleSession } from "./idle-session.js?v=1.4-20261028";
 
-import { visitorForm } from "./visitor-forms.js?v=1.4-20261021";
-import { startAutoRefresh } from "./auto-refresh.js?v=1.4-20261021";
-import { createBoard } from "./board.js?v=1.4-20261021";
-import { createCollaborator } from "./collaborator.js?v=1.4-20261021";
-import { greeting } from "./greeting.js?v=1.4-20261021";
-import { memberEntryHtml, bindMemberEntry } from "./member-entry.js?v=1.4-20261021";
-import { updateSiteMetadata } from "./site-title.js?v=1.4-20261021";
-import { createPresence } from "./presence.js?v=1.4-20261021";
-import { createExtras } from "./extras.js?v=1.4-20261021";
-import { createHoverPanel } from "./hover.js?v=1.4-20261021";
+import { visitorForm } from "./visitor-forms.js?v=1.4-20261028";
+import { startAutoRefresh } from "./auto-refresh.js?v=1.4-20261028";
+import { createBoard } from "./board.js?v=1.4-20261028";
+import { createCollaborator } from "./collaborator.js?v=1.4-20261028";
+import { greeting } from "./greeting.js?v=1.4-20261028";
+import { memberEntryHtml, bindMemberEntry } from "./member-entry.js?v=1.4-20261028";
+import { updateSiteMetadata } from "./site-title.js?v=1.4-20261028";
+import { createPresence } from "./presence.js?v=1.4-20261028";
+import { createExtras } from "./extras.js?v=1.4-20261028";
+import { createHoverPanel } from "./hover.js?v=1.4-20261028";
 import {
   civilKey,
   civilDate,
@@ -36,8 +36,8 @@ import {
   validZone,
   zoneLabel,
   parts,
-} from "./timezone.js?v=1.4-20261021";
-import { createAdmin } from "./admin.js?v=1.4-20261021";
+} from "./timezone.js?v=1.4-20261028";
+import { createAdmin } from "./admin.js?v=1.4-20261028";
 import {
   configured,
   client,
@@ -46,7 +46,7 @@ import {
   profile,
   save,
   remove,
-} from "./data.js?v=1.4-20261021";
+} from "./data.js?v=1.4-20261028";
 import {
   setZone,
   MAX_DURATION,
@@ -61,7 +61,7 @@ import {
   shift,
   dayEvents,
   layout,
-} from "./calendar.js?v=1.4-20261021";
+} from "./calendar.js?v=1.4-20261028";
 const $ = (s) => document.querySelector(s);
 let data,
   me,
@@ -117,13 +117,14 @@ function toast(message) {
 
 }
 modal.addEventListener("close", () => document.body.append($("#toast")));
-function show(content) {
+function show(content, event = null) {
   modal.classList.remove("event-dialog");
   modal.style.removeProperty("--event-color");
   $("#modal").style.background = "white";
   hoverPanel.hide();
   $("#modal-body").innerHTML = content;
   bindYouTubePreviews($("#modal-body"));
+  if (event) styleEventDialog(event);
   modal.showModal();
 }
 const presence = createPresence(client, () => me);
@@ -547,7 +548,7 @@ function showDayList(key, shouldScroll = true) {
   );
   bindCards();
 }
-function detail(e, withImage = false) {
+function detail(e) {
   const category =
     data.categories.find((c) => c.id === e.category_id)?.name || "";
   const icon = /可視/.test(category)
@@ -555,7 +556,7 @@ function detail(e, withImage = false) {
     : /聲音/.test(category)
       ? "🔊 "
       : "";
-  return `${withImage ? youtubePreviewHtml(e) : ""}<div class="event-detail" style="--color:${group(e).color}"><h3><span data-user-content>${esc(group(e).name)}</span> · ${people(e)==="全團"?"<span>全團</span>":`<span data-user-content>${esc(people(e))}</span>`}</h3><h2><span data-user-content>${esc(e.title)}</span>${e.previous_start_at ? ' <span class="time-change">時間異動</span>' : ""}${isLive(e) ? '<span class="detail-live-badge">直播中</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : ""}${e.members_only ? '<span class="members-only-badge">屬於付費會員限定</span>' : ""}</h2>${e.previous_start_at ? `<p class="muted">原時間：${dayKey(e.previous_start_at)} ${time(e.previous_start_at)} → 新時間：${dayKey(e.start_at)} ${time(e.start_at)}</p>` : ""}<p>${dayKey(e.start_at)}　${time(e.start_at)}（<span data-zone-label="${esc(displayZone)}" data-zone-instant="${esc(e.start_at)}">${esc(zoneLabel(displayZone, new Date(e.start_at)))}</span>）</p><p>${icon}<span>${esc(category)}</span> · <span>${eventState(e)}</span></p><p style="white-space:pre-wrap"><span data-user-content>${esc(e.description)}</span></p></div>`;
+  return `<div class="event-detail" style="--color:${group(e).color}"><h3><span data-user-content>${esc(group(e).name)}</span> · ${people(e)==="全團"?"<span>全團</span>":`<span data-user-content>${esc(people(e))}</span>`}</h3><h2><span data-user-content>${esc(e.title)}</span>${e.previous_start_at ? ' <span class="time-change">時間異動</span>' : ""}${isLive(e) ? '<span class="detail-live-badge">直播中</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : ""}${e.members_only ? '<span class="members-only-badge">屬於付費會員限定</span>' : ""}</h2>${e.previous_start_at ? `<p class="muted">原時間：${dayKey(e.previous_start_at)} ${time(e.previous_start_at)} → 新時間：${dayKey(e.start_at)} ${time(e.start_at)}</p>` : ""}<p>${dayKey(e.start_at)}　${time(e.start_at)}（<span data-zone-label="${esc(displayZone)}" data-zone-instant="${esc(e.start_at)}">${esc(zoneLabel(displayZone, new Date(e.start_at)))}</span>）</p><p>${icon}<span>${esc(category)}</span> · <span>${eventState(e)}</span></p><p style="white-space:pre-wrap"><span data-user-content>${esc(e.description)}</span></p></div>`;
 }
 function platformLinks(e) {
   return e.links
@@ -573,15 +574,12 @@ function styleEventDialog(e) {
     "color-mix(in srgb, " + group(e).color + " 12%, white)";
 }
 function openEvent(e) {
-  show(
-    detail(e, true) +
-      `<div>${platformLinks(e)}</div><p class="muted">直播提醒依預定時間顯示，開始後兩小時停止；並非平台開播確認。</p>${extras.shareHtml(e)}${me ? '<button id="event-history">修改紀錄</button>' : ""}${me && (me.role === "owner" || e.created_by === me.id) ? '<div class="actions"><button id="edit-event">編輯行程</button>' + (isLive(e) ? '<button id="end-live">結束直播</button>' : "") + (me.role === "owner" ? '<button id="delete-event">刪除行程</button>' : "") + "</div>" : ""}`,
-  );
-  styleEventDialog(e);
+  const canEdit = me && (me.role === "owner" || e.created_by === me.id);
+  const actions = me ? `<div class="actions event-admin-actions">${canEdit ? '<button id="edit-event">編輯行程</button>' + (isLive(e) ? '<button id="end-live">結束直播</button>' : '') + (me.role === "owner" ? '<button id="delete-event">刪除行程</button>' : '') : ''}<button id="event-history">修改紀錄</button></div>` : '';
+  show(`${youtubePreviewHtml(e)}<div class="event-dialog-content">${detail(e)}<div>${platformLinks(e)}</div><p class="muted">直播提醒依預定時間顯示，開始後兩小時停止；並非平台開播確認。</p>${actions}</div>`, e);
   $("#event-history")?.addEventListener("click", () =>
     showEventHistory(e, show, data),
   );
-  extras.bindShare($("#modal-body"));
   $("#end-live")?.addEventListener("click", () => finishLive(e));
   $("#edit-event")?.addEventListener("click", () => eventForm(e));
   $("#delete-event")?.addEventListener("click", async () => {
@@ -608,12 +606,10 @@ function bindCards() {
         '<button type="button" class="close" aria-label="關閉浮卡">×</button>' +
         detail(e) +
         platformLinks(e) +
-        '<p class="muted">直播提醒開始後兩小時停止，並非平台開播確認。</p>' +
-        extras.shareHtml(e);
+        '<p class="muted">直播提醒開始後兩小時停止，並非平台開播確認。</p>'; 
       tip.style.setProperty("--event-color", group(e).color);
       tip.style.background =
         "color-mix(in srgb, " + group(e).color + " 12%, white)";
-      extras.bindShare(tip);
       tip.querySelector(".close").onclick = hoverPanel.hide;
       tip.hidden = false;
       positionHover(tip, b);
@@ -1264,9 +1260,7 @@ window.addEventListener("hashchange", () => {
     document.querySelector('[data-event="' + CSS.escape(id) + '"]')?.click();
     const e = data.events.find((x) => x.id === id);
     if (e && !modal.open) {
-      show(detail(e, true) + platformLinks(e) + extras.shareHtml(e));
-      styleEventDialog(e);
-      extras.bindShare($("#modal-body"));
+      openEvent(e);
     }
   } else if (adminOpen) leaveAdmin();
 });
@@ -1334,9 +1328,7 @@ try {
     document.querySelector('[data-event="' + CSS.escape(id) + '"]')?.click();
     const e = data.events.find((x) => x.id === id);
     if (e && !modal.open) {
-      show(detail(e, true) + platformLinks(e) + extras.shareHtml(e));
-      styleEventDialog(e);
-      extras.bindShare($("#modal-body"));
+      openEvent(e);
     }
   }
   $("#notice").textContent = configured
