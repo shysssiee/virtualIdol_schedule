@@ -1,6 +1,6 @@
-import { prepareRow } from './batch-import-core.js?v=1.4-20261028';
-import { escape as esc } from './calendar.js?v=1.4-20261028';
-import { save } from './data.js?v=1.4-20261028';
+import { prepareRow } from './batch-import-core.js?v=1.4-20261101';
+import { escape as esc } from './calendar.js?v=1.4-20261101';
+import { save } from './data.js?v=1.4-20261101';
 
 export const MAX_BATCH = 10;
 export const blankEntry = () => ({title:'',date:'',time:'',members:[],source:'',platform:'',members_only:false});

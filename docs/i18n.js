@@ -6,6 +6,14 @@ export const getLanguage = () => language;
 export const locale = () => ({'zh-Hant':'zh-TW',en:'en-US',ko:'ko-KR',ja:'ja-JP'})[language];
 export function setLanguage(value) { language = Object.hasOwn(languages,value) ? value : 'zh-Hant'; try { globalThis.localStorage?.setItem('calendar-language',language); } catch {} return language; }
 const rows = `
+行事曆|Calendar|달력|カレンダー
+今日|Today|오늘|今日
+篩選|Filters|필터|絞り込み
+更多|More|더 보기|その他
+手機導覽|Mobile navigation|모바일 탐색|モバイルナビゲーション
+詳細內容|Details|상세 정보|詳細
+套用篩選|Apply filters|필터 적용|絞り込みを適用
+
 語言|Language|언어|言語
 直播行程|Live schedule|라이브 일정|配信スケジュール
 過往紀錄|Past streams|지난 방송|過去の配信
@@ -216,7 +224,7 @@ Apple／其他日曆|Apple / other calendars|Apple / 기타 캘린더|Apple／�
 密碼已更新|Password updated|비밀번호 변경 완료|パスワードを更新しました
 請先登入。|Please sign in.|먼저 로그인하세요.|ログインしてください。
 `;
-const dictionary = new Map(rows.trim().split('\n').map(row => {const [key,...values]=row.split('|'); return [key,values];}));
+const dictionary = new Map(rows.trim().split('\n').filter(row => row.trim() && row.split('|').length === 4).map(row => {const [key,...values]=row.split('|'); return [key,values];}));
 const fragmentKeys=[...dictionary.keys()].filter(key=>key.length>=3||['台：','韓：','農曆','韓曆','補假','補班','放假'].includes(key)).sort((a,b)=>b.length-a.length);
 const fragmentPattern=new RegExp(fragmentKeys.map(key=>key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'g');
 export function t(text) {

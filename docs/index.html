@@ -2,7 +2,8 @@
 <html lang="zh-Hant" data-theme="light">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#292c4a" />
     <title>Virtual Idol 直播行程表 · 直播行程</title>
     <meta property="og:title" content="Virtual Idol 直播行程表 · 直播行程" />
     <meta property="og:site_name" content="Virtual Idol 直播行程表" />
@@ -15,9 +16,10 @@
     <link rel="stylesheet" href="style.css?v=1.4-20261013" />
     <link rel="stylesheet" href="lucian-ui.css?v=1.4-20261015" />
     <link rel="stylesheet" href="language-ui.css?v=1.4-20261028" />
+    <link rel="stylesheet" href="mobile-ui.css?v=1.4-20261101" />
     <script src="config.js"></script>
     <script src="./vendor/korean-lunar-calendar.min.js"></script>
-    <script type="module" src="app.js?v=1.4-20261028"></script>
+    <script type="module" src="app.js?v=1.4-20261101"></script>
   </head>
   <body>
     <header>
@@ -52,6 +54,7 @@
           aria-label="台灣時間"
         ></div>
         <button id="filter-toggle" aria-expanded="false">團體與平台篩選</button>
+        <div id="filter-panel">
         <label class="search-label"
           >搜尋團體<input id="search" type="search" placeholder="輸入團體名稱…"
         /></label>
@@ -85,6 +88,7 @@
           </p>
         </fieldset>
         <p id="zone-note" class="aside-note"></p>
+        </div>
       </aside>
       <main>
         <div class="toolbar">
@@ -149,8 +153,8 @@
       </main>
     </section>
     <div id="tooltip" role="dialog" aria-label="行程快速資訊" hidden=""></div>
-    <dialog id="modal">
-      <button class="close" aria-label="關閉">×</button>
+    <dialog id="modal" aria-labelledby="modal-title">
+      <div class="modal-topbar"><span class="modal-title" id="modal-title">詳細內容</span><button class="close" aria-label="關閉">×</button></div>
       <div id="modal-body"></div>
     </dialog>
     <div id="toast" class="ux u070" data-theme="light"><div class="u070-zone" role="region" aria-label="操作通知" tabindex="-1"><p class="u070-empty"></p><div class="u070-live" aria-live="polite"></div></div></div>

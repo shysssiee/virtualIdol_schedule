@@ -1,6 +1,6 @@
-import { client } from "./data.js?v=1.4-20261028";
-import { escape as esc } from "./calendar.js?v=1.4-20261028";
-import { renderLoginHistory } from "./login-history.js?v=1.4-20261028";
+import { client } from "./data.js?v=1.4-20261101";
+import { escape as esc } from "./calendar.js?v=1.4-20261101";
+import { renderLoginHistory } from "./login-history.js?v=1.4-20261101";
 export function accountPage(root, { getUser, refresh, toast, passwordForm }) {
   root.innerHTML = `<h1>我的帳號</h1><form id="nickname-form" class="settings-card"><label>暱稱<input name="nickname" required maxlength="80" value="${esc(getUser().display_name)}" autocomplete="nickname"></label><p class="muted">站主與協作者都可修改自己的暱稱，最多 80 字。</p><div class="actions"><button class="primary" type="submit">儲存暱稱</button><button id="account-password" type="button">修改密碼</button></div><p class="error" role="alert" id="nickname-error"></p></form><section id="login-history" class="login-history"></section>`;
   root.querySelector("#account-password").onclick = passwordForm;

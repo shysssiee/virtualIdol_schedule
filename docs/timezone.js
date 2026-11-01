@@ -1,4 +1,4 @@
-import {t} from './i18n.js?v=1.4-20261028';
+import {t} from './i18n.js?v=1.4-20261101';
 // Stored timestamps are absolute instants. Calendar dates are floating UTC dates.
 export const INPUT_ZONES = ["Asia/Taipei", "Asia/Seoul"];
 export function validZone(zone) {

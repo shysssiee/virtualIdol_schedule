@@ -1,4 +1,4 @@
-import { escape as esc } from "./calendar.js?v=1.4-20261028";
+import { escape as esc } from "./calendar.js?v=1.4-20261101";
 export function photoEditorHtml(photo) {
   return `<section class="settings-card"><h3>團體照片（4:3）</h3><label>上傳照片<input id="group-photo-file" type="file" accept="image/jpeg,image/png,image/webp"></label><canvas id="group-photo-crop" width="800" height="600" aria-label="照片裁切預覽"></canvas><div id="photo-adjust" hidden><label>放大<input id="photo-zoom" type="range" min="1" max="3" step="0.01" value="1"></label><label>左右位置<input id="photo-x" type="range" min="-1" max="1" step="0.01" value="0"></label><label>上下位置<input id="photo-y" type="range" min="-1" max="1" step="0.01" value="0"></label></div><button id="remove-group-photo" type="button">移除照片</button><p class="muted">JPEG／PNG／WebP，最多 8 MB；等比例縮放裁切為 800×600，圖片小卡顯示 160×120。調整後按表單儲存。</p><p id="photo-error" class="error" role="alert"></p></section>`;
 }

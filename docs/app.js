@@ -1,31 +1,32 @@
-import {initLanguage,t,locale,getLanguage} from './i18n.js?v=1.4-20261028';
-import {youtubePreviewHtml,bindYouTubePreviews} from './youtube-preview.js?v=1.4-20261028';
-import {upcomingAnniversaries} from './upcoming-anniversaries.js?v=1.4-20261028';
-import {liveFirst,liveBundles} from './live-order.js?v=1.4-20261028';
-import {createToasts,syncTabs,bindTabs} from './lucian-ui.js?v=1.4-20261028';
-import { eventState } from './management-state.js?v=1.4-20261028';
-import { showUrlImport } from "./url-import.js?v=1.4-20261028";
-import { matchImportGroup, matchImportPlatform } from "./url-import-core.js?v=1.4-20261028";
-import { groupDay, newEventStatus, duplicates, eventChanges } from "./v14.js?v=1.4-20261028";
-import { bindGroupPhotos } from "./group-photo.js?v=1.4-20261028";
+import {initMobileShell} from './mobile-shell.js?v=1.4-20261101';
+import {initLanguage,t,locale,getLanguage} from './i18n.js?v=1.4-20261101';
+import {youtubePreviewHtml,bindYouTubePreviews} from './youtube-preview.js?v=1.4-20261101';
+import {upcomingAnniversaries} from './upcoming-anniversaries.js?v=1.4-20261101';
+import {liveFirst,liveBundles} from './live-order.js?v=1.4-20261101';
+import {createToasts,syncTabs,bindTabs} from './lucian-ui.js?v=1.4-20261101';
+import { eventState } from './management-state.js?v=1.4-20261101';
+import { showUrlImport } from "./url-import.js?v=1.4-20261101";
+import { matchImportGroup, matchImportPlatform } from "./url-import-core.js?v=1.4-20261101";
+import { groupDay, newEventStatus, duplicates, eventChanges } from "./v14.js?v=1.4-20261101";
+import { bindGroupPhotos } from "./group-photo.js?v=1.4-20261101";
 import {
   templateHtml,
   bindTemplates,
   showEventHistory,
-} from "./event-tools.js?v=1.4-20261028";
-import { defaultEventTitle, templateValues } from "./event-template.js?v=1.4-20261028";
-import { startIdleSession } from "./idle-session.js?v=1.4-20261028";
+} from "./event-tools.js?v=1.4-20261101";
+import { defaultEventTitle, templateValues } from "./event-template.js?v=1.4-20261101";
+import { startIdleSession } from "./idle-session.js?v=1.4-20261101";
 
-import { visitorForm } from "./visitor-forms.js?v=1.4-20261028";
-import { startAutoRefresh } from "./auto-refresh.js?v=1.4-20261028";
-import { createBoard } from "./board.js?v=1.4-20261028";
-import { createCollaborator } from "./collaborator.js?v=1.4-20261028";
-import { greeting } from "./greeting.js?v=1.4-20261028";
-import { memberEntryHtml, bindMemberEntry } from "./member-entry.js?v=1.4-20261028";
-import { updateSiteMetadata } from "./site-title.js?v=1.4-20261028";
-import { createPresence } from "./presence.js?v=1.4-20261028";
-import { createExtras } from "./extras.js?v=1.4-20261028";
-import { createHoverPanel } from "./hover.js?v=1.4-20261028";
+import { visitorForm } from "./visitor-forms.js?v=1.4-20261101";
+import { startAutoRefresh } from "./auto-refresh.js?v=1.4-20261101";
+import { createBoard } from "./board.js?v=1.4-20261101";
+import { createCollaborator } from "./collaborator.js?v=1.4-20261101";
+import { greeting } from "./greeting.js?v=1.4-20261101";
+import { memberEntryHtml, bindMemberEntry } from "./member-entry.js?v=1.4-20261101";
+import { updateSiteMetadata } from "./site-title.js?v=1.4-20261101";
+import { createPresence } from "./presence.js?v=1.4-20261101";
+import { createExtras } from "./extras.js?v=1.4-20261101";
+import { createHoverPanel } from "./hover.js?v=1.4-20261101";
 import {
   civilKey,
   civilDate,
@@ -36,8 +37,8 @@ import {
   validZone,
   zoneLabel,
   parts,
-} from "./timezone.js?v=1.4-20261028";
-import { createAdmin } from "./admin.js?v=1.4-20261028";
+} from "./timezone.js?v=1.4-20261101";
+import { createAdmin } from "./admin.js?v=1.4-20261101";
 import {
   configured,
   client,
@@ -46,7 +47,7 @@ import {
   profile,
   save,
   remove,
-} from "./data.js?v=1.4-20261028";
+} from "./data.js?v=1.4-20261101";
 import {
   setZone,
   MAX_DURATION,
@@ -61,8 +62,9 @@ import {
   shift,
   dayEvents,
   layout,
-} from "./calendar.js?v=1.4-20261028";
+} from "./calendar.js?v=1.4-20261101";
 const $ = (s) => document.querySelector(s);
+let mobileShell;
 let data,
   me,
   view = "month",
@@ -319,6 +321,7 @@ function renderFilters() {
     );
 }
 function render() {
+  mobileShell?.sync({history,admin:adminOpen});
   hoverPanel.hide();
   $("#jump-date").value = civilKey(anchor);
   const previousScroll = $(".timeline")?.scrollTop;
@@ -506,7 +509,7 @@ function render() {
   if (
     selectedDay &&
     view === "month" &&
-    matchMedia("(max-width:600px)").matches
+    matchMedia("(max-width:700px)").matches
   )
     showDayList(selectedDay, false);
   else $("#mobile-day-panel").hidden = true;
@@ -536,12 +539,12 @@ function showDayList(key, shouldScroll = true) {
   selectedDay = key;
   const items = dayEvents(filtered(), civilDate(key)).sort(liveFirst);
   const content = `<h2>${esc(key)} 當日行程</h2><p class="muted">${extras.dayAlmanac(key).map(esc).join(" · ")}</p><div class="day-schedule-list">${items.map((e) => `<button data-event="${esc(e.id)}" class="day-schedule-item" style="--color:${esc(group(e).color)}"><strong>${isLive(e) ? '<span class="live">LIVE</span>' : isUpcoming(e) ? '<span class="upcoming">即將直播</span>' : eventState(e) === "已結束" ? "已結束 · " : ""}${time(e.start_at)} · <span data-user-content>${esc(group(e).name)}</span></strong><span><span data-user-content>${esc(e.title)}</span>${e.members_only ? " · 屬於付費會員限定" : ""}</span></button>`).join("") || "<p>當日暫無行程</p>"}</div>${me ? '<button id="day-add-event" class="primary">＋ 新增行程</button>' : ""}`;
-  if (matchMedia("(max-width:600px)").matches) {
+  if (matchMedia("(max-width:700px)").matches) {
     const panel = document.querySelector("#mobile-day-panel");
     panel.hidden = false;
     panel.innerHTML = content;
     if (shouldScroll)
-      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      panel.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion:reduce)").matches ? "instant" : "smooth", block: "start" });
   } else show(content);
   $("#day-add-event")?.addEventListener("click", () =>
     eventForm(null, fromLocal(key + "T12:00", displayZone)),
@@ -1226,6 +1229,7 @@ function enterAdmin() {
     return;
   }
   adminOpen = true;
+  mobileShell?.sync({history,admin:true});
   modal.close();
   hoverPanel.hide();
   $("#public-workspace").hidden = true;
@@ -1437,3 +1441,11 @@ window.addEventListener("resize", () => {
 });
 
 initLanguage(document,()=>{applyZone(data.site_settings[0]?.default_timezone||"auto");updateClock();render();document.querySelectorAll("[data-zone-label]").forEach(el=>el.textContent=zoneLabel(el.dataset.zoneLabel,new Date(el.dataset.zoneInstant)));});
+
+if (data) {
+  mobileShell = initMobileShell({
+    onToday: () => { history = false; render(); },
+    onCalendar: () => { history = false; render(); }
+  });
+  mobileShell.sync({history,admin:adminOpen});
+}

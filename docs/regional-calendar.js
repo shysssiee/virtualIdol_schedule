@@ -1,4 +1,4 @@
-import { lunarLabel, holidayLabel } from "./almanac.js?v=1.4-20261028";
+import { lunarLabel, holidayLabel } from "./almanac.js?v=1.4-20261101";
 const formatter = new Intl.DateTimeFormat("zh-TW-u-ca-chinese", {
   month: "numeric",
   day: "numeric",
