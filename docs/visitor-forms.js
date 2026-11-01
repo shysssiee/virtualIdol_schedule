@@ -1,4 +1,4 @@
-import { client, configured } from "./data.js?v=1.4-20261101";
+import { client, configured } from "./data.js?v=1.4-20261101b";
 export function visitorForm(kind, { show, toast }) {
   const application = kind === "application";
   show(

@@ -1,32 +1,33 @@
-import {initMobileShell} from './mobile-shell.js?v=1.4-20261101';
-import {initLanguage,t,locale,getLanguage} from './i18n.js?v=1.4-20261101';
-import {youtubePreviewHtml,bindYouTubePreviews} from './youtube-preview.js?v=1.4-20261101';
-import {upcomingAnniversaries} from './upcoming-anniversaries.js?v=1.4-20261101';
-import {liveFirst,liveBundles} from './live-order.js?v=1.4-20261101';
-import {createToasts,syncTabs,bindTabs} from './lucian-ui.js?v=1.4-20261101';
-import { eventState } from './management-state.js?v=1.4-20261101';
-import { showUrlImport } from "./url-import.js?v=1.4-20261101";
-import { matchImportGroup, matchImportPlatform } from "./url-import-core.js?v=1.4-20261101";
-import { groupDay, newEventStatus, duplicates, eventChanges } from "./v14.js?v=1.4-20261101";
-import { bindGroupPhotos } from "./group-photo.js?v=1.4-20261101";
+import {initEntryAnnouncements} from './announcements.js?v=1.4-20261101b';
+import {initMobileShell} from './mobile-shell.js?v=1.4-20261101b';
+import {initLanguage,t,locale,getLanguage} from './i18n.js?v=1.4-20261101b';
+import {youtubePreviewHtml,bindYouTubePreviews} from './youtube-preview.js?v=1.4-20261101b';
+import {upcomingAnniversaries} from './upcoming-anniversaries.js?v=1.4-20261101b';
+import {liveFirst,liveBundles} from './live-order.js?v=1.4-20261101b';
+import {createToasts,syncTabs,bindTabs} from './lucian-ui.js?v=1.4-20261101b';
+import { eventState } from './management-state.js?v=1.4-20261101b';
+import { showUrlImport } from "./url-import.js?v=1.4-20261101b";
+import { matchImportGroup, matchImportPlatform } from "./url-import-core.js?v=1.4-20261101b";
+import { groupDay, newEventStatus, duplicates, eventChanges } from "./v14.js?v=1.4-20261101b";
+import { bindGroupPhotos } from "./group-photo.js?v=1.4-20261101b";
 import {
   templateHtml,
   bindTemplates,
   showEventHistory,
-} from "./event-tools.js?v=1.4-20261101";
-import { defaultEventTitle, templateValues } from "./event-template.js?v=1.4-20261101";
-import { startIdleSession } from "./idle-session.js?v=1.4-20261101";
+} from "./event-tools.js?v=1.4-20261101b";
+import { defaultEventTitle, templateValues } from "./event-template.js?v=1.4-20261101b";
+import { startIdleSession } from "./idle-session.js?v=1.4-20261101b";
 
-import { visitorForm } from "./visitor-forms.js?v=1.4-20261101";
-import { startAutoRefresh } from "./auto-refresh.js?v=1.4-20261101";
-import { createBoard } from "./board.js?v=1.4-20261101";
-import { createCollaborator } from "./collaborator.js?v=1.4-20261101";
-import { greeting } from "./greeting.js?v=1.4-20261101";
-import { memberEntryHtml, bindMemberEntry } from "./member-entry.js?v=1.4-20261101";
-import { updateSiteMetadata } from "./site-title.js?v=1.4-20261101";
-import { createPresence } from "./presence.js?v=1.4-20261101";
-import { createExtras } from "./extras.js?v=1.4-20261101";
-import { createHoverPanel } from "./hover.js?v=1.4-20261101";
+import { visitorForm } from "./visitor-forms.js?v=1.4-20261101b";
+import { startAutoRefresh } from "./auto-refresh.js?v=1.4-20261101b";
+import { createBoard } from "./board.js?v=1.4-20261101b";
+import { createCollaborator } from "./collaborator.js?v=1.4-20261101b";
+import { greeting } from "./greeting.js?v=1.4-20261101b";
+import { memberEntryHtml, bindMemberEntry } from "./member-entry.js?v=1.4-20261101b";
+import { updateSiteMetadata } from "./site-title.js?v=1.4-20261101b";
+import { createPresence } from "./presence.js?v=1.4-20261101b";
+import { createExtras } from "./extras.js?v=1.4-20261101b";
+import { createHoverPanel } from "./hover.js?v=1.4-20261101b";
 import {
   civilKey,
   civilDate,
@@ -37,8 +38,8 @@ import {
   validZone,
   zoneLabel,
   parts,
-} from "./timezone.js?v=1.4-20261101";
-import { createAdmin } from "./admin.js?v=1.4-20261101";
+} from "./timezone.js?v=1.4-20261101b";
+import { createAdmin } from "./admin.js?v=1.4-20261101b";
 import {
   configured,
   client,
@@ -47,7 +48,7 @@ import {
   profile,
   save,
   remove,
-} from "./data.js?v=1.4-20261101";
+} from "./data.js?v=1.4-20261101b";
 import {
   setZone,
   MAX_DURATION,
@@ -62,7 +63,7 @@ import {
   shift,
   dayEvents,
   layout,
-} from "./calendar.js?v=1.4-20261101";
+} from "./calendar.js?v=1.4-20261101b";
 const $ = (s) => document.querySelector(s);
 let mobileShell;
 let data,
@@ -1365,7 +1366,7 @@ if (client) {
   });
   const autoRefresh = startAutoRefresh({
     refresh,
-    canRefresh: () => !modal.open && !adminOpen && $("#tooltip").hidden,
+    canRefresh: () => !document.querySelector("dialog[open]") && !adminOpen && $("#tooltip").hidden,
   });
   modal.addEventListener("close", autoRefresh.check);
   window.addEventListener("pagehide", (event) => {
@@ -1449,3 +1450,5 @@ if (data) {
   });
   mobileShell.sync({history,admin:adminOpen});
 }
+
+if (data) initEntryAnnouncements({settings:data.site_settings[0] || {},blocked:()=>adminOpen || location.hash === "#admin"});

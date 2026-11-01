@@ -1,18 +1,19 @@
-import { byLastUpdate } from './management-state.js?v=1.4-20261101';
-import { batchEntryPage } from './batch-entry.js?v=1.4-20261101';
-import { memberName } from "./v14.js?v=1.4-20261101";
-import { batchImportPage } from "./batch-import.js?v=1.4-20261101";
-import { photoEditorHtml, bindPhotoEditor } from "./group-photo.js?v=1.4-20261101";
-import { accountPage } from "./account.js?v=1.4-20261101";
-import { backendHome } from "./backend-home.js?v=1.4-20261101";
-import { backupPage } from "./backup.js?v=1.4-20261101";
-import { paginate, pageSizeOptions } from "./pagination.js?v=1.4-20261101";
-import { renderLoginHistory } from "./login-history.js?v=1.4-20261101";
-import { downloadSharePage } from "./site-title.js?v=1.4-20261101";
-import { client, save, remove, loadProfiles } from "./data.js?v=1.4-20261101";
-import { escape as esc, dayKey, time } from "./calendar.js?v=1.4-20261101";
-import { zoneLabel, validZone } from "./timezone.js?v=1.4-20261101";
-import { bindSorting } from "./sorting.js?v=1.4-20261101";
+import {announcementPage} from './announcements.js?v=1.4-20261101b';
+import { byLastUpdate } from './management-state.js?v=1.4-20261101b';
+import { batchEntryPage } from './batch-entry.js?v=1.4-20261101b';
+import { memberName } from "./v14.js?v=1.4-20261101b";
+import { batchImportPage } from "./batch-import.js?v=1.4-20261101b";
+import { photoEditorHtml, bindPhotoEditor } from "./group-photo.js?v=1.4-20261101b";
+import { accountPage } from "./account.js?v=1.4-20261101b";
+import { backendHome } from "./backend-home.js?v=1.4-20261101b";
+import { backupPage } from "./backup.js?v=1.4-20261101b";
+import { paginate, pageSizeOptions } from "./pagination.js?v=1.4-20261101b";
+import { renderLoginHistory } from "./login-history.js?v=1.4-20261101b";
+import { downloadSharePage } from "./site-title.js?v=1.4-20261101b";
+import { client, save, remove, loadProfiles } from "./data.js?v=1.4-20261101b";
+import { escape as esc, dayKey, time } from "./calendar.js?v=1.4-20261101b";
+import { zoneLabel, validZone } from "./timezone.js?v=1.4-20261101b";
+import { bindSorting } from "./sorting.js?v=1.4-20261101b";
 
 export function createAdmin({
   getData,
@@ -64,6 +65,7 @@ export function createAdmin({
       ["catalog", "團體與共用分類"],
       ["collaborators", "協作者管理"],
       ["settings", "網站設定"],
+      ["announcements", "進站公告"],
       ["reports", "建議／問題留言板"],
       ["account", "我的帳號"],
       ["backup", "網站備份下載"],
@@ -134,6 +136,19 @@ export function createAdmin({
         page = 0;
         admin();
       } });
+      return;
+    }
+    if (section === "announcements") {
+      announcementPage($("#admin-content"), {
+        getData,getUser,refresh,show,toast,
+        persist: async (rows,previous) => {
+          if (!allowed()) throw Error("僅站主可管理公告。");
+          const {error} = await client.from("site_settings")
+            .update({popup_announcements:rows}).eq("singleton",true)
+            .eq("popup_announcements",JSON.stringify(previous)).select("singleton").single();
+          if (error) throw Error(error.code === 'PGRST116' ? "公告已被其他頁面修改，請重新整理後再試。" : error.message);
+        }
+      });
       return;
     }
     if (section === "account") {

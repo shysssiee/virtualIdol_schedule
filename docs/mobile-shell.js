@@ -25,14 +25,13 @@ export function initMobileShell({ onToday, onCalendar }) {
       <div class="sheet-content"><button type="button" id="mobile-history">過往紀錄</button><div id="mobile-account"></div></div>
     </dialog>`);
   const nav = document.querySelector('#mobile-nav');
-  const dialogs = [...document.querySelectorAll('dialog')];
   const filterDialog = document.querySelector('#mobile-filters');
   const moreDialog = document.querySelector('#mobile-more');
   let current = 'today';
   const positions = { today: 0, calendar: 0 };
   let locked = false, scrollY = 0;
   function syncLock() {
-    const open = phone.matches && dialogs.some(d => d.open);
+    const open = phone.matches && !!document.querySelector('dialog[open]');
     if (open && !locked) {
       scrollY = window.scrollY;
       body.style.setProperty('--sheet-scroll', `-${scrollY}px`);
@@ -46,10 +45,8 @@ export function initMobileShell({ onToday, onCalendar }) {
     }
   }
   const observer = new MutationObserver(syncLock);
-  dialogs.forEach(d => {
-    observer.observe(d, { attributes: true, attributeFilter: ['open'] });
-    d.addEventListener('close', syncLock);
-  });
+  observer.observe(body, {subtree:true,childList:true,attributes:true,attributeFilter:['open']});
+  document.addEventListener('close',syncLock,true);
   function setPage(page, remember = true) {
     if (remember) positions[current] = window.scrollY;
     current = page;

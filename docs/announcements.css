@@ -1,0 +1,23 @@
+/* The calendar number must override the general 44px-tall phone button rule. */
+.month .day-number { width:32px;height:32px;min-width:32px;min-height:32px;max-width:32px;max-height:32px;aspect-ratio:1;padding:0;border-radius:50%;flex-shrink:0;line-height:1; }
+.announcement-dialog { position:fixed;inset:0;margin:auto;padding:0;width:min(560px,calc(100vw - 32px));max-height:calc(100dvh - 40px);overflow:hidden;border-radius:18px; }
+.announcement-dialog[open] { display:flex;flex-direction:column; }
+.announcement-heading { padding:20px 24px;border-bottom:1px solid var(--line);flex:none; }
+.announcement-heading h2 { margin:0;font-size:22px;line-height:1.4; }
+.announcement-content { padding:0 24px;min-height:0;overflow:auto;overscroll-behavior:contain; }
+.announcement-article { padding:20px 0; }
+.announcement-article + .announcement-article { border-top:1px solid var(--line); }
+.announcement-article h3 { margin:0 0 12px;font-size:18px;line-height:1.5;overflow-wrap:anywhere; }
+.announcement-article p,.announcement-list-body { margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:16px;line-height:1.7; }
+.announcement-actions { display:flex;justify-content:flex-end;flex-wrap:wrap;gap:12px;padding:16px 24px;border-top:1px solid var(--line);flex:none; }
+.announcement-actions button { min-height:44px; }
+.announcement-enabled { display:flex;gap:8px;align-items:center;min-height:44px; }
+.announcement-enabled input { width:20px;height:20px;margin:0; }
+.announcement-list-body { margin:12px 0; }
+@media(max-width:700px) {
+ .announcement-dialog { max-height:calc(var(--mobile-viewport,100dvh) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 32px);width:calc(100vw - 32px); }
+ .announcement-heading { padding:18px; }
+ .announcement-content { padding:0 18px; }
+ .announcement-actions { padding:14px 18px;gap:10px; }
+ .announcement-actions button { flex:1;font-size:14px;white-space:normal; }
+}

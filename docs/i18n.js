@@ -6,6 +6,23 @@ export const getLanguage = () => language;
 export const locale = () => ({'zh-Hant':'zh-TW',en:'en-US',ko:'ko-KR',ja:'ja-JP'})[language];
 export function setLanguage(value) { language = Object.hasOwn(languages,value) ? value : 'zh-Hant'; try { globalThis.localStorage?.setItem('calendar-language',language); } catch {} return language; }
 const rows = `
+網站公告|Site announcements|사이트 공지|サイトのお知らせ
+進站公告|Entry announcements|접속 공지|アクセス時のお知らせ
+今日不再顯示|Do not show again today|오늘 다시 보지 않기|今日は表示しない
+新增公告|New announcement|공지 추가|お知らせを追加
+編輯公告|Edit announcement|공지 수정|お知らせを編集
+刪除公告|Delete announcement|공지 삭제|お知らせを削除
+公告標題|Announcement title|공지 제목|お知らせのタイトル
+公告內容|Announcement content|공지 내용|お知らせの内容
+啟用公告|Enable announcement|공지 활성화|お知らせを有効にする
+儲存公告|Save announcement|공지 저장|お知らせを保存
+預覽公告|Preview announcement|공지 미리보기|お知らせをプレビュー
+公告預覽|Announcement preview|공지 미리보기|お知らせのプレビュー
+已啟用|Enabled|활성화됨|有効
+已停用|Disabled|비활성화됨|無効
+尚無公告|No announcements|공지 없음|お知らせはありません
+公告更新成功|Announcement updated|공지가 업데이트되었습니다|お知らせを更新しました
+
 行事曆|Calendar|달력|カレンダー
 今日|Today|오늘|今日
 篩選|Filters|필터|絞り込み

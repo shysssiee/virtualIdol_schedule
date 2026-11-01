@@ -1,4 +1,4 @@
-import { localInput } from "./timezone.js?v=1.4-20261101";
+import { localInput } from "./timezone.js?v=1.4-20261101b";
 export function defaultEventTitle(title, group, category) {
   return (
     title.trim() ||
